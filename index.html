@@ -334,8 +334,12 @@
     width:100%;aspect-ratio:1/1;border-radius:11px;background:var(--accent-soft);
     overflow:hidden;display:flex;align-items:flex-end;justify-content:center;margin-bottom:8px;
   }
+  /* Per-coach `scale` lets Granito (et al) render smaller in the same frame —
+     Toad-to-Mario proportion. Default 1; controlled by inline --coach-scale. */
   .coach-card .cc-img{
-    width:100%;height:100%;object-fit:contain;object-position:center bottom;display:block;
+    max-width:calc(100% * var(--coach-scale,1));
+    max-height:calc(100% * var(--coach-scale,1));
+    width:auto;height:100%;object-fit:contain;object-position:center bottom;display:block;
   }
   .coach-card .cc-name{
     font-family:var(--font-display);font-size:15px;font-weight:700;line-height:1.1;text-align:center;
@@ -354,7 +358,11 @@
     width:200px;height:200px;border-radius:18px;background:var(--accent-soft);
     overflow:hidden;display:flex;align-items:flex-end;justify-content:center;
   }
-  .coach-detail .cd-img{width:100%;height:100%;object-fit:contain;object-position:center bottom;display:block}
+  .coach-detail .cd-img{
+    max-width:calc(100% * var(--coach-scale,1));
+    max-height:calc(100% * var(--coach-scale,1));
+    width:auto;height:100%;object-fit:contain;object-position:center bottom;display:block;
+  }
   .coach-detail .coach-img-fallback{
     width:100%;height:100%;align-items:center;justify-content:center;
     color:var(--accent-deep);font-size:42px;font-family:var(--font-display);font-weight:700;
@@ -553,7 +561,11 @@
     flex:none;width:78px;height:78px;border-radius:14px;background:var(--bg);
     display:flex;align-items:flex-end;justify-content:center;overflow:hidden;
   }
-  .coach-card-game .ccg-pose img{width:100%;height:100%;object-fit:contain;object-position:center bottom;display:block}
+  .coach-card-game .ccg-pose img{
+    max-width:calc(100% * var(--coach-scale,1));
+    max-height:calc(100% * var(--coach-scale,1));
+    width:auto;height:100%;object-fit:contain;object-position:center bottom;display:block;
+  }
   .coach-card-game .ccg-body{flex:1;min-width:0}
   .coach-card-game .ccg-head{display:flex;align-items:baseline;gap:6px;margin-bottom:3px}
   .coach-card-game .ccg-label{
@@ -1190,13 +1202,13 @@ function charFile(id){
    COACH_LINES is a map of coachId → 100 stepCountLines (700 total).
    Imported verbatim from Codex Files/coaches-app-data-es.ts.            */
 var COACHES=[
-  {id:'ristretto', name:"Ristretto", tagline:"el capitán atleta",       personality:"capitán atleta, competitivo, intenso y divertido", description:"Energético, competitivo y divertido. Siempre te empuja a dar un poco más, pero con una sonrisa."},
-  {id:'puchi',     name:"Puchi",     tagline:"la dulce y positiva",     personality:"dulce, girly, amable y positiva", description:"Dulce, alegre y súper positiva. Te acompaña con ternura, ánimo y mucha buena vibra."},
-  {id:'togo',      name:"Togo",      tagline:"el ritmo urbano",         personality:"musical, cool, rítmico y urbano", description:"Rítmico, cool y musical. Convierte cada movimiento en parte de tu propio beat."},
-  {id:'granito',   name:"Granito",   tagline:"el más juguetón",         personality:"juguetón, curioso y lleno de energía", description:"Juguetón, curioso y lleno de energía. Hace que moverse se sienta ligero y divertido."},
-  {id:'moka',      name:"Moka",      tagline:"la determinada",          personality:"determinada, intensa, orgullosa y feliz por sus logros", description:"Determinada, intensa y orgullosa. Te ayuda a enfocarte, avanzar y celebrar cada logro."},
-  {id:'franco',    name:"Franco",    tagline:"el mentor tranquilo",     personality:"sabio, tranquilo, paciente y mentor", description:"Sabio, tranquilo y paciente. Te guía con calma, experiencia y confianza."},
-  {id:'nata',      name:"Nata",      tagline:"la calma y el equilibrio",personality:"serena, suave, equilibrada y calmante", description:"Serena, suave y equilibrada. Te invita a respirar, moverte con calma y cuidar tu ritmo."},
+  {id:'ristretto', name:"Ristretto", tagline:"el capitán atleta",        scale:1.00, personality:"capitán atleta, competitivo, intenso y divertido", description:"Energético, competitivo y divertido. Siempre te empuja a dar un poco más, pero con una sonrisa."},
+  {id:'puchi',     name:"Puchi",     tagline:"la dulce y positiva",      scale:1.00, personality:"dulce, girly, amable y positiva", description:"Dulce, alegre y súper positiva. Te acompaña con ternura, ánimo y mucha buena vibra."},
+  {id:'togo',      name:"Togo",      tagline:"el ritmo urbano",          scale:1.00, personality:"musical, cool, rítmico y urbano", description:"Rítmico, cool y musical. Convierte cada movimiento en parte de tu propio beat."},
+  {id:'granito',   name:"Granito",   tagline:"el más juguetón",          scale:0.62, personality:"juguetón, curioso y lleno de energía", description:"El pequeñín del grupo. Juguetón, curioso y lleno de energía — hace que moverse se sienta ligero y divertido."},
+  {id:'moka',      name:"Moka",      tagline:"la determinada",           scale:1.00, personality:"determinada, intensa, orgullosa y feliz por sus logros", description:"Determinada, intensa y orgullosa. Te ayuda a enfocarte, avanzar y celebrar cada logro."},
+  {id:'franco',    name:"Franco",    tagline:"el mentor tranquilo",      scale:1.00, personality:"sabio, tranquilo, paciente y mentor", description:"Sabio, tranquilo y paciente. Te guía con calma, experiencia y confianza."},
+  {id:'nata',      name:"Nata",      tagline:"la calma y el equilibrio", scale:1.00, personality:"serena, suave, equilibrada y calmante", description:"Serena, suave y equilibrada. Te invita a respirar, moverte con calma y cuidar tu ritmo."},
 ];
 
 /* Position-bucketed step-count lines + milestone lines per coach.
@@ -2235,7 +2247,7 @@ function showCoachPicker(){
     '<div class="coach-grid" id="coach-grid">'+
       COACHES.map(function(c){
         var active = (state.coach===c.id) ? ' active' : '';
-        return '<button type="button" class="coach-card'+active+'" data-coach="'+c.id+'">'+
+        return '<button type="button" class="coach-card'+active+'" data-coach="'+c.id+'" style="--coach-scale:'+c.scale+'">'+
                  '<div class="cc-frame">'+coachImgTag(c.id,'cc-img')+'</div>'+
                  '<div class="cc-name">'+c.name+'</div>'+
                  '<div class="cc-tag">'+c.tagline+'</div>'+
@@ -2251,10 +2263,14 @@ function showCoachPicker(){
 function showCoachDetail(coachId){
   var c = COACHES.find(function(x){return x.id===coachId;});
   if(!c)return;
-  var sample = COACH_LINES[c.id] ? COACH_LINES[c.id][Math.floor(Math.random()*COACH_LINES[c.id].length)] : '';
+  // Pull a random sample line from the coach's mid-bucket so the user hears
+  // their voice before committing. Falls back through other buckets.
+  var pos = COACH_LINES_POS[c.id] || {};
+  var pool = (pos.early||[]).concat(pos.mid||[], pos.late||[], pos.start||[]);
+  var sample = pool.length ? pool[Math.floor(Math.random()*pool.length)] : '';
   var isCurrent = (state.coach===c.id);
   var html =
-    '<div class="coach-detail">'+
+    '<div class="coach-detail" style="--coach-scale:'+c.scale+'">'+
       '<div class="cd-frame">'+coachImgTag(c.id,'cd-img')+'</div>'+
       '<div class="cd-head">'+
         '<div class="cd-name">'+c.name+'</div>'+
@@ -3070,6 +3086,9 @@ function updateCoachCard(coachId, line, opts){
   document.getElementById('ccg-pose-img').src = coachPoseFile(coachId, poseId);
   document.getElementById('ccg-name').textContent = COACH_NAMES[coachId] || coachId;
   document.getElementById('ccg-line').textContent = line;
+  // Apply per-coach scale so Granito reads as the little one in the same frame.
+  var c = COACHES.find(function(x){return x.id===coachId;});
+  card.style.setProperty('--coach-scale', (c && c.scale) || 1);
   // Flash border briefly to signal "new"
   card.classList.add('flash');
   clearTimeout(updateCoachCard._t);
