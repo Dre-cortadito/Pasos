@@ -19,13 +19,13 @@
     --success:#6b8e3d;
     --error:#b03434;
 
-    /* ---- Pasos accent pair · drawn from the logo (orange sleeve + bootprints) ---- */
-    /* The orange is the only saturated color on the page (same role cherry
-       plays in Racimo / terracota in Sudoku). Secondary accent is the ink-black
-       of the cup lid and the bootprints. */
-    --accent:#ee6d20;       --accent-deep:#c95613;   --accent-soft:#fde2cc;
-    --accent-2:#1a1614;     --accent-2-deep:#000000; --accent-2-soft:#fdf3e1;
-    --footprint:#1a1614;    /* header bootprints: black in claro, orange in dark (set below) */
+    /* ---- Pasos accent pair · drawn from the new mint footprint logo ---- */
+    /* The mint is the one saturated color on the page (the same role cherry
+       plays in Racimo / terracota in Sudoku). Secondary accent is the deep
+       teal-ink that grounds it. */
+    --accent:#28B58B;       --accent-deep:#1F8E6E;   --accent-soft:#D5F0E5;
+    --accent-2:#1a1614;     --accent-2-deep:#000000; --accent-2-soft:#E2F1EA;
+    --footprint:var(--accent);    /* header bootprints in the brand mint, both themes */
 
     --font-display:'Newsreader','DM Serif Display',Georgia,serif;
     --font-ui:'Helvetica Neue',Helvetica,Arial,sans-serif;
@@ -37,9 +37,9 @@
     --bg:#0e0c0a; --paper:#1a1614;
     --ink:#f3eee4; --ink-soft:#8a8278;
     --ink-line:#2a2420; --ink-line-strong:#4a4138;
-    --accent:#f6892f; --accent-deep:#d97121; --accent-soft:#2a1a0c;
-    --accent-2:#f3eee4; --accent-2-deep:#ffffff; --accent-2-soft:#241a12;
-    --footprint:var(--accent);    /* dark theme: bootprints in orange */
+    --accent:#3FD8A8; --accent-deep:#28B58B; --accent-soft:#16322A;
+    --accent-2:#f3eee4; --accent-2-deep:#ffffff; --accent-2-soft:#1A2820;
+    --footprint:var(--accent);    /* dark theme: bootprints in mint */
     --success:#86a85a;
   }
 
@@ -459,7 +459,7 @@
   .modal.celebrate h2{color:#1a1614}
   .modal.celebrate h2.accent{color:var(--accent)}
   .modal.celebrate p{color:#5a544e}
-  .modal.celebrate .mk{width:104px;height:104px;margin:0 auto 8px;display:block;border-radius:50%;background:#fde2cc;padding:8px;object-fit:contain}
+  .modal.celebrate .mk{width:104px;height:104px;margin:0 auto 8px;display:block;border-radius:50%;background:var(--accent-soft);padding:8px;object-fit:contain}
   .modal.celebrate .actions{display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap}
   .modal.celebrate .actions .btn{min-width:140px}
 
@@ -1039,8 +1039,8 @@ document.getElementById('header-home').onclick=goHome;
 /* ----- Trail SVG ----- */
 function buildTrail(j,walked){
   var cs=getComputedStyle(document.body);
-  var ACC=(cs.getPropertyValue('--accent')||'#ee6d20').trim();
-  var DP =(cs.getPropertyValue('--accent-deep')||'#c95613').trim();
+  var ACC=(cs.getPropertyValue('--accent')||'#28B58B').trim();
+  var DP =(cs.getPropertyValue('--accent-deep')||'#1F8E6E').trim();
   var LN =(cs.getPropertyValue('--ink-line')||'#ece7df').trim();
   var BG =(cs.getPropertyValue('--bg')||'#fff').trim();
   var W=1000,H=80,padL=24,padR=24,y=50,iw=W-padL-padR;
@@ -1177,7 +1177,7 @@ function sceneOf(routeId,stop,i,total){
   var cap=(routeId==='inca'&&INCA_CAPS[i])?INCA_CAPS[i]:firstSentence(stop.f);
   return {biome:biome,mood:mood,cap:cap};
 }
-function sceneCSS(){return {paper:'#fbfaf6',ink:'#1a1614',inkLine:'#ece7df',acc:'#ee6d20',accD:'#c95613',accS:'#fde2cc',night:'#14110e',nightH:'#6a3220'};}
+function sceneCSS(){return {paper:'#fbfaf6',ink:'#1a1614',inkLine:'#ece7df',acc:'#28B58B',accD:'#1F8E6E',accS:'#D5F0E5',night:'#0E1C18',nightH:'#1F4A3E'};}
 function ridgePath(pts,W,H,fill,op){var d='M0 '+H+' L0 '+pts[0][1];for(var i=0;i<pts.length;i++)d+=' L'+pts[i][0]+' '+pts[i][1];d+=' L'+W+' '+H+' Z';return '<path d="'+d+'" fill="'+fill+'"'+(op!=null?' opacity="'+op+'"':'')+'/>';}
 function frontBiome(b,W,H,c){
   var I=c.ink, P=c.paper;
@@ -1318,10 +1318,10 @@ function panoLandmark(b,x,y,c){var I=c.ink,P=c.paper;
   return '<rect x="'+(x-1.6)+'" y="'+(y-26)+'" width="3.2" height="22" fill="'+I+'"/><circle cx="'+x+'" cy="'+(y-32)+'" r="13" fill="'+I+'"/>';
 }
 function panoHiker(x,y,fill){
-  // Bright traveller silhouette (orange) so he's unmistakable on any backdrop.
+  // Bright traveller silhouette (brand mint) so he's unmistakable on any backdrop.
   // ~46px tall: head, torso, backpack hump, two legs mid-stride, walking pole.
   // 'fill' is reserved for the dark scene ink; the hiker uses the brand accent directly.
-  var ACC='#ee6d20', ACCD='#c95613';
+  var ACC='#28B58B', ACCD='#1F8E6E';
   return '<g>'
     +'<circle cx="'+x+'" cy="'+(y-40)+'" r="6.5" fill="'+ACC+'"/>'
     +'<rect x="'+(x-3.5)+'" y="'+(y-33)+'" width="7" height="21" rx="2.6" fill="'+ACC+'"/>'
