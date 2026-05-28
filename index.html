@@ -315,9 +315,46 @@
   .goal-item.rec .gi-desc{color:var(--accent-deep);opacity:.85}
   .goal-item.rec .gi-tag{background:var(--accent);color:#fff;padding:4px 9px;border-radius:999px;letter-spacing:.8px}
 
-  /* Character picker — 6×6 grid of mint-tinted silhouettes (CSS mask trick) */
+  /* Coach picker — 7 cards (name, personality tag, one-line description) */
+  .coach-list{display:flex;flex-direction:column;gap:10px;margin:14px 0 4px}
+  .coach-item{
+    display:block;width:100%;background:var(--bg);border:1px solid var(--ink-line);border-radius:13px;
+    padding:13px 14px;text-align:left;cursor:pointer;color:var(--ink);font-family:inherit;
+    transition:border-color .15s,transform .08s;
+    touch-action:manipulation;user-select:none;-webkit-tap-highlight-color:transparent;
+  }
+  .coach-item:active{transform:scale(.99)}
+  .coach-item.active{border-color:var(--accent);background:var(--accent-soft)}
+  @media (hover:hover){.coach-item:hover{border-color:var(--ink-soft)}}
+  .coach-item .ci-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:3px}
+  .coach-item .ci-name{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--ink);line-height:1.1}
+  .coach-item.active .ci-name{color:var(--accent-deep)}
+  .coach-item .ci-tag{flex:none;font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--accent);white-space:nowrap}
+  .coach-item .ci-desc{font-size:12.5px;color:var(--ink-soft);margin-top:2px;line-height:1.4}
+
+  /* Coach toast — quick line from your coach when you sync or log steps */
+  .coach-toast{
+    position:fixed;top:14px;left:50%;transform:translate(-50%,-120%);z-index:2400;
+    max-width:min(420px,calc(100% - 24px));
+    background:var(--ink);color:var(--bg);
+    border-radius:14px;padding:11px 16px;
+    box-shadow:0 10px 30px rgba(0,0,0,.25);
+    opacity:0;transition:transform .28s cubic-bezier(.2,.8,.3,1),opacity .2s;
+    pointer-events:none;
+    display:flex;align-items:baseline;gap:9px;
+    font-family:var(--font-ui);font-size:13.5px;line-height:1.35;
+  }
+  .coach-toast.open{transform:translate(-50%,0);opacity:1}
+  .coach-toast .ct-name{
+    flex:none;font-family:var(--font-display);font-weight:700;font-style:italic;
+    color:var(--accent);letter-spacing:.2px;
+  }
+  .coach-toast .ct-line{flex:1}
+  @media (max-width:420px){.coach-toast{font-size:13px;padding:10px 14px}}
+
+  /* Character picker — 5×5 grid of mint-tinted silhouettes (CSS mask trick) */
   .char-grid{
-    display:grid;grid-template-columns:repeat(6,1fr);gap:8px;
+    display:grid;grid-template-columns:repeat(5,1fr);gap:8px;
     margin:14px 0 4px;
   }
   .char-tile{
@@ -340,7 +377,7 @@
     -webkit-mask-mode:alpha;mask-mode:alpha;
   }
   @media (max-width:420px){
-    .char-grid{grid-template-columns:repeat(4,1fr);gap:7px}
+    .char-grid{grid-template-columns:repeat(5,1fr);gap:7px}
     .char-tile{padding:5px;border-radius:10px}
   }
 
@@ -763,6 +800,12 @@
   </div>
 </div></div>
 
+<!-- Coach toast — flashes a line from the chosen coach on sync / log steps -->
+<div class="coach-toast" id="coach-toast" aria-live="polite" aria-hidden="true">
+  <span class="ct-name" id="ct-name"></span>
+  <span class="ct-line" id="ct-line"></span>
+</div>
+
 <script>
 "use strict";
 
@@ -980,53 +1023,41 @@ function renderLanding(){
   play.onclick = function(){ openJourney(state.selected); };
 }
 
-/* Character + coach selection — 36 inclusive silhouettes (Character Selection.png
-   sliced into characters/char-01.png … char-36.png). Names roughly describe
-   the silhouette for accessibility / tooltips; the user just sees the mint
-   silhouette and picks one. */
+/* Character + coach selection — 25 inclusive silhouettes (Character Selection
+   trimmed v10.png sliced into characters/char-01.png … char-25.png). Names
+   roughly describe each silhouette for accessibility / tooltips; the user
+   just sees the mint silhouette and picks one. */
 var CHARACTERS = [
-  // Row 1 — calm walkers
-  {id:'c01', label:'Caminante'},
-  {id:'c02', label:'Caminante'},
-  {id:'c03', label:'Caminante con gorra'},
+  // Row 1
+  {id:'c01', label:'Caminante con mochila'},
+  {id:'c02', label:'Corredora con coleta'},
+  {id:'c03', label:'Caminante'},
   {id:'c04', label:'Caminante con afro'},
-  {id:'c05', label:'Caminante'},
-  {id:'c06', label:'Caminante con coleta'},
-  // Row 2 — mixed walkers / starters
+  {id:'c05', label:'Caminante con túnica'},
+  // Row 2
+  {id:'c06', label:'Caminante'},
   {id:'c07', label:'Caminante'},
-  {id:'c08', label:'Caminante'},
-  {id:'c09', label:'Caminante'},
-  {id:'c10', label:'Corredora con coleta'},
+  {id:'c08', label:'Excursionista con bastones'},
+  {id:'c09', label:'Caminante con mochila'},
+  {id:'c10', label:'Caminante'},
+  // Row 3
   {id:'c11', label:'Corredora'},
-  {id:'c12', label:'Caminante'},
-  // Row 3 — runners
-  {id:'c13', label:'Corredora'},
-  {id:'c14', label:'Corredor con mochila'},
-  {id:'c15', label:'Corredora con coleta'},
-  {id:'c16', label:'Niño'},
-  {id:'c17', label:'Corredora'},
-  {id:'c18', label:'Corredor con mochila'},
-  // Row 4 — runners
-  {id:'c19', label:'Corredora'},
-  {id:'c20', label:'Corredor'},
-  {id:'c21', label:'Corredora'},
+  {id:'c12', label:'Caminante con capucha'},
+  {id:'c13', label:'Corredor con gorra'},
+  {id:'c14', label:'Corredora con coleta'},
+  {id:'c15', label:'Caminante con túnica'},
+  // Row 4
+  {id:'c16', label:'Corredora'},
+  {id:'c17', label:'Corredor'},
+  {id:'c18', label:'Corredora con coleta'},
+  {id:'c19', label:'Corredor'},
+  {id:'c20', label:'En silla de ruedas'},
+  // Row 5
+  {id:'c21', label:'Corredor con afro'},
   {id:'c22', label:'Corredor'},
-  {id:'c23', label:'Corredora'},
-  {id:'c24', label:'Corredor'},
-  // Row 5 — elders + extra runners
-  {id:'c25', label:'Abuela con bastón'},
-  {id:'c26', label:'Abuelo con sombrero'},
-  {id:'c27', label:'Corredora'},
-  {id:'c28', label:'Corredora'},
-  {id:'c29', label:'Corredor con bandana'},
-  {id:'c30', label:'Corredora con coleta'},
-  // Row 6 — mobility + kids + hiker
-  {id:'c31', label:'En silla de ruedas'},
-  {id:'c32', label:'Corredora'},
-  {id:'c33', label:'Corredor'},
-  {id:'c34', label:'Niña'},
-  {id:'c35', label:'Excursionista con mochila'},
-  {id:'c36', label:'En silla de ruedas'}
+  {id:'c23', label:'Caminante con gorra'},
+  {id:'c24', label:'Caminante'},
+  {id:'c25', label:'En silla de ruedas con coleta'}
 ];
 var CHARACTER_NAMES = {};
 CHARACTERS.forEach(function(ch){CHARACTER_NAMES[ch.id]=ch.label;});
@@ -1036,7 +1067,739 @@ function charFile(id){
   return 'characters/char-'+n+'.png';
 }
 
-var COACH_NAMES     = {};   // populated when the coach options are defined
+/* === Cortadito News × Codex — the seven coaches (Spanish). =============
+   COACHES holds metadata (id, name, personality, description) and
+   COACH_LINES is a map of coachId → 100 stepCountLines (700 total).
+   Imported verbatim from Codex Files/coaches-app-data-es.ts.            */
+var COACHES=[
+  {id:'ristretto', name:"Ristretto", personality:"capitán atleta, competitivo, intenso y divertido", description:"Energético, competitivo y divertido. Siempre te empuja a dar un poco más, pero con una sonrisa."},
+  {id:'puchi', name:"Puchi", personality:"dulce, girly, amable y positiva", description:"Dulce, alegre y súper positiva. Te acompaña con ternura, ánimo y mucha buena vibra."},
+  {id:'togo', name:"Togo", personality:"musical, cool, rítmico y urbano", description:"Rítmico, cool y musical. Convierte cada movimiento en parte de tu propio beat."},
+  {id:'granito', name:"Granito", personality:"juguetón, curioso y lleno de energía", description:"Juguetón, curioso y lleno de energía. Hace que moverse se sienta ligero y divertido."},
+  {id:'moka', name:"Moka", personality:"determinada, intensa, orgullosa y feliz por sus logros", description:"Determinada, intensa y orgullosa. Te ayuda a enfocarte, avanzar y celebrar cada logro."},
+  {id:'franco', name:"Franco", personality:"sabio, tranquilo, paciente y mentor", description:"Sabio, tranquilo y paciente. Te guía con calma, experiencia y confianza."},
+  {id:'nata', name:"Nata", personality:"serena, suave, equilibrada y calmante", description:"Serena, suave y equilibrada. Te invita a respirar, moverte con calma y cuidar tu ritmo."},
+];
+
+// 700 step-count lines, indexed by coach id
+var COACH_LINES={
+  ristretto:[
+    "¡Vamos, capitán! Elige una esquina como meta y llega con pecho arriba.",
+    "Ese contador quiere partido: haz treinta pasos fuertes y vuelve al ritmo base.",
+    "Aprieta el paso durante una canción; revisa el marcador al final, no antes.",
+    "Si estabas sentado, arriba: dos minutos y ya ganaste la primera jugada.",
+    "Codos doblados, hombros sueltos, mirada al frente: camina como atleta de verdad.",
+    "Divide lo que falta en dos mitades; gana la primera y luego atacamos la segunda.",
+    "Después del semáforo, nada de enfriarse: recupera ritmo en diez pasos.",
+    "Camina esa cuadra con zancada firme; hoy se siente entrenamiento, no paseo perdido.",
+    "Si falta energía, baja velocidad, pero llega a la esquina antes de parar.",
+    "Cierra este bloque con veinte pasos extra; que se note quién tiene carácter.",
+    "Cuando quieras parar, dame diez pasos más y decide como capitán.",
+    "Pon cinco minutos en el reloj: juega ese tramo sin mirar el marcador.",
+    "Busca una recta corta y úsala como tramo fuerte, con técnica limpia.",
+    "Respira dos veces antes de acelerar; potencia con cabeza, Ristretto.",
+    "Postura de campeón: pecho arriba, mandíbula suelta, pisada firme.",
+    "Marca un destino visible y ve directo; nada de distraerse a mitad de jugada.",
+    "Baja un cambio si pierdes aire, pero conserva el paso hasta la próxima sombra.",
+    "Diez pasos firmes después de cada giro; el ritmo no se regala.",
+    "Tres minutos sin revisar el número; deja que el marcador sude contigo.",
+    "Cierra la cuadra con brazos activos y sonrisa brava: eso ya huele a victoria.",
+    "¡Vamos, capitán!: elige una meta visible y llega sin aflojar. Me gusta esa garra! cada bloque ganado cuenta.",
+    "El marcador está vivo! divide el objetivo en dos mini victorias; esto tiene energía de cierre. tu yo de mañana va a aplaudir.",
+    "baja velocidad sin abandonar la jugada. Apretamos bonito: así se gana terreno; la meta se está acercando.",
+    "Esto ya parece victoria: se te nota el carácter. divide el objetivo en dos mini victorias; cierra como capitán.",
+    "baja velocidad sin abandonar la jugada; el cuerpo ya despertó. Ristretto entra al campo, la victoria pequeña también vale.",
+    "Remontada en marcha: camina una cuadra sin mirar el número. hoy mandas tú! ese empuje ya suma.",
+    "Se juega hasta el cierre! baja velocidad sin abandonar la jugada; eso fue de atleta. vamos por otra jugada.",
+    "camina una cuadra sin mirar el número. Vamos a romper la flojera: la sonrisa también compite; la victoria pequeña también vale.",
+    "Modo final activado: el marcador empieza a respetarte. termina la canción caminando fuerte; ese empuje ya suma.",
+    "camina una cuadra sin mirar el número; me gusta esa garra. Pecho arriba, vamos por otra jugada.",
+    "Ristretto no se esconde: termina la canción caminando fuerte. así se gana terreno! hoy se juega con cabeza y corazón.",
+    "Ritmo de campeón! recupera el paso apenas termine la pausa; se te nota el carácter. terminar fuerte también se entrena.",
+    "termina la canción caminando fuerte. ¡Ese es mi atleta!: el cuerpo ya despertó; no era suerte, era ritmo.",
+    "Equipo, seguimos: qué buena remontada. recupera el paso apenas termine la pausa; cada bloque ganado cuenta.",
+    "haz diez pasos firmes después del semáforo; hoy mandas tú. Hoy hay chispa, terminar fuerte también se entrena.",
+    "No sueltes la jugada: recupera el paso apenas termine la pausa. la sonrisa también compite! no era suerte, era ritmo.",
+    "Jugada rápida! haz diez pasos firmes después del semáforo; el marcador empieza a respetarte. cada bloque ganado cuenta.",
+    "mantén una respiración fuerte pero cómoda. Último tramo con orgullo: me gusta esa garra; tu yo de mañana va a aplaudir.",
+    "Capitán, manda el ritmo: esto tiene energía de cierre. haz diez pasos firmes después del semáforo; la meta se está acercando.",
+    "mantén una respiración fuerte pero cómoda; así se gana terreno. Sonríe y acelera, cierra como capitán.",
+    "El marcador está vivo: mantén abdomen activo hasta la esquina. el cuerpo ya despertó! la victoria pequeña también vale.",
+    "Apretamos bonito! mantén una respiración fuerte pero cómoda; qué buena remontada. la meta se está acercando.",
+    "mantén abdomen activo hasta la esquina. Esto ya parece victoria: hoy mandas tú; cierra como capitán.",
+    "¡Vamos, capitán!: eso fue de atleta. sube el ritmo treinta segundos y vuelve al control; la victoria pequeña también vale.",
+    "mantén abdomen activo hasta la esquina; la sonrisa también compite. Remontada en marcha, ese empuje ya suma.",
+    "Se juega hasta el cierre: sube el ritmo treinta segundos y vuelve al control. Me gusta esa garra! vamos por otra jugada.",
+    "Vamos a romper la flojera! toma agua y vuelve al bloque; esto tiene energía de cierre. hoy se juega con cabeza y corazón.",
+    "sube el ritmo treinta segundos y vuelve al control. Ristretto entra al campo: así se gana terreno; terminar fuerte también se entrena.",
+    "Pecho arriba: se te nota el carácter. toma agua y vuelve al bloque; vamos por otra jugada.",
+    "usa los brazos como si empujaras al equipo; el cuerpo ya despertó. Ristretto no se esconde, hoy se juega con cabeza y corazón.",
+    "Ritmo de campeón: toma agua y vuelve al bloque. hoy mandas tú! terminar fuerte también se entrena.",
+    "Modo final activado! usa los brazos como si empujaras al equipo; eso fue de atleta. no era suerte, era ritmo.",
+    "aprieta en la recta y suelta en la esquina. Equipo, seguimos: la sonrisa también compite; cada bloque ganado cuenta.",
+    "Hoy hay chispa: el marcador empieza a respetarte. usa los brazos como si empujaras al equipo; tu yo de mañana va a aplaudir.",
+    "aprieta en la recta y suelta en la esquina; me gusta esa garra. No sueltes la jugada, la meta se está acercando.",
+    "¡Ese es mi atleta!: haz veinte pasos extra antes de pausar. así se gana terreno! cada bloque ganado cuenta.",
+    "Último tramo con orgullo! aprieta en la recta y suelta en la esquina; se te nota el carácter. tu yo de mañana va a aplaudir.",
+    "haz veinte pasos extra antes de pausar. Capitán, manda el ritmo: el cuerpo ya despertó; la meta se está acercando.",
+    "Sonríe y acelera: qué buena remontada. cuida la pisada antes de acelerar; cierra como capitán.",
+    "haz veinte pasos extra antes de pausar; hoy mandas tú. Jugada rápida, la victoria pequeña también vale.",
+    "Apretamos bonito: cuida la pisada antes de acelerar. la sonrisa también compite! ese empuje ya suma.",
+    "Esto ya parece victoria! elige una meta visible y llega sin aflojar; el marcador empieza a respetarte. vamos por otra jugada.",
+    "cuida la pisada antes de acelerar. ¡Vamos, capitán!: me gusta esa garra; la victoria pequeña también vale.",
+    "El marcador está vivo: esto tiene energía de cierre. elige una meta visible y llega sin aflojar; ese empuje ya suma.",
+    "divide el objetivo en dos mini victorias; así se gana terreno. Se juega hasta el cierre, vamos por otra jugada.",
+    "Vamos a romper la flojera: elige una meta visible y llega sin aflojar. el cuerpo ya despertó! hoy se juega con cabeza y corazón.",
+    "Ristretto entra al campo! divide el objetivo en dos mini victorias; qué buena remontada. terminar fuerte también se entrena.",
+    "baja velocidad sin abandonar la jugada. Remontada en marcha: hoy mandas tú; no era suerte, era ritmo.",
+    "Ristretto no se esconde: eso fue de atleta. divide el objetivo en dos mini victorias; cada bloque ganado cuenta.",
+    "baja velocidad sin abandonar la jugada; la sonrisa también compite. Ritmo de campeón, terminar fuerte también se entrena.",
+    "Modo final activado: camina una cuadra sin mirar el número. Me gusta esa garra! no era suerte, era ritmo.",
+    "Pecho arriba! baja velocidad sin abandonar la jugada; esto tiene energía de cierre. cada bloque ganado cuenta.",
+    "camina una cuadra sin mirar el número. Hoy hay chispa: así se gana terreno; tu yo de mañana va a aplaudir.",
+    "No sueltes la jugada: se te nota el carácter. termina la canción caminando fuerte; la meta se está acercando.",
+    "camina una cuadra sin mirar el número; el cuerpo ya despertó. ¡Ese es mi atleta!, cierra como capitán.",
+    "Equipo, seguimos: termina la canción caminando fuerte. hoy mandas tú! la victoria pequeña también vale.",
+    "Capitán, manda el ritmo! recupera el paso apenas termine la pausa; eso fue de atleta. la meta se está acercando.",
+    "termina la canción caminando fuerte. Sonríe y acelera: la sonrisa también compite; cierra como capitán.",
+    "Jugada rápida: el marcador empieza a respetarte. recupera el paso apenas termine la pausa; la victoria pequeña también vale.",
+    "haz diez pasos firmes después del semáforo; me gusta esa garra. Último tramo con orgullo, ese empuje ya suma.",
+    "Esto ya parece victoria: recupera el paso apenas termine la pausa. así se gana terreno! vamos por otra jugada.",
+    "¡Vamos, capitán!! haz diez pasos firmes después del semáforo; se te nota el carácter. hoy se juega con cabeza y corazón.",
+    "mantén una respiración fuerte pero cómoda. El marcador está vivo: el cuerpo ya despertó; terminar fuerte también se entrena.",
+    "Apretamos bonito: qué buena remontada. haz diez pasos firmes después del semáforo; vamos por otra jugada.",
+    "mantén una respiración fuerte pero cómoda; hoy mandas tú. Vamos a romper la flojera, hoy se juega con cabeza y corazón.",
+    "Ristretto entra al campo: mantén abdomen activo hasta la esquina. la sonrisa también compite! terminar fuerte también se entrena.",
+    "Remontada en marcha! mantén una respiración fuerte pero cómoda; el marcador empieza a respetarte. no era suerte, era ritmo.",
+    "mantén abdomen activo hasta la esquina. Se juega hasta el cierre: me gusta esa garra; cada bloque ganado cuenta.",
+    "Ritmo de campeón: esto tiene energía de cierre. sube el ritmo treinta segundos y vuelve al control; tu yo de mañana va a aplaudir.",
+    "mantén abdomen activo hasta la esquina; así se gana terreno. Modo final activado, la meta se está acercando.",
+    "Pecho arriba: sube el ritmo treinta segundos y vuelve al control. el cuerpo ya despertó! cada bloque ganado cuenta.",
+    "Ristretto no se esconde! toma agua y vuelve al bloque; qué buena remontada. tu yo de mañana va a aplaudir.",
+    "sube el ritmo treinta segundos y vuelve al control. No sueltes la jugada: hoy mandas tú; la meta se está acercando.",
+    "¡Ese es mi atleta!: eso fue de atleta. toma agua y vuelve al bloque; cierra como capitán.",
+    "usa los brazos como si empujaras al equipo; la sonrisa también compite. Equipo, seguimos, la victoria pequeña también vale.",
+    "Hoy hay chispa: toma agua y vuelve al bloque. Me gusta esa garra! ese empuje ya suma.",
+    "Sonríe y acelera! usa los brazos como si empujaras al equipo; esto tiene energía de cierre. vamos por otra jugada.",
+    "aprieta en la recta y suelta en la esquina. Jugada rápida: así se gana terreno; la victoria pequeña también vale.",
+    "Último tramo con orgullo: se te nota el carácter. usa los brazos como si empujaras al equipo; ese empuje ya suma.",
+    "aprieta en la recta y suelta en la esquina; el cuerpo ya despertó. Capitán, manda el ritmo, vamos por otra jugada.",
+  ],
+  puchi:[
+    "Ay, qué lindo: haz una vuelta cortita y elige una ruta que te dé ganas de sonreír.",
+    "Respira suave, baja los hombros y regálate dos minutos de pasitos bonitos.",
+    "Pon una canción linda y camina hasta que termine; tú y tu brillo, sin prisa.",
+    "Cuenta veinte pasitos sin mirar el reloj; cada uno cuenta, preciosa.",
+    "Si perdiste el ritmo, no pasa nada: diez pasos suaves y volvemos con amor.",
+    "Toma agüita antes de seguir; cuidarte también es parte del glow.",
+    "Elige una esquina cercana y llega con pasos cómodos, no perfectos.",
+    "Da una vuelta extra si te sientes ligera; mira qué bonito estás cumpliendo.",
+    "Camina por un lugar que te guste; el ánimo también merece decoración.",
+    "Haz cinco minutos tuyos, sin regaños, sin drama, con cariño.",
+    "Suelta los hombros en cada cruce y vuelve a tu ritmo dulce.",
+    "Si hoy cuesta, bajamos la meta a una cuadra y la cumplimos bonito.",
+    "Alarga la espalda, respira fácil y deja que el paso se ponga cómodo.",
+    "Celebra ese bloque pequeño; lo tierno también puede ser fuerte.",
+    "Camina hasta ver algo lindo y úsalo como mini premio.",
+    "Guarda el teléfono por una canción; deja que tus pasos tengan brillito.",
+    "Pasos cómodos por cinco minutos; suave también es progreso real.",
+    "Antes de acelerar, revisa hombros, respiración y sonrisita.",
+    "Pausa breve, agua, y volvemos con pasitos tranquilos.",
+    "Termina la próxima cuadra y date crédito; cumpliste, y eso se ve hermoso.",
+    "Ay, vamos bonito: elige una esquina cercana y llega tranquila. Qué bonito verte intentarlo! cada pasito cuenta muchísimo.",
+    "Qué linda constancia! vuelve despacio si perdiste el ritmo; tu esfuerzo se ve precioso. tu cuerpo recibe ese cariño.",
+    "guarda el teléfono durante un minuto. Dale sparkle al camino: esto también es amor propio; hoy mereces ese orgullo.",
+    "Qué orgullo tan dulce: me encanta esa suavidad fuerte. vuelve despacio si perdiste el ritmo; vamos por otro poquito bonito.",
+    "guarda el teléfono durante un minuto; mira cómo vuelves a ti. Puchi está contigo, lo pequeño también cambia el día.",
+    "Con cariño, seguimos: da una vuelta extra si te queda energía. ese pasito tiene luz! qué lindo verte volver.",
+    "Sin drama, con amor! guarda el teléfono durante un minuto; hoy estás siendo buena contigo. tú también eres prioridad.",
+    "da una vuelta extra si te queda energía. Vuelta con encanto: la constancia te queda divina; lo pequeño también cambia el día.",
+    "Pasitos con brillo: qué dulzura de avance. cierra la cuadra y celébralo bajito; qué lindo verte volver.",
+    "da una vuelta extra si te queda energía; qué bonito verte intentarlo. Pasito coqueto, tú también eres prioridad.",
+    "Puchi celebra esto: cierra la cuadra y celébralo bajito. esto también es amor propio! la meta se acerca sin presión.",
+    "Sonríe tantito! haz cinco minutos que se sientan tuyos; me encanta esa suavidad fuerte. seguir suave sigue siendo seguir.",
+    "cierra la cuadra y celébralo bajito. Mi amor, suavecito: mira cómo vuelves a ti; este bloque ya brilla.",
+    "Mini meta preciosa: te estás tratando con ternura. haz cinco minutos que se sientan tuyos; cada pasito cuenta muchísimo.",
+    "haz diez pasitos más antes de sentarte; ese pasito tiene luz. Tu glow también camina, seguir suave sigue siendo seguir.",
+    "Cero presión, mucho cariño: haz cinco minutos que se sientan tuyos. la constancia te queda divina! este bloque ya brilla.",
+    "Momento cute! haz diez pasitos más antes de sentarte; qué dulzura de avance. cada pasito cuenta muchísimo.",
+    "toma agua y vuelve con calma. Respira, bonita: qué bonito verte intentarlo; tu cuerpo recibe ese cariño.",
+    "Hoy te cuidas bonito: tu esfuerzo se ve precioso. haz diez pasitos más antes de sentarte; hoy mereces ese orgullo.",
+    "toma agua y vuelve con calma; esto también es amor propio. Vamos florcita, vamos por otro poquito bonito.",
+    "Qué linda constancia: camina hasta ver algo que te saque sonrisa. mira cómo vuelves a ti! lo pequeño también cambia el día.",
+    "Dale sparkle al camino! toma agua y vuelve con calma; te estás tratando con ternura. hoy mereces ese orgullo.",
+    "camina hasta ver algo que te saque sonrisa. Qué orgullo tan dulce: ese pasito tiene luz; vamos por otro poquito bonito.",
+    "Ay, vamos bonito: hoy estás siendo buena contigo. cuenta treinta pasos sin mirar el celular; lo pequeño también cambia el día.",
+    "camina hasta ver algo que te saque sonrisa; la constancia te queda divina. Con cariño, seguimos, qué lindo verte volver.",
+    "Sin drama, con amor: cuenta treinta pasos sin mirar el celular. Qué bonito verte intentarlo! tú también eres prioridad.",
+    "Vuelta con encanto! suelta las manos y respira fácil; tu esfuerzo se ve precioso. la meta se acerca sin presión.",
+    "cuenta treinta pasos sin mirar el celular. Puchi está contigo: esto también es amor propio; seguir suave sigue siendo seguir.",
+    "Pasito coqueto: me encanta esa suavidad fuerte. suelta las manos y respira fácil; tú también eres prioridad.",
+    "relaja hombros y mandíbula antes de seguir; mira cómo vuelves a ti. Puchi celebra esto, la meta se acerca sin presión.",
+    "Sonríe tantito: suelta las manos y respira fácil. ese pasito tiene luz! seguir suave sigue siendo seguir.",
+    "Pasitos con brillo! relaja hombros y mandíbula antes de seguir; hoy estás siendo buena contigo. este bloque ya brilla.",
+    "elige pasos cómodos, no perfectos. Mini meta preciosa: la constancia te queda divina; cada pasito cuenta muchísimo.",
+    "Tu glow también camina: qué dulzura de avance. relaja hombros y mandíbula antes de seguir; tu cuerpo recibe ese cariño.",
+    "elige pasos cómodos, no perfectos; qué bonito verte intentarlo. Cero presión, mucho cariño, hoy mereces ese orgullo.",
+    "Mi amor, suavecito: pon una canción que te guste y camínala completa. esto también es amor propio! cada pasito cuenta muchísimo.",
+    "Respira, bonita! elige pasos cómodos, no perfectos; me encanta esa suavidad fuerte. tu cuerpo recibe ese cariño.",
+    "pon una canción que te guste y camínala completa. Hoy te cuidas bonito: mira cómo vuelves a ti; hoy mereces ese orgullo.",
+    "Vamos florcita: te estás tratando con ternura. camina por el lado más bonito de la calle; vamos por otro poquito bonito.",
+    "pon una canción que te guste y camínala completa; ese pasito tiene luz. Momento cute, lo pequeño también cambia el día.",
+    "Dale sparkle al camino: camina por el lado más bonito de la calle. la constancia te queda divina! qué lindo verte volver.",
+    "Qué orgullo tan dulce! elige una esquina cercana y llega tranquila; qué dulzura de avance. tú también eres prioridad.",
+    "camina por el lado más bonito de la calle. Ay, vamos bonito: qué bonito verte intentarlo; lo pequeño también cambia el día.",
+    "Qué linda constancia: tu esfuerzo se ve precioso. elige una esquina cercana y llega tranquila; qué lindo verte volver.",
+    "vuelve despacio si perdiste el ritmo; esto también es amor propio. Sin drama, con amor, tú también eres prioridad.",
+    "Vuelta con encanto: elige una esquina cercana y llega tranquila. mira cómo vuelves a ti! la meta se acerca sin presión.",
+    "Puchi está contigo! vuelve despacio si perdiste el ritmo; te estás tratando con ternura. seguir suave sigue siendo seguir.",
+    "guarda el teléfono durante un minuto. Con cariño, seguimos: ese pasito tiene luz; este bloque ya brilla.",
+    "Puchi celebra esto: hoy estás siendo buena contigo. vuelve despacio si perdiste el ritmo; cada pasito cuenta muchísimo.",
+    "guarda el teléfono durante un minuto; la constancia te queda divina. Sonríe tantito, seguir suave sigue siendo seguir.",
+    "Pasitos con brillo: da una vuelta extra si te queda energía. Qué bonito verte intentarlo! este bloque ya brilla.",
+    "Pasito coqueto! guarda el teléfono durante un minuto; tu esfuerzo se ve precioso. cada pasito cuenta muchísimo.",
+    "da una vuelta extra si te queda energía. Tu glow también camina: esto también es amor propio; tu cuerpo recibe ese cariño.",
+    "Cero presión, mucho cariño: me encanta esa suavidad fuerte. cierra la cuadra y celébralo bajito; hoy mereces ese orgullo.",
+    "da una vuelta extra si te queda energía; mira cómo vuelves a ti. Mi amor, suavecito, vamos por otro poquito bonito.",
+    "Mini meta preciosa: cierra la cuadra y celébralo bajito. ese pasito tiene luz! lo pequeño también cambia el día.",
+    "Hoy te cuidas bonito! haz cinco minutos que se sientan tuyos; hoy estás siendo buena contigo. hoy mereces ese orgullo.",
+    "cierra la cuadra y celébralo bajito. Vamos florcita: la constancia te queda divina; vamos por otro poquito bonito.",
+    "Momento cute: qué dulzura de avance. haz cinco minutos que se sientan tuyos; lo pequeño también cambia el día.",
+    "haz diez pasitos más antes de sentarte; qué bonito verte intentarlo. Respira, bonita, qué lindo verte volver.",
+    "Qué orgullo tan dulce: haz cinco minutos que se sientan tuyos. esto también es amor propio! tú también eres prioridad.",
+    "Ay, vamos bonito! haz diez pasitos más antes de sentarte; me encanta esa suavidad fuerte. la meta se acerca sin presión.",
+    "toma agua y vuelve con calma. Qué linda constancia: mira cómo vuelves a ti; seguir suave sigue siendo seguir.",
+    "Dale sparkle al camino: te estás tratando con ternura. haz diez pasitos más antes de sentarte; tú también eres prioridad.",
+    "toma agua y vuelve con calma; ese pasito tiene luz. Vuelta con encanto, la meta se acerca sin presión.",
+    "Puchi está contigo: camina hasta ver algo que te saque sonrisa. la constancia te queda divina! seguir suave sigue siendo seguir.",
+    "Con cariño, seguimos! toma agua y vuelve con calma; qué dulzura de avance. este bloque ya brilla.",
+    "camina hasta ver algo que te saque sonrisa. Sin drama, con amor: qué bonito verte intentarlo; cada pasito cuenta muchísimo.",
+    "Sonríe tantito: tu esfuerzo se ve precioso. cuenta treinta pasos sin mirar el celular; tu cuerpo recibe ese cariño.",
+    "camina hasta ver algo que te saque sonrisa; esto también es amor propio. Pasitos con brillo, hoy mereces ese orgullo.",
+    "Pasito coqueto: cuenta treinta pasos sin mirar el celular. mira cómo vuelves a ti! cada pasito cuenta muchísimo.",
+    "Puchi celebra esto! suelta las manos y respira fácil; te estás tratando con ternura. tu cuerpo recibe ese cariño.",
+    "cuenta treinta pasos sin mirar el celular. Cero presión, mucho cariño: ese pasito tiene luz; hoy mereces ese orgullo.",
+    "Mi amor, suavecito: hoy estás siendo buena contigo. suelta las manos y respira fácil; vamos por otro poquito bonito.",
+    "relaja hombros y mandíbula antes de seguir; la constancia te queda divina. Mini meta preciosa, lo pequeño también cambia el día.",
+    "Tu glow también camina: suelta las manos y respira fácil. Qué bonito verte intentarlo! qué lindo verte volver.",
+    "Vamos florcita! relaja hombros y mandíbula antes de seguir; tu esfuerzo se ve precioso. tú también eres prioridad.",
+    "elige pasos cómodos, no perfectos. Momento cute: esto también es amor propio; lo pequeño también cambia el día.",
+    "Respira, bonita: me encanta esa suavidad fuerte. relaja hombros y mandíbula antes de seguir; qué lindo verte volver.",
+    "elige pasos cómodos, no perfectos; mira cómo vuelves a ti. Hoy te cuidas bonito, tú también eres prioridad.",
+  ],
+  togo:[
+    "Pon una canción y camínala completa; no mires el contador hasta el último beat.",
+    "Ocho pasos parejos, respira, repite: ya encontraste el groove.",
+    "Si el ritmo se cayó, vuelve con diez pasos cortos y seguros.",
+    "Usa los cruces como cambios de pista: cruzas y recuperas tempo.",
+    "Hombros sueltos, pies ligeros; el flow también cuida la técnica.",
+    "Una cuadra al ritmo del bajo y otra más tranquila: buen mix, Togo.",
+    "Si estás esperando algo, convierte la espera en pasitos alrededor.",
+    "Bájale volumen al día: dos minutos caminando sin mirar el teléfono.",
+    "Elige un beat cómodo; si no puedes respirar, baja el tempo.",
+    "Cierra el tramo como final de canción: constante hasta el último paso.",
+    "Cuatro tiempos inhalando, cuatro caminando fuerte; vuelve al compás.",
+    "Busca una recta y mantén el mismo ritmo de principio a fin.",
+    "En subida, pasos cortos y aire guardado; ese es el truco.",
+    "Modo groove: brazos suaves, espalda alta, pies despiertos.",
+    "El próximo semáforo es tu señal para empezar otra ronda.",
+    "Usa el coro para subir un poquito el ritmo, sin perder el flow.",
+    "Si te distraes, vuelve al beat con pasos cortos y mirada alta.",
+    "Relaja hombros antes de acelerar; el ritmo sale mejor sin tensión.",
+    "Agua entre bloques y regreso al tempo, suave pero seguro.",
+    "Termina la cuadra con el mismo compás con el que arrancaste.",
+    "Togo trae el beat: elige una canción y camina hasta que termine. Ese ritmo está sabroso! la meta suena más cerca.",
+    "Bajo interno! haz dos minutos sin revisar el teléfono; el cuerpo encontró la pista. terminas con estilo.",
+    "termina el tramo como cierre de canción. Paso con swing: qué bien suena esa constancia; sigue hasta el próximo beat.",
+    "Súbelo tantito: eso tiene flow real. haz dos minutos sin revisar el teléfono; cierra en tempo.",
+    "termina el tramo como cierre de canción; la energía cambió de tono. Flow de calle, la racha mantiene el compás.",
+    "Modo playlist: usa la próxima esquina como cambio de pista. el beat interno despertó! el conteo empieza a bailar contigo.",
+    "La acera tiene música! termina el tramo como cierre de canción; ese paso no está tieso. tu cuerpo ya agarró onda.",
+    "usa la próxima esquina como cambio de pista. Que camine el bajo: la calle te sigue el compás; la racha mantiene el compás.",
+    "Dale groove: hoy el conteo tiene música. toma agua y vuelve al ritmo; el conteo empieza a bailar contigo.",
+    "usa la próxima esquina como cambio de pista; ese ritmo está sabroso. Tempo limpio, tu cuerpo ya agarró onda.",
+    "Beat activo: toma agua y vuelve al ritmo. qué bien suena esa constancia! tu ritmo te lleva lejos.",
+    "Pies en tempo! camina una cuadra con ritmo constante; eso tiene flow real. ese flow sí suma.",
+    "toma agua y vuelve al ritmo. Suena ese paso: la energía cambió de tono; la constancia también tiene música.",
+    "Coro del día: vas caminando con estilo. camina una cuadra con ritmo constante; la meta suena más cerca.",
+    "mantén pies ligeros y mirada alta; el beat interno despertó. Ritmo cool, ese flow sí suma.",
+    "Cierre con estilo: camina una cuadra con ritmo constante. la calle te sigue el compás! la constancia también tiene música.",
+    "Compás firme! mantén pies ligeros y mirada alta; hoy el conteo tiene música. la meta suena más cerca.",
+    "baja velocidad si pierdes el aire. Cambia de pista: ese ritmo está sabroso; terminas con estilo.",
+    "Togo aprueba ese flow: el cuerpo encontró la pista. mantén pies ligeros y mirada alta; sigue hasta el próximo beat.",
+    "baja velocidad si pierdes el aire; qué bien suena esa constancia. Esto ya tiene ritmo, cierra en tempo.",
+    "Bajo interno: respira profundo entre bloques. la energía cambió de tono! la racha mantiene el compás.",
+    "Paso con swing! baja velocidad si pierdes el aire; vas caminando con estilo. sigue hasta el próximo beat.",
+    "respira profundo entre bloques. Súbelo tantito: el beat interno despertó; cierra en tempo.",
+    "Togo trae el beat: ese paso no está tieso. mueve los brazos como metrónomo suave; la racha mantiene el compás.",
+    "respira profundo entre bloques; la calle te sigue el compás. Modo playlist, el conteo empieza a bailar contigo.",
+    "La acera tiene música: mueve los brazos como metrónomo suave. Ese ritmo está sabroso! tu cuerpo ya agarró onda.",
+    "Que camine el bajo! alarga la zancada en la recta; el cuerpo encontró la pista. tu ritmo te lleva lejos.",
+    "mueve los brazos como metrónomo suave. Flow de calle: qué bien suena esa constancia; ese flow sí suma.",
+    "Tempo limpio: eso tiene flow real. alarga la zancada en la recta; tu cuerpo ya agarró onda.",
+    "recupera el tempo después de la pausa; la energía cambió de tono. Beat activo, tu ritmo te lleva lejos.",
+    "Pies en tempo: alarga la zancada en la recta. el beat interno despertó! ese flow sí suma.",
+    "Dale groove! recupera el tempo después de la pausa; ese paso no está tieso. la constancia también tiene música.",
+    "marca pasos cortos en subida. Coro del día: la calle te sigue el compás; la meta suena más cerca.",
+    "Ritmo cool: hoy el conteo tiene música. recupera el tempo después de la pausa; terminas con estilo.",
+    "marca pasos cortos en subida; ese ritmo está sabroso. Cierre con estilo, sigue hasta el próximo beat.",
+    "Suena ese paso: cuenta ocho pasos parejos y repite. qué bien suena esa constancia! la meta suena más cerca.",
+    "Cambia de pista! marca pasos cortos en subida; eso tiene flow real. terminas con estilo.",
+    "cuenta ocho pasos parejos y repite. Togo aprueba ese flow: la energía cambió de tono; sigue hasta el próximo beat.",
+    "Esto ya tiene ritmo: vas caminando con estilo. convierte la espera en pasos pequeños; cierra en tempo.",
+    "cuenta ocho pasos parejos y repite; el beat interno despertó. Compás firme, la racha mantiene el compás.",
+    "Paso con swing: convierte la espera en pasos pequeños. la calle te sigue el compás! el conteo empieza a bailar contigo.",
+    "Súbelo tantito! elige una canción y camina hasta que termine; hoy el conteo tiene música. tu cuerpo ya agarró onda.",
+    "convierte la espera en pasos pequeños. Togo trae el beat: ese ritmo está sabroso; la racha mantiene el compás.",
+    "Bajo interno: el cuerpo encontró la pista. elige una canción y camina hasta que termine; el conteo empieza a bailar contigo.",
+    "haz dos minutos sin revisar el teléfono; qué bien suena esa constancia. La acera tiene música, tu cuerpo ya agarró onda.",
+    "Que camine el bajo: elige una canción y camina hasta que termine. la energía cambió de tono! tu ritmo te lleva lejos.",
+    "Flow de calle! haz dos minutos sin revisar el teléfono; vas caminando con estilo. ese flow sí suma.",
+    "termina el tramo como cierre de canción. Modo playlist: el beat interno despertó; la constancia también tiene música.",
+    "Beat activo: ese paso no está tieso. haz dos minutos sin revisar el teléfono; la meta suena más cerca.",
+    "termina el tramo como cierre de canción; la calle te sigue el compás. Pies en tempo, ese flow sí suma.",
+    "Dale groove: usa la próxima esquina como cambio de pista. Ese ritmo está sabroso! la constancia también tiene música.",
+    "Tempo limpio! termina el tramo como cierre de canción; el cuerpo encontró la pista. la meta suena más cerca.",
+    "usa la próxima esquina como cambio de pista. Ritmo cool: qué bien suena esa constancia; terminas con estilo.",
+    "Cierre con estilo: eso tiene flow real. toma agua y vuelve al ritmo; sigue hasta el próximo beat.",
+    "usa la próxima esquina como cambio de pista; la energía cambió de tono. Suena ese paso, cierra en tempo.",
+    "Coro del día: toma agua y vuelve al ritmo. el beat interno despertó! la racha mantiene el compás.",
+    "Togo aprueba ese flow! camina una cuadra con ritmo constante; ese paso no está tieso. sigue hasta el próximo beat.",
+    "toma agua y vuelve al ritmo. Esto ya tiene ritmo: la calle te sigue el compás; cierra en tempo.",
+    "Compás firme: hoy el conteo tiene música. camina una cuadra con ritmo constante; la racha mantiene el compás.",
+    "mantén pies ligeros y mirada alta; ese ritmo está sabroso. Cambia de pista, el conteo empieza a bailar contigo.",
+    "Súbelo tantito: camina una cuadra con ritmo constante. qué bien suena esa constancia! tu cuerpo ya agarró onda.",
+    "Togo trae el beat! mantén pies ligeros y mirada alta; eso tiene flow real. tu ritmo te lleva lejos.",
+    "baja velocidad si pierdes el aire. Bajo interno: la energía cambió de tono; ese flow sí suma.",
+    "Paso con swing: vas caminando con estilo. mantén pies ligeros y mirada alta; tu cuerpo ya agarró onda.",
+    "baja velocidad si pierdes el aire; el beat interno despertó. Que camine el bajo, tu ritmo te lleva lejos.",
+    "Flow de calle: respira profundo entre bloques. la calle te sigue el compás! ese flow sí suma.",
+    "Modo playlist! baja velocidad si pierdes el aire; hoy el conteo tiene música. la constancia también tiene música.",
+    "respira profundo entre bloques. La acera tiene música: ese ritmo está sabroso; la meta suena más cerca.",
+    "Pies en tempo: el cuerpo encontró la pista. mueve los brazos como metrónomo suave; terminas con estilo.",
+    "respira profundo entre bloques; qué bien suena esa constancia. Dale groove, sigue hasta el próximo beat.",
+    "Tempo limpio: mueve los brazos como metrónomo suave. la energía cambió de tono! la meta suena más cerca.",
+    "Beat activo! alarga la zancada en la recta; vas caminando con estilo. terminas con estilo.",
+    "mueve los brazos como metrónomo suave. Cierre con estilo: el beat interno despertó; sigue hasta el próximo beat.",
+    "Suena ese paso: ese paso no está tieso. alarga la zancada en la recta; cierra en tempo.",
+    "recupera el tempo después de la pausa; la calle te sigue el compás. Coro del día, la racha mantiene el compás.",
+    "Ritmo cool: alarga la zancada en la recta. Ese ritmo está sabroso! el conteo empieza a bailar contigo.",
+    "Esto ya tiene ritmo! recupera el tempo después de la pausa; el cuerpo encontró la pista. tu cuerpo ya agarró onda.",
+    "marca pasos cortos en subida. Compás firme: qué bien suena esa constancia; la racha mantiene el compás.",
+    "Cambia de pista: eso tiene flow real. recupera el tempo después de la pausa; el conteo empieza a bailar contigo.",
+    "marca pasos cortos en subida; la energía cambió de tono. Togo aprueba ese flow, tu cuerpo ya agarró onda.",
+  ],
+  granito:[
+    "¡Misión mini! Llega al árbol, marca la esquina con la mirada y vuelve.",
+    "Busca tres cosas en la ruta y camina hasta encontrarlas; modo explorador.",
+    "Reto de juego: cincuenta pasos; si llegas, sonrisa y diez más.",
+    "Si te aburres, cambia de calle: la caminata ahora es aventura.",
+    "Camina hasta el próximo color verde que veas; Granito aprueba la misión.",
+    "Acelera diez pasos y vuelve suave; jugar con el ritmo también entrena.",
+    "Una vuelta chiquita alrededor de la manzana antes de decidir parar.",
+    "Convierte la espera en pasitos; que el contador no se duerma.",
+    "Dos minutos sin mirar el teléfono; busca detalles escondidos.",
+    "Si estás cansado, pasos cortos; la aventura no se cancela.",
+    "Prueba una ruta diferente, aunque sea media cuadra. ¡Nuevo mapa!",
+    "Mapa mental: puerta, sombra, esquina, siguiente objetivo.",
+    "Agua como parte de la misión y de vuelta al juego.",
+    "Diez pasos alegres para cerrar; premio pequeño para el cuerpo.",
+    "Busca una sombra, llega a ella y elige la siguiente pista.",
+    "Elige una meta curiosa y camina hasta verla de cerca.",
+    "Veinte pasos con rebote y luego vuelves al ritmo normal.",
+    "Si la ruta está aburrida, inventa un reto de colores.",
+    "Pausa convertida en mini ronda: cinco pasos de ida, cinco de vuelta.",
+    "Completa una vuelta chiquita antes de revisar si quieres seguir.",
+    "¡Misión Granito!: elige tres cosas para encontrar en la ruta. Esto se puso divertido! moverte también puede ser juego.",
+    "Siguiente pista! toma agua como parte del juego; la aventura ya empezó. una aventura corta también cuenta.",
+    "termina con diez pasos alegres. Juego en serio: qué buena chispa tienes; este mini reto ya valió.",
+    "Alerta de aventura: el aburrimiento perdió. toma agua como parte del juego; Granito quiere otra vuelta.",
+    "termina con diez pasos alegres; me encanta ese rebote. Modo juego, el conteo sube sin drama.",
+    "Explorador feliz: haz una pausa breve y reinicia la misión. ese mini reto cuenta muchísimo! tu racha gana chispa.",
+    "Objetivo divertido! termina con diez pasos alegres; hoy estás jugando en serio. vamos por la siguiente pista.",
+    "haz una pausa breve y reinicia la misión. Pasitos curiosos: tu energía anda despierta; el conteo sube sin drama.",
+    "Reto travieso: la ruta se volvió mapa. convierte una espera en pasitos; tu racha gana chispa.",
+    "haz una pausa breve y reinicia la misión; esto se puso divertido. Pasos con chispa, vamos por la siguiente pista.",
+    "Vuelta sorpresa: convierte una espera en pasitos. qué buena chispa tienes! cada pasito despierta el ánimo.",
+    "Vamos a investigar! mueve los brazos con alegría; el aburrimiento perdió. el camino se pone interesante.",
+    "convierte una espera en pasitos. Mapa secreto: me encanta ese rebote; la diversión también suma pasos.",
+    "Búsqueda rápida: la curiosidad está empujando. mueve los brazos con alegría; moverte también puede ser juego.",
+    "sigue hasta el próximo color que veas; ese mini reto cuenta muchísimo. Granito encontró una misión, el camino se pone interesante.",
+    "Ruta misteriosa: mueve los brazos con alegría. tu energía anda despierta! la diversión también suma pasos.",
+    "Mini aventura! sigue hasta el próximo color que veas; la ruta se volvió mapa. moverte también puede ser juego.",
+    "acelera diez pasos y vuelve suave. Energía de recreo: esto se puso divertido; una aventura corta también cuenta.",
+    "Desafío chiquito: la aventura ya empezó. sigue hasta el próximo color que veas; este mini reto ya valió.",
+    "acelera diez pasos y vuelve suave; qué buena chispa tienes. Pum, nuevo reto, Granito quiere otra vuelta.",
+    "Siguiente pista: usa pasos cortos si estás cansado. me encanta ese rebote! el conteo sube sin drama.",
+    "Juego en serio! acelera diez pasos y vuelve suave; la curiosidad está empujando. este mini reto ya valió.",
+    "usa pasos cortos si estás cansado. Alerta de aventura: ese mini reto cuenta muchísimo; Granito quiere otra vuelta.",
+    "¡Misión Granito!: hoy estás jugando en serio. da una vuelta extra alrededor de la manzana; el conteo sube sin drama.",
+    "usa pasos cortos si estás cansado; tu energía anda despierta. Explorador feliz, tu racha gana chispa.",
+    "Objetivo divertido: da una vuelta extra alrededor de la manzana. Esto se puso divertido! vamos por la siguiente pista.",
+    "Pasitos curiosos! camina dos minutos sin revisar el teléfono; la aventura ya empezó. cada pasito despierta el ánimo.",
+    "da una vuelta extra alrededor de la manzana. Modo juego: qué buena chispa tienes; el camino se pone interesante.",
+    "Pasos con chispa: el aburrimiento perdió. camina dos minutos sin revisar el teléfono; vamos por la siguiente pista.",
+    "cuenta cincuenta pasos como reto; me encanta ese rebote. Vuelta sorpresa, cada pasito despierta el ánimo.",
+    "Vamos a investigar: camina dos minutos sin revisar el teléfono. ese mini reto cuenta muchísimo! el camino se pone interesante.",
+    "Reto travieso! cuenta cincuenta pasos como reto; hoy estás jugando en serio. la diversión también suma pasos.",
+    "elige una meta que te dé curiosidad. Búsqueda rápida: tu energía anda despierta; moverte también puede ser juego.",
+    "Granito encontró una misión: la ruta se volvió mapa. cuenta cincuenta pasos como reto; una aventura corta también cuenta.",
+    "elige una meta que te dé curiosidad; esto se puso divertido. Ruta misteriosa, este mini reto ya valió.",
+    "Mapa secreto: camina hasta una sombra y luego otra. qué buena chispa tienes! moverte también puede ser juego.",
+    "Energía de recreo! elige una meta que te dé curiosidad; el aburrimiento perdió. una aventura corta también cuenta.",
+    "camina hasta una sombra y luego otra. Desafío chiquito: me encanta ese rebote; este mini reto ya valió.",
+    "Pum, nuevo reto: la curiosidad está empujando. cambia de calle si puedes explorar; Granito quiere otra vuelta.",
+    "camina hasta una sombra y luego otra; ese mini reto cuenta muchísimo. Mini aventura, el conteo sube sin drama.",
+    "Juego en serio: cambia de calle si puedes explorar. tu energía anda despierta! tu racha gana chispa.",
+    "Alerta de aventura! elige tres cosas para encontrar en la ruta; la ruta se volvió mapa. vamos por la siguiente pista.",
+    "cambia de calle si puedes explorar. ¡Misión Granito!: esto se puso divertido; el conteo sube sin drama.",
+    "Siguiente pista: la aventura ya empezó. elige tres cosas para encontrar en la ruta; tu racha gana chispa.",
+    "toma agua como parte del juego; qué buena chispa tienes. Objetivo divertido, vamos por la siguiente pista.",
+    "Pasitos curiosos: elige tres cosas para encontrar en la ruta. me encanta ese rebote! cada pasito despierta el ánimo.",
+    "Modo juego! toma agua como parte del juego; la curiosidad está empujando. el camino se pone interesante.",
+    "termina con diez pasos alegres. Explorador feliz: ese mini reto cuenta muchísimo; la diversión también suma pasos.",
+    "Vuelta sorpresa: hoy estás jugando en serio. toma agua como parte del juego; moverte también puede ser juego.",
+    "termina con diez pasos alegres; tu energía anda despierta. Vamos a investigar, el camino se pone interesante.",
+    "Reto travieso: haz una pausa breve y reinicia la misión. Esto se puso divertido! la diversión también suma pasos.",
+    "Pasos con chispa! termina con diez pasos alegres; la aventura ya empezó. moverte también puede ser juego.",
+    "haz una pausa breve y reinicia la misión. Granito encontró una misión: qué buena chispa tienes; una aventura corta también cuenta.",
+    "Ruta misteriosa: el aburrimiento perdió. convierte una espera en pasitos; este mini reto ya valió.",
+    "haz una pausa breve y reinicia la misión; me encanta ese rebote. Mapa secreto, Granito quiere otra vuelta.",
+    "Búsqueda rápida: convierte una espera en pasitos. ese mini reto cuenta muchísimo! el conteo sube sin drama.",
+    "Desafío chiquito! mueve los brazos con alegría; hoy estás jugando en serio. este mini reto ya valió.",
+    "convierte una espera en pasitos. Pum, nuevo reto: tu energía anda despierta; Granito quiere otra vuelta.",
+    "Mini aventura: la ruta se volvió mapa. mueve los brazos con alegría; el conteo sube sin drama.",
+    "sigue hasta el próximo color que veas; esto se puso divertido. Energía de recreo, tu racha gana chispa.",
+    "Alerta de aventura: mueve los brazos con alegría. qué buena chispa tienes! vamos por la siguiente pista.",
+    "¡Misión Granito!! sigue hasta el próximo color que veas; el aburrimiento perdió. cada pasito despierta el ánimo.",
+    "acelera diez pasos y vuelve suave. Siguiente pista: me encanta ese rebote; el camino se pone interesante.",
+    "Juego en serio: la curiosidad está empujando. sigue hasta el próximo color que veas; vamos por la siguiente pista.",
+    "acelera diez pasos y vuelve suave; ese mini reto cuenta muchísimo. Pasitos curiosos, cada pasito despierta el ánimo.",
+    "Modo juego: usa pasos cortos si estás cansado. tu energía anda despierta! el camino se pone interesante.",
+    "Explorador feliz! acelera diez pasos y vuelve suave; la ruta se volvió mapa. la diversión también suma pasos.",
+    "usa pasos cortos si estás cansado. Objetivo divertido: esto se puso divertido; moverte también puede ser juego.",
+    "Vamos a investigar: la aventura ya empezó. da una vuelta extra alrededor de la manzana; una aventura corta también cuenta.",
+    "usa pasos cortos si estás cansado; qué buena chispa tienes. Reto travieso, este mini reto ya valió.",
+    "Pasos con chispa: da una vuelta extra alrededor de la manzana. me encanta ese rebote! moverte también puede ser juego.",
+    "Vuelta sorpresa! camina dos minutos sin revisar el teléfono; la curiosidad está empujando. una aventura corta también cuenta.",
+    "da una vuelta extra alrededor de la manzana. Ruta misteriosa: ese mini reto cuenta muchísimo; este mini reto ya valió.",
+    "Mapa secreto: hoy estás jugando en serio. camina dos minutos sin revisar el teléfono; Granito quiere otra vuelta.",
+    "cuenta cincuenta pasos como reto; tu energía anda despierta. Búsqueda rápida, el conteo sube sin drama.",
+    "Granito encontró una misión: camina dos minutos sin revisar el teléfono. Esto se puso divertido! tu racha gana chispa.",
+    "Pum, nuevo reto! cuenta cincuenta pasos como reto; la aventura ya empezó. vamos por la siguiente pista.",
+    "elige una meta que te dé curiosidad. Mini aventura: qué buena chispa tienes; el conteo sube sin drama.",
+    "Energía de recreo: el aburrimiento perdió. cuenta cincuenta pasos como reto; tu racha gana chispa.",
+    "elige una meta que te dé curiosidad; me encanta ese rebote. Desafío chiquito, vamos por la siguiente pista.",
+  ],
+  moka:[
+    "Mira al frente: elige un punto y llega sin romper el paso.",
+    "Activa brazos, baja hombros y camina dos minutos con intención clara.",
+    "Respira profundo antes de subir el ritmo; fuerza inteligente, no desorden.",
+    "Divide lo que falta en partes ganables y conquista la primera ahora.",
+    "Si el cansancio habla fuerte, respóndele con diez pasos controlados.",
+    "Bebe agua si el cuerpo lo pide; la disciplina también sabe cuidarse.",
+    "Treinta pasos con seguridad: mirada firme, pisada clara.",
+    "Cierre fuerte antes de revisar el contador; primero cumples, luego miras.",
+    "Camina sin compararte con nadie; tu meta es tuya.",
+    "Cuando completes el bloque, sonríe de verdad: eso fue trabajo real.",
+    "Baja un cambio si hace falta, pero no sueltes la meta visible.",
+    "Suelta manos y mandíbula; la fuerza no necesita rigidez.",
+    "Sube intensidad solo si mantienes control de la respiración.",
+    "Convierte la próxima esquina en logro y llega con cara de ganadora.",
+    "Termina la canción caminando firme, aunque sea a paso moderado.",
+    "Constancia por encima de prisa durante los próximos tres minutos.",
+    "Abdomen activo y zancada estable hasta completar esta cuadra.",
+    "Pausa corta si la necesitas; vuelve antes de perder el enfoque.",
+    "Treinta pasos de concentración total: mirada al frente, hombros abajo.",
+    "Celebra el bloque completado y empieza el siguiente con decisión.",
+    "Moka no duda: elige un punto y llega sin romper el paso. Eso es determinación real! cada tramo te respalda.",
+    "Paso decidido! mira al frente y pisa con seguridad; tu orgullo se está ganando. la meta ya te siente cerca.",
+    "sube la intensidad solo con control. Vamos con intención: me encanta esa fuerza tuya; la sonrisa del final va a saber mejor.",
+    "Moka sonríe fuerte: hoy caminas como quien cumple. mira al frente y pisa con seguridad; este logro va contigo.",
+    "sube la intensidad solo con control; la confianza se nota. Enfoque total, tu disciplina habla claro.",
+    "Fuerza limpia: baja un cambio sin soltar la meta. estás haciendo algo importante por ti! tu esfuerzo tiene presencia.",
+    "Cara de logro! sube la intensidad solo con control; se siente tu poder. tu racha merece aplauso.",
+    "baja un cambio sin soltar la meta. Avance real: la intensidad también puede ser feliz; tu disciplina habla claro.",
+    "Meta clara: esto tiene fuego y control. suelta tensión de manos y mandíbula; tu esfuerzo tiene presencia.",
+    "baja un cambio sin soltar la meta; eso es determinación real. Mirada de meta, tu racha merece aplauso.",
+    "Sin compararte: suelta tensión de manos y mandíbula. me encanta esa fuerza tuya! la confianza nace de cumplir.",
+    "Cierre con orgullo! bebe agua si el cuerpo lo pide; hoy caminas como quien cumple. hoy ganas respeto por ti.",
+    "suelta tensión de manos y mandíbula. Poder tranquilo: la confianza se nota; vas convirtiendo intención en resultado.",
+    "Control total: esa sonrisa va a saber increíble. bebe agua si el cuerpo lo pide; cada tramo te respalda.",
+    "convierte la próxima esquina en logro; estás haciendo algo importante por ti. Bloque conquistable, hoy ganas respeto por ti.",
+    "Más firme que antes: bebe agua si el cuerpo lo pide. la intensidad también puede ser feliz! vas convirtiendo intención en resultado.",
+    "Orgullo en marcha! convierte la próxima esquina en logro; esto tiene fuego y control. cada tramo te respalda.",
+    "camina dos minutos con ritmo firme. Disciplina feliz: eso es determinación real; la meta ya te siente cerca.",
+    "Esto es tuyo: tu orgullo se está ganando. convierte la próxima esquina en logro; la sonrisa del final va a saber mejor.",
+    "camina dos minutos con ritmo firme; me encanta esa fuerza tuya. Respira y domina, este logro va contigo.",
+    "Paso decidido: toma una pausa corta y regresa fuerte. la confianza se nota! tu disciplina habla claro.",
+    "Vamos con intención! camina dos minutos con ritmo firme; esa sonrisa va a saber increíble. la sonrisa del final va a saber mejor.",
+    "toma una pausa corta y regresa fuerte. Moka sonríe fuerte: estás haciendo algo importante por ti; este logro va contigo.",
+    "Moka no duda: se siente tu poder. divide lo que falta en partes ganables; tu disciplina habla claro.",
+    "toma una pausa corta y regresa fuerte; la intensidad también puede ser feliz. Fuerza limpia, tu esfuerzo tiene presencia.",
+    "Cara de logro: divide lo que falta en partes ganables. Eso es determinación real! tu racha merece aplauso.",
+    "Avance real! mantén abdomen activo y zancada estable; tu orgullo se está ganando. la confianza nace de cumplir.",
+    "divide lo que falta en partes ganables. Enfoque total: me encanta esa fuerza tuya; hoy ganas respeto por ti.",
+    "Mirada de meta: hoy caminas como quien cumple. mantén abdomen activo y zancada estable; tu racha merece aplauso.",
+    "respira profundo antes de subir el ritmo; la confianza se nota. Sin compararte, la confianza nace de cumplir.",
+    "Cierre con orgullo: mantén abdomen activo y zancada estable. estás haciendo algo importante por ti! hoy ganas respeto por ti.",
+    "Meta clara! respira profundo antes de subir el ritmo; se siente tu poder. vas convirtiendo intención en resultado.",
+    "celebra cada bloque completado. Control total: la intensidad también puede ser feliz; cada tramo te respalda.",
+    "Bloque conquistable: esto tiene fuego y control. respira profundo antes de subir el ritmo; la meta ya te siente cerca.",
+    "celebra cada bloque completado; eso es determinación real. Más firme que antes, la sonrisa del final va a saber mejor.",
+    "Poder tranquilo: activa brazos y mantén hombros abajo. me encanta esa fuerza tuya! cada tramo te respalda.",
+    "Disciplina feliz! celebra cada bloque completado; hoy caminas como quien cumple. la meta ya te siente cerca.",
+    "activa brazos y mantén hombros abajo. Esto es tuyo: la confianza se nota; la sonrisa del final va a saber mejor.",
+    "Respira y domina: esa sonrisa va a saber increíble. haz treinta pasos de pura concentración; este logro va contigo.",
+    "activa brazos y mantén hombros abajo; estás haciendo algo importante por ti. Orgullo en marcha, tu disciplina habla claro.",
+    "Vamos con intención: haz treinta pasos de pura concentración. la intensidad también puede ser feliz! tu esfuerzo tiene presencia.",
+    "Moka sonríe fuerte! elige un punto y llega sin romper el paso; esto tiene fuego y control. tu racha merece aplauso.",
+    "haz treinta pasos de pura concentración. Moka no duda: eso es determinación real; tu disciplina habla claro.",
+    "Paso decidido: tu orgullo se está ganando. elige un punto y llega sin romper el paso; tu esfuerzo tiene presencia.",
+    "mira al frente y pisa con seguridad; me encanta esa fuerza tuya. Cara de logro, tu racha merece aplauso.",
+    "Avance real: elige un punto y llega sin romper el paso. la confianza se nota! la confianza nace de cumplir.",
+    "Enfoque total! mira al frente y pisa con seguridad; esa sonrisa va a saber increíble. hoy ganas respeto por ti.",
+    "sube la intensidad solo con control. Fuerza limpia: estás haciendo algo importante por ti; vas convirtiendo intención en resultado.",
+    "Sin compararte: se siente tu poder. mira al frente y pisa con seguridad; cada tramo te respalda.",
+    "sube la intensidad solo con control; la intensidad también puede ser feliz. Cierre con orgullo, hoy ganas respeto por ti.",
+    "Meta clara: baja un cambio sin soltar la meta. Eso es determinación real! vas convirtiendo intención en resultado.",
+    "Mirada de meta! sube la intensidad solo con control; tu orgullo se está ganando. cada tramo te respalda.",
+    "baja un cambio sin soltar la meta. Bloque conquistable: me encanta esa fuerza tuya; la meta ya te siente cerca.",
+    "Más firme que antes: hoy caminas como quien cumple. suelta tensión de manos y mandíbula; la sonrisa del final va a saber mejor.",
+    "baja un cambio sin soltar la meta; la confianza se nota. Poder tranquilo, este logro va contigo.",
+    "Control total: suelta tensión de manos y mandíbula. estás haciendo algo importante por ti! tu disciplina habla claro.",
+    "Esto es tuyo! bebe agua si el cuerpo lo pide; se siente tu poder. la sonrisa del final va a saber mejor.",
+    "suelta tensión de manos y mandíbula. Respira y domina: la intensidad también puede ser feliz; este logro va contigo.",
+    "Orgullo en marcha: esto tiene fuego y control. bebe agua si el cuerpo lo pide; tu disciplina habla claro.",
+    "convierte la próxima esquina en logro; eso es determinación real. Disciplina feliz, tu esfuerzo tiene presencia.",
+    "Moka sonríe fuerte: bebe agua si el cuerpo lo pide. me encanta esa fuerza tuya! tu racha merece aplauso.",
+    "Moka no duda! convierte la próxima esquina en logro; hoy caminas como quien cumple. la confianza nace de cumplir.",
+    "camina dos minutos con ritmo firme. Paso decidido: la confianza se nota; hoy ganas respeto por ti.",
+    "Vamos con intención: esa sonrisa va a saber increíble. convierte la próxima esquina en logro; tu racha merece aplauso.",
+    "camina dos minutos con ritmo firme; estás haciendo algo importante por ti. Avance real, la confianza nace de cumplir.",
+    "Enfoque total: toma una pausa corta y regresa fuerte. la intensidad también puede ser feliz! hoy ganas respeto por ti.",
+    "Fuerza limpia! camina dos minutos con ritmo firme; esto tiene fuego y control. vas convirtiendo intención en resultado.",
+    "toma una pausa corta y regresa fuerte. Cara de logro: eso es determinación real; cada tramo te respalda.",
+    "Cierre con orgullo: tu orgullo se está ganando. divide lo que falta en partes ganables; la meta ya te siente cerca.",
+    "toma una pausa corta y regresa fuerte; me encanta esa fuerza tuya. Meta clara, la sonrisa del final va a saber mejor.",
+    "Mirada de meta: divide lo que falta en partes ganables. la confianza se nota! cada tramo te respalda.",
+    "Sin compararte! mantén abdomen activo y zancada estable; esa sonrisa va a saber increíble. la meta ya te siente cerca.",
+    "divide lo que falta en partes ganables. Más firme que antes: estás haciendo algo importante por ti; la sonrisa del final va a saber mejor.",
+    "Poder tranquilo: se siente tu poder. mantén abdomen activo y zancada estable; este logro va contigo.",
+    "respira profundo antes de subir el ritmo; la intensidad también puede ser feliz. Control total, tu disciplina habla claro.",
+    "Bloque conquistable: mantén abdomen activo y zancada estable. Eso es determinación real! tu esfuerzo tiene presencia.",
+    "Respira y domina! respira profundo antes de subir el ritmo; tu orgullo se está ganando. tu racha merece aplauso.",
+    "celebra cada bloque completado. Orgullo en marcha: me encanta esa fuerza tuya; tu disciplina habla claro.",
+    "Disciplina feliz: hoy caminas como quien cumple. respira profundo antes de subir el ritmo; tu esfuerzo tiene presencia.",
+    "celebra cada bloque completado; la confianza se nota. Esto es tuyo, tu racha merece aplauso.",
+  ],
+  franco:[
+    "Franco diría: encuentra tu ritmo base antes de intentar acelerar.",
+    "Respira profundo durante diez pasos; si el aire vuelve fácil, seguimos.",
+    "Divide la ruta en bloques pequeños y completa uno con buena postura.",
+    "Baja velocidad si pierdes técnica; caminar bien también cuenta.",
+    "Toma agua antes de exigir más; un buen mentor cuida el proceso.",
+    "Suelta hombros y afloja manos mientras avanzas a paso parejo.",
+    "Una cuadra sin revisar el número; primero siente el ritmo.",
+    "Guarda fuerza para el cierre: empieza cómodo y termina estable.",
+    "Si el día pesa, simple: una cuadra consciente y luego otra.",
+    "Alarga el paso solo si se siente natural, sin forzar rodillas.",
+    "Descansa breve y vuelve con calma; continuidad no significa prisa.",
+    "Observa tu postura en cada esquina y corrige suavemente.",
+    "Mirada suave al frente; el cuerpo sigue mejor a una mente clara.",
+    "Tres minutos de paso parejo para enseñarle constancia al cuerpo.",
+    "Termina el bloque sin precipitarte; cerrar bien también es progreso.",
+    "Antes de mirar el contador, revisa respiración, hombros y pisada.",
+    "Elige una cuadra fácil y complétala con atención tranquila.",
+    "En subida, acorta el paso y conserva energía para el final.",
+    "Vuelve al ritmo base después de cada pausa; eso mantiene el hábito.",
+    "Una vuelta más solo si todavía puedes sostener buena técnica.",
+    "Consejo de Franco: respira profundo durante diez pasos. Eso es inteligencia en movimiento! lo sostenible gana al impulso.",
+    "Buen juicio! elige una cuadra y complétala; me gusta ese cuidado. la sabiduría está en continuar.",
+    "vuelve al ritmo base después de pausar. Proceso cuidado: el cuerpo agradece la paciencia; vas creando una base sólida.",
+    "Respira primero: aquí no hay que demostrar, hay que sostener. elige una cuadra y complétala; Franco aprueba ese ritmo.",
+    "vuelve al ritmo base después de pausar; qué bien se ve un ritmo maduro. Con calma y criterio, tu cuerpo aprende a confiar.",
+    "Base sólida: observa tu postura mientras avanzas. esto es progreso con oficio! tu energía llega más lejos.",
+    "Cadencia serena! vuelve al ritmo base después de pausar; vas construyendo algo durable. la meta se acerca con serenidad.",
+    "observa tu postura mientras avanzas. La técnica manda: ese paso tiene sabiduría; tu cuerpo aprende a confiar.",
+    "Sabiduría práctica: la constancia tranquila gana terreno. termina este bloque sin precipitarte; tu energía llega más lejos.",
+    "observa tu postura mientras avanzas; eso es inteligencia en movimiento. Ritmo paciente, la meta se acerca con serenidad.",
+    "Energía medida: termina este bloque sin precipitarte. el cuerpo agradece la paciencia! terminar bien vale más que salir rápido.",
+    "Avance sostenible! baja velocidad si pierdes técnica; aquí no hay que demostrar, hay que sostener. cada paso consciente cuenta.",
+    "termina este bloque sin precipitarte. Paso elegante: qué bien se ve un ritmo maduro; este progreso tiene buen juicio.",
+    "Sin prisa, con dirección: la calma también tiene fuerza. baja velocidad si pierdes técnica; lo sostenible gana al impulso.",
+    "cuida la pisada en cada esquina; esto es progreso con oficio. Largo plazo, cada paso consciente cuenta.",
+    "Calma de maestro: baja velocidad si pierdes técnica. ese paso tiene sabiduría! este progreso tiene buen juicio.",
+    "Mentor en marcha! cuida la pisada en cada esquina; la constancia tranquila gana terreno. lo sostenible gana al impulso.",
+    "toma agua antes de exigir más. Franco observa: eso es inteligencia en movimiento; la sabiduría está en continuar.",
+    "Cierre sereno: me gusta ese cuidado. cuida la pisada en cada esquina; vas creando una base sólida.",
+    "toma agua antes de exigir más; el cuerpo agradece la paciencia. Vamos con oficio, Franco aprueba ese ritmo.",
+    "Buen juicio: camina sin revisar tanto el número. qué bien se ve un ritmo maduro! tu cuerpo aprende a confiar.",
+    "Proceso cuidado! toma agua antes de exigir más; la calma también tiene fuerza. vas creando una base sólida.",
+    "camina sin revisar tanto el número. Respira primero: esto es progreso con oficio; Franco aprueba ese ritmo.",
+    "Consejo de Franco: vas construyendo algo durable. divide la ruta en bloques pequeños; tu cuerpo aprende a confiar.",
+    "camina sin revisar tanto el número; ese paso tiene sabiduría. Base sólida, tu energía llega más lejos.",
+    "Cadencia serena: divide la ruta en bloques pequeños. Eso es inteligencia en movimiento! la meta se acerca con serenidad.",
+    "La técnica manda! alarga el paso solo si se siente natural; me gusta ese cuidado. terminar bien vale más que salir rápido.",
+    "divide la ruta en bloques pequeños. Con calma y criterio: el cuerpo agradece la paciencia; cada paso consciente cuenta.",
+    "Ritmo paciente: aquí no hay que demostrar, hay que sostener. alarga el paso solo si se siente natural; la meta se acerca con serenidad.",
+    "suelta hombros y afloja manos; qué bien se ve un ritmo maduro. Energía medida, terminar bien vale más que salir rápido.",
+    "Avance sostenible: alarga el paso solo si se siente natural. esto es progreso con oficio! cada paso consciente cuenta.",
+    "Sabiduría práctica! suelta hombros y afloja manos; vas construyendo algo durable. este progreso tiene buen juicio.",
+    "descansa breve y vuelve con calma. Sin prisa, con dirección: ese paso tiene sabiduría; lo sostenible gana al impulso.",
+    "Largo plazo: la constancia tranquila gana terreno. suelta hombros y afloja manos; la sabiduría está en continuar.",
+    "descansa breve y vuelve con calma; eso es inteligencia en movimiento. Calma de maestro, vas creando una base sólida.",
+    "Paso elegante: mantén una cadencia cómoda. el cuerpo agradece la paciencia! lo sostenible gana al impulso.",
+    "Franco observa! descansa breve y vuelve con calma; aquí no hay que demostrar, hay que sostener. la sabiduría está en continuar.",
+    "mantén una cadencia cómoda. Cierre sereno: qué bien se ve un ritmo maduro; vas creando una base sólida.",
+    "Vamos con oficio: la calma también tiene fuerza. haz tres minutos de paso parejo; Franco aprueba ese ritmo.",
+    "mantén una cadencia cómoda; esto es progreso con oficio. Mentor en marcha, tu cuerpo aprende a confiar.",
+    "Proceso cuidado: haz tres minutos de paso parejo. ese paso tiene sabiduría! tu energía llega más lejos.",
+    "Respira primero! respira profundo durante diez pasos; la constancia tranquila gana terreno. la meta se acerca con serenidad.",
+    "haz tres minutos de paso parejo. Consejo de Franco: eso es inteligencia en movimiento; tu cuerpo aprende a confiar.",
+    "Buen juicio: me gusta ese cuidado. respira profundo durante diez pasos; tu energía llega más lejos.",
+    "elige una cuadra y complétala; el cuerpo agradece la paciencia. Cadencia serena, la meta se acerca con serenidad.",
+    "La técnica manda: respira profundo durante diez pasos. qué bien se ve un ritmo maduro! terminar bien vale más que salir rápido.",
+    "Con calma y criterio! elige una cuadra y complétala; la calma también tiene fuerza. cada paso consciente cuenta.",
+    "vuelve al ritmo base después de pausar. Base sólida: esto es progreso con oficio; este progreso tiene buen juicio.",
+    "Energía medida: vas construyendo algo durable. elige una cuadra y complétala; lo sostenible gana al impulso.",
+    "vuelve al ritmo base después de pausar; ese paso tiene sabiduría. Avance sostenible, cada paso consciente cuenta.",
+    "Sabiduría práctica: observa tu postura mientras avanzas. Eso es inteligencia en movimiento! este progreso tiene buen juicio.",
+    "Ritmo paciente! vuelve al ritmo base después de pausar; me gusta ese cuidado. lo sostenible gana al impulso.",
+    "observa tu postura mientras avanzas. Largo plazo: el cuerpo agradece la paciencia; la sabiduría está en continuar.",
+    "Calma de maestro: aquí no hay que demostrar, hay que sostener. termina este bloque sin precipitarte; vas creando una base sólida.",
+    "observa tu postura mientras avanzas; qué bien se ve un ritmo maduro. Paso elegante, Franco aprueba ese ritmo.",
+    "Sin prisa, con dirección: termina este bloque sin precipitarte. esto es progreso con oficio! tu cuerpo aprende a confiar.",
+    "Cierre sereno! baja velocidad si pierdes técnica; vas construyendo algo durable. vas creando una base sólida.",
+    "termina este bloque sin precipitarte. Vamos con oficio: ese paso tiene sabiduría; Franco aprueba ese ritmo.",
+    "Mentor en marcha: la constancia tranquila gana terreno. baja velocidad si pierdes técnica; tu cuerpo aprende a confiar.",
+    "cuida la pisada en cada esquina; eso es inteligencia en movimiento. Franco observa, tu energía llega más lejos.",
+    "Respira primero: baja velocidad si pierdes técnica. el cuerpo agradece la paciencia! la meta se acerca con serenidad.",
+    "Consejo de Franco! cuida la pisada en cada esquina; aquí no hay que demostrar, hay que sostener. terminar bien vale más que salir rápido.",
+    "toma agua antes de exigir más. Buen juicio: qué bien se ve un ritmo maduro; cada paso consciente cuenta.",
+    "Proceso cuidado: la calma también tiene fuerza. cuida la pisada en cada esquina; la meta se acerca con serenidad.",
+    "toma agua antes de exigir más; esto es progreso con oficio. La técnica manda, terminar bien vale más que salir rápido.",
+    "Con calma y criterio: camina sin revisar tanto el número. ese paso tiene sabiduría! cada paso consciente cuenta.",
+    "Base sólida! toma agua antes de exigir más; la constancia tranquila gana terreno. este progreso tiene buen juicio.",
+    "camina sin revisar tanto el número. Cadencia serena: eso es inteligencia en movimiento; lo sostenible gana al impulso.",
+    "Avance sostenible: me gusta ese cuidado. divide la ruta en bloques pequeños; la sabiduría está en continuar.",
+    "camina sin revisar tanto el número; el cuerpo agradece la paciencia. Sabiduría práctica, vas creando una base sólida.",
+    "Ritmo paciente: divide la ruta en bloques pequeños. qué bien se ve un ritmo maduro! lo sostenible gana al impulso.",
+    "Energía medida! alarga el paso solo si se siente natural; la calma también tiene fuerza. la sabiduría está en continuar.",
+    "divide la ruta en bloques pequeños. Calma de maestro: esto es progreso con oficio; vas creando una base sólida.",
+    "Paso elegante: vas construyendo algo durable. alarga el paso solo si se siente natural; Franco aprueba ese ritmo.",
+    "suelta hombros y afloja manos; ese paso tiene sabiduría. Sin prisa, con dirección, tu cuerpo aprende a confiar.",
+    "Largo plazo: alarga el paso solo si se siente natural. Eso es inteligencia en movimiento! tu energía llega más lejos.",
+    "Vamos con oficio! suelta hombros y afloja manos; me gusta ese cuidado. la meta se acerca con serenidad.",
+    "descansa breve y vuelve con calma. Mentor en marcha: el cuerpo agradece la paciencia; tu cuerpo aprende a confiar.",
+    "Franco observa: aquí no hay que demostrar, hay que sostener. suelta hombros y afloja manos; tu energía llega más lejos.",
+    "descansa breve y vuelve con calma; qué bien se ve un ritmo maduro. Cierre sereno, la meta se acerca con serenidad.",
+  ],
+  nata:[
+    "Respira conmigo: inhala en cuatro pasos y exhala en cuatro.",
+    "Suelta los hombros antes de seguir y camina una cuadra sin presión.",
+    "Elige una esquina cercana; llega con paso cómodo y respiración tranquila.",
+    "Toma agua y vuelve despacio; cuidarte también suma.",
+    "Si el cuerpo pide bajar el ritmo, hazlo sin abandonar la caminata.",
+    "Treinta pasos atentos, sintiendo la pisada sin forzarla.",
+    "Guarda el teléfono por un minuto y vuelve a tu cuerpo.",
+    "Busca una ruta más silenciosa si puedes; el entorno también ayuda.",
+    "Alarga la espalda, relaja la mandíbula y camina cinco minutos suaves.",
+    "Haz una vuelta pequeña pero completa; terminar con calma también cuenta.",
+    "Respira hondo al cruzar la próxima calle y reinicia el paso.",
+    "Brazos sueltos; que el movimiento no se sienta apretado.",
+    "Constancia antes que velocidad; hoy el objetivo es sostener.",
+    "Termina este bloque más ligera, no más presionada.",
+    "Si el día está pesado, empieza por dos minutos amables y reales.",
+    "Mira al frente con suavidad y mantén la cara relajada.",
+    "Camina por donde haya menos ruido si puedes; el entorno cambia el ritmo.",
+    "Vuelve al paso después de una pausa breve, sin juzgar la pausa.",
+    "Haz dos minutos más solo si se siente bien en el cuerpo.",
+    "Termina la vuelta con respiración cómoda y hombros livianos.",
+    "Respira, aquí estás: inhala en cuatro pasos y exhala en cuatro. Qué alivio volver despacio! tu cuerpo agradece este cuidado.",
+    "Vuelve a tu ritmo! haz treinta pasos atentos; tu cuerpo no necesita presión para avanzar. cada paso baja un poco el ruido.",
+    "siente la pisada sin forzarla. Poquito a poquito: esto se siente más liviano; tu energía se ordena al moverte.",
+    "Regresa al cuerpo: me gusta cómo te estás cuidando. haz treinta pasos atentos; lo amable también funciona.",
+    "siente la pisada sin forzarla; el ruido baja un poquito. Nata baja el ruido, la meta se acerca sin tensión.",
+    "Con calma real: mira al frente con suavidad. ese paso amable también cuenta! terminar en paz también es logro.",
+    "Hombros sueltos! siente la pisada sin forzarla; hoy estás haciendo espacio para ti. vas volviendo a ti paso a paso.",
+    "mira al frente con suavidad. Pausa amable: la ligereza vuelve paso a paso; la meta se acerca sin tensión.",
+    "Suave y constante: qué bonito sostener sin apretar. deja el teléfono guardado por un minuto; terminar en paz también es logro.",
+    "mira al frente con suavidad; qué alivio volver despacio. Espacio para ti, vas volviendo a ti paso a paso.",
+    "Hoy con suavidad: deja el teléfono guardado por un minuto. esto se siente más liviano! seguir suave sigue siendo seguir.",
+    "Camina ligero! baja el ritmo si el cuerpo lo pide; me gusta cómo te estás cuidando. la constancia tranquila cuenta.",
+    "deja el teléfono guardado por un minuto. Sin presión: el ruido baja un poquito; este ritmo también construye salud.",
+    "Movimiento liviano: hay calma en seguir así. baja el ritmo si el cuerpo lo pide; tu cuerpo agradece este cuidado.",
+    "haz una vuelta pequeña pero completa; ese paso amable también cuenta. Ritmo cómodo, la constancia tranquila cuenta.",
+    "Sostén sin apretar: baja el ritmo si el cuerpo lo pide. la ligereza vuelve paso a paso! este ritmo también construye salud.",
+    "Paso amable! haz una vuelta pequeña pero completa; qué bonito sostener sin apretar. tu cuerpo agradece este cuidado.",
+    "toma agua y vuelve despacio. Cuidado tranquilo: qué alivio volver despacio; cada paso baja un poco el ruido.",
+    "No hay pelea aquí: tu cuerpo no necesita presión para avanzar. haz una vuelta pequeña pero completa; tu energía se ordena al moverte.",
+    "toma agua y vuelve despacio; esto se siente más liviano. Nata te acompaña, lo amable también funciona.",
+    "Vuelve a tu ritmo: elige constancia antes que velocidad. el ruido baja un poquito! la meta se acerca sin tensión.",
+    "Poquito a poquito! toma agua y vuelve despacio; hay calma en seguir así. tu energía se ordena al moverte.",
+    "elige constancia antes que velocidad. Regresa al cuerpo: ese paso amable también cuenta; lo amable también funciona.",
+    "Respira, aquí estás: hoy estás haciendo espacio para ti. mantén un paso cómodo durante cinco minutos; la meta se acerca sin tensión.",
+    "elige constancia antes que velocidad; la ligereza vuelve paso a paso. Con calma real, terminar en paz también es logro.",
+    "Hombros sueltos: mantén un paso cómodo durante cinco minutos. Qué alivio volver despacio! vas volviendo a ti paso a paso.",
+    "Pausa amable! vuelve al paso después de una pausa breve; tu cuerpo no necesita presión para avanzar. seguir suave sigue siendo seguir.",
+    "mantén un paso cómodo durante cinco minutos. Nata baja el ruido: esto se siente más liviano; la constancia tranquila cuenta.",
+    "Espacio para ti: me gusta cómo te estás cuidando. vuelve al paso después de una pausa breve; vas volviendo a ti paso a paso.",
+    "elige una esquina cercana y camina sin presión; el ruido baja un poquito. Hoy con suavidad, seguir suave sigue siendo seguir.",
+    "Camina ligero: vuelve al paso después de una pausa breve. ese paso amable también cuenta! la constancia tranquila cuenta.",
+    "Suave y constante! elige una esquina cercana y camina sin presión; hoy estás haciendo espacio para ti. este ritmo también construye salud.",
+    "camina por donde haya menos ruido si puedes. Movimiento liviano: la ligereza vuelve paso a paso; tu cuerpo agradece este cuidado.",
+    "Ritmo cómodo: qué bonito sostener sin apretar. elige una esquina cercana y camina sin presión; cada paso baja un poco el ruido.",
+    "camina por donde haya menos ruido si puedes; qué alivio volver despacio. Sostén sin apretar, tu energía se ordena al moverte.",
+    "Sin presión: suelta los hombros antes de seguir. esto se siente más liviano! tu cuerpo agradece este cuidado.",
+    "Cuidado tranquilo! camina por donde haya menos ruido si puedes; me gusta cómo te estás cuidando. cada paso baja un poco el ruido.",
+    "suelta los hombros antes de seguir. No hay pelea aquí: el ruido baja un poquito; tu energía se ordena al moverte.",
+    "Nata te acompaña: hay calma en seguir así. alarga la espalda y relaja la mandíbula; lo amable también funciona.",
+    "suelta los hombros antes de seguir; ese paso amable también cuenta. Paso amable, la meta se acerca sin tensión.",
+    "Poquito a poquito: alarga la espalda y relaja la mandíbula. la ligereza vuelve paso a paso! terminar en paz también es logro.",
+    "Regresa al cuerpo! inhala en cuatro pasos y exhala en cuatro; qué bonito sostener sin apretar. vas volviendo a ti paso a paso.",
+    "alarga la espalda y relaja la mandíbula. Respira, aquí estás: qué alivio volver despacio; la meta se acerca sin tensión.",
+    "Vuelve a tu ritmo: tu cuerpo no necesita presión para avanzar. inhala en cuatro pasos y exhala en cuatro; terminar en paz también es logro.",
+    "haz treinta pasos atentos; esto se siente más liviano. Hombros sueltos, vas volviendo a ti paso a paso.",
+    "Pausa amable: inhala en cuatro pasos y exhala en cuatro. el ruido baja un poquito! seguir suave sigue siendo seguir.",
+    "Nata baja el ruido! haz treinta pasos atentos; hay calma en seguir así. la constancia tranquila cuenta.",
+    "siente la pisada sin forzarla. Con calma real: ese paso amable también cuenta; este ritmo también construye salud.",
+    "Hoy con suavidad: hoy estás haciendo espacio para ti. haz treinta pasos atentos; tu cuerpo agradece este cuidado.",
+    "siente la pisada sin forzarla; la ligereza vuelve paso a paso. Camina ligero, la constancia tranquila cuenta.",
+    "Suave y constante: mira al frente con suavidad. Qué alivio volver despacio! este ritmo también construye salud.",
+    "Espacio para ti! siente la pisada sin forzarla; tu cuerpo no necesita presión para avanzar. tu cuerpo agradece este cuidado.",
+    "mira al frente con suavidad. Ritmo cómodo: esto se siente más liviano; cada paso baja un poco el ruido.",
+    "Sostén sin apretar: me gusta cómo te estás cuidando. deja el teléfono guardado por un minuto; tu energía se ordena al moverte.",
+    "mira al frente con suavidad; el ruido baja un poquito. Sin presión, lo amable también funciona.",
+    "Movimiento liviano: deja el teléfono guardado por un minuto. ese paso amable también cuenta! la meta se acerca sin tensión.",
+    "No hay pelea aquí! baja el ritmo si el cuerpo lo pide; hoy estás haciendo espacio para ti. tu energía se ordena al moverte.",
+    "deja el teléfono guardado por un minuto. Nata te acompaña: la ligereza vuelve paso a paso; lo amable también funciona.",
+    "Paso amable: qué bonito sostener sin apretar. baja el ritmo si el cuerpo lo pide; la meta se acerca sin tensión.",
+    "haz una vuelta pequeña pero completa; qué alivio volver despacio. Cuidado tranquilo, terminar en paz también es logro.",
+    "Regresa al cuerpo: baja el ritmo si el cuerpo lo pide. esto se siente más liviano! vas volviendo a ti paso a paso.",
+    "Respira, aquí estás! haz una vuelta pequeña pero completa; me gusta cómo te estás cuidando. seguir suave sigue siendo seguir.",
+    "toma agua y vuelve despacio. Vuelve a tu ritmo: el ruido baja un poquito; la constancia tranquila cuenta.",
+    "Poquito a poquito: hay calma en seguir así. haz una vuelta pequeña pero completa; vas volviendo a ti paso a paso.",
+    "toma agua y vuelve despacio; ese paso amable también cuenta. Pausa amable, seguir suave sigue siendo seguir.",
+    "Nata baja el ruido: elige constancia antes que velocidad. la ligereza vuelve paso a paso! la constancia tranquila cuenta.",
+    "Con calma real! toma agua y vuelve despacio; qué bonito sostener sin apretar. este ritmo también construye salud.",
+    "elige constancia antes que velocidad. Hombros sueltos: qué alivio volver despacio; tu cuerpo agradece este cuidado.",
+    "Camina ligero: tu cuerpo no necesita presión para avanzar. mantén un paso cómodo durante cinco minutos; cada paso baja un poco el ruido.",
+    "elige constancia antes que velocidad; esto se siente más liviano. Suave y constante, tu energía se ordena al moverte.",
+    "Espacio para ti: mantén un paso cómodo durante cinco minutos. el ruido baja un poquito! tu cuerpo agradece este cuidado.",
+    "Hoy con suavidad! vuelve al paso después de una pausa breve; hay calma en seguir así. cada paso baja un poco el ruido.",
+    "mantén un paso cómodo durante cinco minutos. Sostén sin apretar: ese paso amable también cuenta; tu energía se ordena al moverte.",
+    "Sin presión: hoy estás haciendo espacio para ti. vuelve al paso después de una pausa breve; lo amable también funciona.",
+    "elige una esquina cercana y camina sin presión; la ligereza vuelve paso a paso. Movimiento liviano, la meta se acerca sin tensión.",
+    "Ritmo cómodo: vuelve al paso después de una pausa breve. Qué alivio volver despacio! terminar en paz también es logro.",
+    "Nata te acompaña! elige una esquina cercana y camina sin presión; tu cuerpo no necesita presión para avanzar. vas volviendo a ti paso a paso.",
+    "camina por donde haya menos ruido si puedes. Paso amable: esto se siente más liviano; la meta se acerca sin tensión.",
+    "Cuidado tranquilo: me gusta cómo te estás cuidando. elige una esquina cercana y camina sin presión; terminar en paz también es logro.",
+    "camina por donde haya menos ruido si puedes; el ruido baja un poquito. No hay pelea aquí, vas volviendo a ti paso a paso.",
+  ],
+};
+var COACH_NAMES = {};
+COACHES.forEach(function(c){COACH_NAMES[c.id] = c.name;});
 function showCharacterPicker(){
   var html =
     '<p class="muted" style="margin-top:4px">Elige una silueta. Es la que te acompañará por la ruta.</p>'+
@@ -1064,10 +1827,27 @@ function showCharacterPicker(){
   });
 }
 function showCoachPicker(){
-  showInfo('Tu coach',
-    '<p>Pronto podrás elegir un coach que te acompañe con su propio estilo y mensajes en cada etapa del camino.</p>'+
-    '<p class="muted">Aviso: esto es solo el botón. Las opciones llegan en la siguiente actualización.</p>'
-  );
+  var html =
+    '<p class="muted" style="margin-top:4px">Elige el coach que te acompañará. Cada uno tiene su propio estilo de animarte.</p>'+
+    '<div class="coach-list" id="coach-list">'+
+      COACHES.map(function(c){
+        var active = (state.coach===c.id) ? ' active' : '';
+        return '<button type="button" class="coach-item'+active+'" data-coach="'+c.id+'">'+
+                 '<div class="ci-head"><span class="ci-name">'+c.name+'</span><span class="ci-tag">'+c.personality.split(',')[0]+'</span></div>'+
+                 '<div class="ci-desc">'+c.description+'</div>'+
+               '</button>';
+      }).join('')+
+    '</div>';
+  showInfo('Tu coach', html);
+  document.querySelectorAll('#coach-list .coach-item').forEach(function(t){
+    t.onclick = function(){
+      state.coach = t.getAttribute('data-coach');
+      save();
+      closeAll();
+      renderLanding();
+      try{ if(current) render(); }catch(e){}
+    };
+  });
 }
 
 /* Personal step goal — preset choices plus a custom number.
@@ -1778,6 +2558,34 @@ function recordToday(newTotal){
   } else if(newMeta){
     celebrate(false,'¡Buen trabajo!','Cumpliste tu meta de '+nFmt(state.goal)+' pasos. Vas por buen camino — la meta saludable está en '+nFmt(RECOMMENDED)+'.');
   }
+  // Coach flashes a line on every sync/log — coachSay() bails if a celebration
+  // modal is open, so it never competes with the bigger moments.
+  coachSay();
+}
+
+/* Coach toast — picks a random stepCountLine from the chosen coach and
+   flashes it at the top of the screen. Skipped if no coach is selected
+   or if a celebration modal just opened (we don't want to compete with it). */
+var _coachToastT=null;
+function coachSay(){
+  var cid=state.coach;
+  if(!cid||!COACH_LINES[cid])return;
+  // Don't fire if any modal-overlay is currently open (e.g. a celebration)
+  if(document.querySelector('.modal-overlay.open'))return;
+  var lines=COACH_LINES[cid];
+  var line=lines[Math.floor(Math.random()*lines.length)];
+  var name=(COACH_NAMES[cid]||cid);
+  var t=document.getElementById('coach-toast');
+  if(!t)return;
+  document.getElementById('ct-name').textContent=name+':';
+  document.getElementById('ct-line').textContent=line;
+  t.setAttribute('aria-hidden','false');
+  t.classList.add('open');
+  clearTimeout(_coachToastT);
+  _coachToastT=setTimeout(function(){
+    t.classList.remove('open');
+    t.setAttribute('aria-hidden','true');
+  },4800);
 }
 
 /* sync demo: simulate the watch reporting more steps since the last read */
