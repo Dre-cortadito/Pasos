@@ -337,6 +337,9 @@
 
   .trail{background:var(--paper);border:1px solid var(--ink-line);border-radius:16px;padding:14px 14px 8px;margin:12px 0}
   .trail svg{display:block;width:100%;height:auto}
+  .trail-label{font-family:var(--font-ui);font-size:10.5px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:var(--ink-soft);text-align:center;margin-bottom:2px}
+  .trail-meta{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:12.5px;color:var(--ink-soft);margin-top:6px;padding:0 4px}
+  .trail-meta b{color:var(--ink);font-weight:600;font-family:var(--font-display)}
   .loc{font-size:14.5px;color:var(--ink);margin:6px 4px 12px;text-align:center;line-height:1.45}
   .loc b{color:var(--accent);font-weight:700}
 
@@ -432,6 +435,30 @@
   .stats-grid .stat{padding:11px 12px;text-align:left}
   .stats-grid .stat .l{margin-top:4px;text-align:left;text-transform:none;letter-spacing:.2px}
   .stats-grid .stat .v{font-size:22px;text-align:left}
+
+  /* ===== Scenes — on-brand two-tone silhouettes, theme-aware (read live tokens) ===== */
+  .scene-art{display:block;width:100%;line-height:0}
+  .scene-art svg{display:block;width:100%;height:100%}
+  .scene-hero{position:relative;border:1px solid var(--ink-line);border-radius:16px;overflow:hidden;margin:12px 0;background:var(--paper)}
+  .scene-hero .scene-art{aspect-ratio:5/2}
+  .scene-overlay{position:absolute;left:0;right:0;bottom:0;padding:30px 16px 13px;background:linear-gradient(to top,rgba(12,9,6,.74),rgba(12,9,6,0))}
+  .scene-day{font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:1.8px;text-transform:uppercase;color:var(--accent)}
+  .scene-place{font-family:var(--font-display);font-size:23px;font-weight:700;color:#fff;line-height:1.05;margin-top:2px}
+  .scene-line{font-family:var(--font-display);font-style:italic;font-size:13.5px;color:rgba(255,255,255,.92);margin-top:3px;line-height:1.35}
+  .stop-thumb{width:74px;height:52px;flex:none;border-radius:9px;overflow:hidden;border:1px solid var(--ink-line);background:var(--paper);line-height:0}
+  .stop-thumb.locked{display:flex;align-items:center;justify-content:center;border-style:dashed;border-color:var(--ink-line-strong);color:var(--ink-line-strong);font-size:20px}
+  .stop-body{flex:1;min-width:0}
+  .stop.clickable{cursor:pointer}
+  @media (hover:hover){.stop.clickable:hover{border-color:var(--accent-soft)}}
+  .scene-modal .scene-art{aspect-ratio:2/1;border-radius:12px;overflow:hidden;border:1px solid var(--ink-line)}
+
+  /* ===== Journey panorama — one continuous scrollable landscape ===== */
+  .panorama{position:relative;border:1px solid var(--ink-line);border-radius:16px;overflow:hidden;margin:12px 0;background:var(--paper);height:280px}
+  .pano-scroll{height:100%;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .pano-scroll::-webkit-scrollbar{display:none}
+  .pano-art{height:100%;display:inline-block;line-height:0}
+  .pano-art svg{display:block;height:100%;width:auto}
+  .pano-overlay{position:absolute;left:0;right:0;bottom:0;padding:38px 16px 14px;background:linear-gradient(to top,rgba(12,9,6,.78),rgba(12,9,6,0));pointer-events:none}
 </style>
 </head>
 <body>
@@ -513,6 +540,18 @@
 
     <div class="j-head">
       <div class="j-title" id="jtitle"></div>
+    </div>
+
+    <!-- THE JOURNEY PANORAMA — one continuous landscape; scroll to "replay" the trip -->
+    <div class="panorama">
+      <div class="pano-scroll" id="pano-scroll">
+        <div class="pano-art" id="pano-art"></div>
+      </div>
+      <div class="pano-overlay">
+        <div class="scene-day" id="scene-day"></div>
+        <div class="scene-place" id="scene-place"></div>
+        <div class="scene-line" id="scene-line"></div>
+      </div>
     </div>
 
     <div class="trail" id="trail"></div>
@@ -604,6 +643,15 @@
 </div></div>
 
 <!-- ============================================================== CELEBRATION -->
+<!-- ============================================================== SCENE VIEWER -->
+<div class="modal-overlay" id="ov-scene"><div class="modal scene-modal">
+  <button class="modal-close" data-close>×</button>
+  <div class="scene-art" id="scene-modal-art"></div>
+  <h2 id="scene-modal-place" style="margin-top:14px"></h2>
+  <p class="muted" id="scene-modal-sub" style="margin-top:-4px"></p>
+  <p id="scene-modal-fact"></p>
+</div></div>
+
 <div class="modal-overlay" id="ov-cel"><div class="modal celebrate">
   <button class="modal-close" data-close>×</button>
   <img class="mk" id="cel-mk" alt="">
@@ -878,6 +926,7 @@ function openJourney(id){
   document.getElementById('journey').classList.remove('hide');
   document.body.classList.add('game-active');
   var m=document.querySelector('main'); if(m)m.scrollTop=0;
+  _panoAutoScrolled=false;            // re-center the panorama on each new open
   render();
 }
 function goHome(){
@@ -894,23 +943,38 @@ function buildTrail(j,walked){
   var ACC=(cs.getPropertyValue('--accent')||'#ee6d20').trim();
   var DP =(cs.getPropertyValue('--accent-deep')||'#c95613').trim();
   var LN =(cs.getPropertyValue('--ink-line')||'#ece7df').trim();
-  var SF =(cs.getPropertyValue('--ink-soft')||'#8a847f').trim();
   var BG =(cs.getPropertyValue('--bg')||'#fff').trim();
-  var W=1000,H=200,padL=46,padR=46,y=128,iw=W-padL-padR;
+  var W=1000,H=80,padL=24,padR=24,y=50,iw=W-padL-padR;
   var frac=clamp(walked/j.total,0,1), fx=padL+frac*iw;
-  var s='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">';
+  // SVG: background bar + walked overlay + milestone dots + chevron at current
+  var s='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">';
   s+='<line x1="'+padL+'" y1="'+y+'" x2="'+(W-padR)+'" y2="'+y+'" stroke="'+LN+'" stroke-width="8" stroke-linecap="round"/>';
   s+='<line x1="'+padL+'" y1="'+y+'" x2="'+fx+'" y2="'+y+'" stroke="'+ACC+'" stroke-width="8" stroke-linecap="round"/>';
   j.stops.forEach(function(st){
     var sx=padL+(st.mi/j.total)*iw, on=walked>=st.mi-0.001;
-    s+='<circle cx="'+sx+'" cy="'+y+'" r="'+(on?9:7)+'" fill="'+(on?ACC:BG)+'" stroke="'+(on?DP:LN)+'" stroke-width="3"/>';
+    s+='<circle cx="'+sx+'" cy="'+y+'" r="'+(on?8:6)+'" fill="'+(on?ACC:BG)+'" stroke="'+(on?DP:LN)+'" stroke-width="2.5"/>';
   });
-  s+='<circle cx="'+fx+'" cy="'+y+'" r="10" fill="'+ACC+'" stroke="'+DP+'" stroke-width="3"/>';
-  var iw2=64,ih2=64,mx=fx,my=y-ih2-12;
-  s+='<g transform="translate('+mx+' '+my+') scale(-1 1)"><image href="'+WALKER+'" xlink:href="'+WALKER+'" x="'+(-iw2/2)+'" y="0" width="'+iw2+'" height="'+ih2+'"/></g>';
-  s+='<text x="'+padL+'" y="'+(y+30)+'" font-family="Newsreader,Georgia,serif" font-size="17" fill="'+SF+'">'+shortName(j.stops[0].n)+'</text>';
-  s+='<text x="'+(W-padR)+'" y="'+(y+30)+'" text-anchor="end" font-family="Newsreader,Georgia,serif" font-size="17" fill="'+SF+'">'+shortName(j.stops[j.stops.length-1].n)+'</text>';
-  s+='</svg>';return s;
+  // chevron at current position — points down at the bar
+  var chevY=y-15;
+  s+='<path d="M'+(fx-7)+' '+(chevY-6)+' L'+(fx+7)+' '+(chevY-6)+' L'+fx+' '+(chevY+5)+' Z" fill="'+ACC+'"/>';
+  s+='</svg>';
+
+  // next + final labels (miles remaining to each)
+  var done=walked>=j.total, next=null;
+  for(var i=0;i<j.stops.length;i++){if(j.stops[i].mi>walked+0.001){next=j.stops[i];break;}}
+  var fin=j.stops[j.stops.length-1];
+  var leftHTML, rightHTML;
+  if(done){
+    leftHTML='<span>¡Llegaste a <b>'+shortName(fin.n)+'</b>!</span>';
+    rightHTML='<span style="text-align:right">Recorrido total: <b>'+fmtMi(j.total)+'</b></span>';
+  } else if(next){
+    leftHTML='<span>Próxima parada: <b>'+shortName(next.n)+'</b> · '+fmtMi1(Math.max(0,next.mi-walked))+'</span>';
+    rightHTML='<span style="text-align:right">Destino: <b>'+shortName(fin.n)+'</b> · '+fmtMi1(Math.max(0,fin.mi-walked))+'</span>';
+  } else {
+    leftHTML='<span>Listo para salir</span>';
+    rightHTML='<span style="text-align:right">Destino: <b>'+shortName(fin.n)+'</b> · '+fmtMi(j.total)+'</span>';
+  }
+  return '<div class="trail-label">Tu progreso en la ruta</div>'+s+'<div class="trail-meta">'+leftHTML+rightHTML+'</div>';
 }
 function currentLeg(j,walked){
   if(walked>=j.total)return{done:true};
@@ -918,6 +982,202 @@ function currentLeg(j,walked){
   return{from:shortName(j.stops[0].n),to:shortName(j.stops[1].n)};
 }
 function statTile(v,l){return '<div class="stat"><div class="v">'+v+'</div><div class="l">'+l+'</div></div>';}
+
+/* ============================================================================
+   Scene engine — on-brand two-tone silhouettes, faithful to each REAL place.
+   Each stop maps to its true terrain + (where iconic) a real landmark.
+   Colors are read live from the theme tokens, so scenes adapt to dark mode.
+============================================================================ */
+var SCENE_BIOMES={
+  inca:    ['forest','terraces','forest','pass','forest','terraces','terraces','machu'],
+  everest: ['forest','forest','peak','peak','snow','snow','snow','snow'],
+  cafe:    ['city','palms','city','forest','city','forest','forest','palms'],
+  santiago:['pass','plains','plains','cathedral','plains','peak','forest','cathedral'],
+  cuba:    ['city','city','city','city','plains','city','plains','coast'],
+  ruta66:  ['city','arch','city','plains','desert','desert','peak','pier']
+};
+var INCA_CAPS=[
+  'Sellas el permiso junto al río Urubamba y el camino de piedra se abre ante ti.',
+  'Llaqtapata asoma entre andenes incas; el valle queda muy abajo, verde y húmedo.',
+  'Última aldea quechua antes de la gran subida. Esta noche se acampa.',
+  'El Paso de la Mujer Muerta, 4.215 m. En el techo de la ruta, sin aliento.',
+  'Bajas entre cascadas y neblina; el campamento huele a tierra mojada.',
+  'Phuyupatamarca, el pueblo sobre las nubes. Las fuentes incas todavía cantan.',
+  '"Para siempre joven", andenes colgados sobre el rugido del Urubamba.',
+  'Cruzas el Inti Punku al amanecer y la ciudadela aparece entre la bruma. Lo lograste.'
+];
+function firstSentence(s){if(!s)return '';var i=s.indexOf('. ');return (i<0?s:s.slice(0,i+1)).replace(/\s+$/,'');}
+function sceneOf(routeId,stop,i,total){
+  var arr=SCENE_BIOMES[routeId]||[], biome=arr[i]||'plains';
+  var t=total>1?i/(total-1):0;
+  var mood=t<0.2?'open':(t<0.45?'golden':(t<0.7?'dusk':(t<0.9?'night':'open')));
+  var cap=(routeId==='inca'&&INCA_CAPS[i])?INCA_CAPS[i]:firstSentence(stop.f);
+  return {biome:biome,mood:mood,cap:cap};
+}
+function sceneCSS(){return {paper:'#fbfaf6',ink:'#1a1614',inkLine:'#ece7df',acc:'#ee6d20',accD:'#c95613',accS:'#fde2cc',night:'#14110e',nightH:'#6a3220'};}
+function ridgePath(pts,W,H,fill,op){var d='M0 '+H+' L0 '+pts[0][1];for(var i=0;i<pts.length;i++)d+=' L'+pts[i][0]+' '+pts[i][1];d+=' L'+W+' '+H+' Z';return '<path d="'+d+'" fill="'+fill+'"'+(op!=null?' opacity="'+op+'"':'')+'/>';}
+function frontBiome(b,W,H,c){
+  var I=c.ink, P=c.paper;
+  if(b==='peak')   return ridgePath([[0,120],[35,68],[72,112],[112,54],[152,102],[196,60],[236,106],[276,74],[300,112]],W,H,I,1);
+  if(b==='pass')   return ridgePath([[0,120],[52,58],[118,92],[150,86],[182,92],[248,56],[300,118]],W,H,I,1);
+  if(b==='snow'){var pts=[[0,120],[40,64],[80,108],[120,50],[170,98],[215,58],[260,104],[300,84]];
+    return ridgePath(pts,W,H,I,1)
+      +'<path d="M120 50 l-13 19 l26 0 z" fill="'+P+'" opacity="0.92"/>'
+      +'<path d="M40 64 l-9 14 l18 0 z" fill="'+P+'" opacity="0.85"/>'
+      +'<path d="M215 58 l-10 15 l20 0 z" fill="'+P+'" opacity="0.85"/>';}
+  if(b==='forest'){var base=ridgePath([[0,120],[72,106],[152,118],[232,104],[300,118]],W,H,I,1),tr='';
+    [40,92,134,210,252,288].forEach(function(x){tr+='<path d="M'+x+' 114 l-7 0 l7 -24 l7 24 z" fill="'+I+'"/><rect x="'+(x-1.3)+'" y="112" width="2.6" height="8" fill="'+I+'"/>';});return base+tr;}
+  if(b==='palms'){var base=ridgePath([[0,122],[80,110],[160,120],[240,108],[300,120]],W,H,I,1),pa='';
+    [58,118,196,252].forEach(function(x){var ph=78;pa+='<rect x="'+(x-1.1)+'" y="'+(122-ph)+'" width="2.2" height="'+ph+'" fill="'+I+'"/>'
+      +'<g transform="translate('+x+' '+(122-ph)+')" stroke="'+I+'" stroke-width="1.6" fill="none" stroke-linecap="round">'
+      +'<path d="M0 0 q-11 -2 -16 5"/><path d="M0 0 q11 -2 16 5"/><path d="M0 0 q-6 -9 -3 -14"/><path d="M0 0 q6 -9 3 -14"/><path d="M0 0 q-14 1 -17 7"/><path d="M0 0 q14 1 17 7"/></g>';});return base+pa;}
+  if(b==='terraces'){var base=ridgePath([[0,122],[90,86],[300,122]],W,H,I,1),ter='';
+    for(var k=0;k<5;k++){ter+='<rect x="'+(34+k*5)+'" y="'+(96+k*5)+'" width="'+(76-k*8)+'" height="2" fill="'+P+'" opacity="0.22"/>';}return base+ter;}
+  if(b==='machu'){var base=ridgePath([[0,122],[60,100],[120,118],[300,120]],W,H,I,1),ter='';
+    for(var k=0;k<4;k++){ter+='<rect x="82" y="'+(104+k*5)+'" width="66" height="2" fill="'+P+'" opacity="0.22"/>';}
+    return base+'<path d="M196 122 Q210 38 232 122 Z" fill="'+I+'"/>'+ter;}
+  if(b==='plains'){var base=ridgePath([[0,128],[90,121],[180,129],[262,123],[300,128]],W,H,I,1),x=212;
+    return base+'<rect x="'+(x-1.6)+'" y="108" width="3.2" height="14" fill="'+I+'"/><circle cx="'+x+'" cy="104" r="11" fill="'+I+'"/>';}
+  if(b==='desert'){var base='<path d="M0 '+H+' L0 126 L52 126 L52 104 L112 104 L112 126 L162 126 L162 94 L216 94 L216 126 L300 126 L300 '+H+' Z" fill="'+I+'"/>';
+    var cx=258,cy=126,cac='<g fill="'+I+'"><rect x="'+(cx-3)+'" y="'+(cy-30)+'" width="6" height="30" rx="3"/><rect x="'+(cx-11)+'" y="'+(cy-22)+'" width="5" height="13" rx="2.5"/><rect x="'+(cx-11)+'" y="'+(cy-22)+'" width="5" height="6"/><rect x="'+(cx+6)+'" y="'+(cy-26)+'" width="5" height="15" rx="2.5"/></g>';return base+cac;}
+  if(b==='city'){var blk=[[6,46],[40,74],[82,58],[122,94],[168,62],[208,84],[248,52],[282,76]],s='';
+    blk.forEach(function(o){s+='<rect x="'+o[0]+'" y="'+(H-o[1])+'" width="30" height="'+o[1]+'" fill="'+I+'"/>';});return s;}
+  if(b==='cathedral'){var blk=[[10,40],[44,56],[210,52],[250,44],[284,60]],base='';
+    blk.forEach(function(o){base+='<rect x="'+o[0]+'" y="'+(H-o[1])+'" width="28" height="'+o[1]+'" fill="'+I+'"/>';});
+    return base+'<g fill="'+I+'"><rect x="120" y="'+(H-86)+'" width="16" height="86"/><path d="M120 '+(H-86)+' l8 -22 l8 22 z"/><rect x="150" y="'+(H-86)+'" width="16" height="86"/><path d="M150 '+(H-86)+' l8 -22 l8 22 z"/></g>';}
+  if(b==='arch'){var blk=[[8,34],[40,50],[236,46],[273,38]],base='';
+    blk.forEach(function(o){base+='<rect x="'+o[0]+'" y="'+(H-o[1])+'" width="26" height="'+o[1]+'" fill="'+I+'"/>';});
+    return base+'<path d="M120 '+H+' Q160 '+(H-112)+' 200 '+H+'" fill="none" stroke="'+I+'" stroke-width="7"/>';}
+  if(b==='coast'){return '<rect x="0" y="'+(H-16)+'" width="'+W+'" height="16" fill="'+I+'" opacity="0.6"/>'
+    +'<path d="M0 '+H+' L0 94 Q58 78 112 116 L112 '+H+' Z" fill="'+I+'"/>'
+    +'<path d="M210 '+(H-20)+' l0 -13 l10 13 z" fill="'+I+'"/><rect x="206" y="'+(H-20)+'" width="14" height="2.4" fill="'+I+'"/>';}
+  if(b==='pier'){var wx=200,wy=H-52,r=20,wheel='';
+    for(var a=0;a<8;a++){var ang=a*Math.PI/4;wheel+='<line x1="'+wx+'" y1="'+wy+'" x2="'+(wx+r*Math.cos(ang)).toFixed(1)+'" y2="'+(wy+r*Math.sin(ang)).toFixed(1)+'" stroke="'+I+'" stroke-width="1.2"/>';}
+    return '<rect x="0" y="'+(H-22)+'" width="'+W+'" height="22" fill="'+I+'" opacity="0.55"/>'
+      +'<path d="M0 '+H+' L0 112 Q40 102 80 126 L80 '+H+' Z" fill="'+I+'"/>'
+      +'<rect x="150" y="'+(H-30)+'" width="120" height="5" fill="'+I+'"/><rect x="162" y="'+(H-30)+'" width="3" height="6" fill="'+I+'"/><rect x="204" y="'+(H-30)+'" width="3" height="6" fill="'+I+'"/><rect x="246" y="'+(H-30)+'" width="3" height="6" fill="'+I+'"/>'
+      +'<line x1="'+(wx-12)+'" y1="'+(H-30)+'" x2="'+wx+'" y2="'+wy+'" stroke="'+I+'" stroke-width="2"/><line x1="'+(wx+12)+'" y1="'+(H-30)+'" x2="'+wx+'" y2="'+wy+'" stroke="'+I+'" stroke-width="2"/>'
+      +'<circle cx="'+wx+'" cy="'+wy+'" r="'+r+'" fill="none" stroke="'+I+'" stroke-width="2"/>'+wheel+'<circle cx="'+wx+'" cy="'+wy+'" r="3" fill="'+I+'"/>';}
+  return ridgePath([[0,124],[150,118],[300,124]],W,H,I,1);
+}
+var _sceneUID=0;
+function sceneSVG(biome,mood,c){
+  c=c||sceneCSS();var W=300,H=150,uid=++_sceneUID;
+  var top={open:c.paper,golden:c.accS,dusk:c.acc,night:c.ink}[mood]||c.accS;
+  var bot={open:c.accS,golden:c.acc,dusk:c.accD,night:c.accD}[mood]||c.acc;
+  var s='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">';
+  s+='<defs><linearGradient id="sky'+uid+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+top+'"/><stop offset="1" stop-color="'+bot+'"/></linearGradient></defs>';
+  s+='<rect width="'+W+'" height="'+H+'" fill="url(#sky'+uid+')"/>';
+  if(mood==='night'){[[40,28],[72,18],[112,40],[150,22],[200,34],[236,16],[266,46],[92,60],[182,58],[256,70]].forEach(function(p){s+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="1.1" fill="'+c.paper+'" opacity="0.85"/>';});}
+  var cel={open:[234,45,15,c.acc,0.95],golden:[222,54,16,c.acc,1],dusk:[156,80,18,c.accD,1],night:[66,42,12,c.paper,0.95]}[mood];
+  if(cel)s+='<circle cx="'+cel[0]+'" cy="'+cel[1]+'" r="'+cel[2]+'" fill="'+cel[3]+'" opacity="'+cel[4]+'"/>';
+  s+=ridgePath([[0,108],[80,96],[160,110],[240,98],[300,108]],W,H,c.ink,0.26);
+  s+=ridgePath([[0,118],[70,106],[150,120],[230,107],[300,118]],W,H,c.ink,0.5);
+  s+=frontBiome(biome,W,H,c);
+  s+='</svg>';return s;
+}
+function dayNum(id){var p=state.j[id];if(!p||!p.started)return 1;try{var s=new Date(p.started+'T00:00:00'),t=new Date(todayISO()+'T00:00:00');return Math.max(1,Math.round((t-s)/86400000)+1);}catch(e){return 1;}}
+function openScene(j,i){var st=j.stops[i],s2=sceneOf(j.id,st,i,j.stops.length);
+  document.getElementById('scene-modal-art').innerHTML=sceneSVG(s2.biome,s2.mood);
+  document.getElementById('scene-modal-place').textContent=st.n;
+  document.getElementById('scene-modal-sub').textContent=(i===0?'Salida':fmtMi(st.mi)+' desde la salida')+' · '+j.name;
+  document.getElementById('scene-modal-fact').textContent=st.f;
+  openOverlay('ov-scene');}
+
+/* ============================================================================
+   Journey panorama — one continuous, scrollable landscape (the whole route).
+   The sky shifts smoothly across the width (morning → golden → dusk → night →
+   dawn at arrival); back / mid / foreground ridges roll continuously across;
+   each real stop's landmark is anchored at its true mile-fraction x position.
+   The hiker stands at your current walked position; the area ahead is dimmed.
+   Scrolling acts like scrubbing video — overlay labels update as you move.
+============================================================================ */
+var PANO_W=3200, PANO_H=280;
+var _panoWired=false, _panoAutoScrolled=false;
+
+function panoRidge(pts,W,H,fill,op){var d='M0 '+H+' L0 '+pts[0][1];for(var i=0;i<pts.length;i++)d+=' L'+pts[i][0]+' '+pts[i][1];d+=' L'+W+' '+H+' Z';return '<path d="'+d+'" fill="'+fill+'"'+(op!=null?' opacity="'+op+'"':'')+'/>';}
+
+function panoLandmark(b,x,y,c){var I=c.ink,P=c.paper;
+  if(b==='pass')return '<path d="M'+(x-90)+' '+y+' L'+(x-30)+' '+(y-110)+' L'+x+' '+(y-50)+' L'+(x+30)+' '+(y-110)+' L'+(x+90)+' '+y+' Z" fill="'+I+'"/>';
+  if(b==='snow')return '<path d="M'+(x-100)+' '+y+' L'+(x-40)+' '+(y-100)+' L'+(x-15)+' '+(y-65)+' L'+(x+10)+' '+(y-120)+' L'+(x+50)+' '+(y-70)+' L'+(x+100)+' '+y+' Z" fill="'+I+'"/><path d="M'+(x+10)+' '+(y-120)+' l-14 22 l28 0 z" fill="'+P+'" opacity=".92"/><path d="M'+(x-40)+' '+(y-100)+' l-10 16 l20 0 z" fill="'+P+'" opacity=".85"/>';
+  if(b==='machu'){var ter='';for(var k=0;k<4;k++){ter+='<rect x="'+(x-50)+'" y="'+(y-22-k*5)+'" width="65" height="2" fill="'+P+'" opacity=".22"/>';}return '<path d="M'+(x-80)+' '+y+' L'+(x-60)+' '+(y-40)+' L'+(x-20)+' '+(y-30)+' L'+x+' '+y+' Z" fill="'+I+'"/><path d="M'+(x+10)+' '+y+' Q'+(x+30)+' '+(y-130)+' '+(x+60)+' '+y+' Z" fill="'+I+'"/>'+ter;}
+  if(b==='forest'){var tr='';[-50,-15,20,55].forEach(function(dx){tr+='<path d="M'+(x+dx)+' '+(y-5)+' l-9 0 l9 -32 l9 32 z" fill="'+I+'"/><rect x="'+(x+dx-1.6)+'" y="'+(y-5)+'" width="3.2" height="8" fill="'+I+'"/>';});return tr;}
+  if(b==='palms'){var pa='';[-40,0,40].forEach(function(dx){var ph=100;pa+='<rect x="'+(x+dx-1.3)+'" y="'+(y-ph)+'" width="2.6" height="'+ph+'" fill="'+I+'"/><g transform="translate('+(x+dx)+' '+(y-ph)+')" stroke="'+I+'" stroke-width="2" fill="none" stroke-linecap="round"><path d="M0 0 q-12 -3 -18 6"/><path d="M0 0 q12 -3 18 6"/><path d="M0 0 q-7 -10 -3 -16"/><path d="M0 0 q7 -10 3 -16"/><path d="M0 0 q-15 1 -19 8"/><path d="M0 0 q15 1 19 8"/></g>';});return pa;}
+  if(b==='terraces'){var t2='';for(var k=0;k<5;k++){t2+='<rect x="'+(x-40+k*5)+'" y="'+(y-30+k*5)+'" width="'+(80-k*10)+'" height="2" fill="'+P+'" opacity=".25"/>';}return '<path d="M'+(x-60)+' '+y+' L'+(x-20)+' '+(y-30)+' L'+(x+30)+' '+(y-12)+' L'+(x+50)+' '+y+' Z" fill="'+I+'"/>'+t2;}
+  if(b==='desert')return '<path d="M'+(x-90)+' '+y+' L'+(x-90)+' '+(y-28)+' L'+(x-30)+' '+(y-28)+' L'+(x-30)+' '+y+' Z" fill="'+I+'"/><g fill="'+I+'"><rect x="'+(x-3)+'" y="'+(y-44)+'" width="6" height="44" rx="3"/><rect x="'+(x-13)+'" y="'+(y-34)+'" width="5" height="18" rx="2.5"/><rect x="'+(x-13)+'" y="'+(y-34)+'" width="5" height="6"/><rect x="'+(x+8)+'" y="'+(y-38)+'" width="5" height="20" rx="2.5"/></g>';
+  if(b==='city'){var blk=[[-60,52],[-30,76],[5,60],[40,90],[75,66]],ss='';blk.forEach(function(o){ss+='<rect x="'+(x+o[0])+'" y="'+(y-o[1])+'" width="28" height="'+o[1]+'" fill="'+I+'"/>';});return ss;}
+  if(b==='cathedral')return '<g fill="'+I+'"><rect x="'+(x-50)+'" y="'+(y-44)+'" width="32" height="44"/><rect x="'+(x+18)+'" y="'+(y-44)+'" width="32" height="44"/><rect x="'+(x-15)+'" y="'+(y-110)+'" width="14" height="110"/><path d="M'+(x-15)+' '+(y-110)+' l7 -22 l7 22 z"/><rect x="'+(x+1)+'" y="'+(y-110)+'" width="14" height="110"/><path d="M'+(x+1)+' '+(y-110)+' l7 -22 l7 22 z"/></g>';
+  if(b==='arch')return '<g fill="'+I+'"><rect x="'+(x-70)+'" y="'+(y-30)+'" width="22" height="30"/><rect x="'+(x+50)+'" y="'+(y-26)+'" width="22" height="26"/></g><path d="M'+(x-40)+' '+y+' Q'+x+' '+(y-160)+' '+(x+40)+' '+y+'" fill="none" stroke="'+I+'" stroke-width="9"/>';
+  if(b==='pier'){var wx=x,wy=y-58,r=26,wheel='';for(var a=0;a<8;a++){var ang=a*Math.PI/4;wheel+='<line x1="'+wx+'" y1="'+wy+'" x2="'+(wx+r*Math.cos(ang)).toFixed(1)+'" y2="'+(wy+r*Math.sin(ang)).toFixed(1)+'" stroke="'+I+'" stroke-width="1.6"/>';}return '<rect x="'+(x-90)+'" y="'+(y-6)+'" width="180" height="6" fill="'+I+'"/><line x1="'+(wx-14)+'" y1="'+(y-6)+'" x2="'+wx+'" y2="'+wy+'" stroke="'+I+'" stroke-width="2.5"/><line x1="'+(wx+14)+'" y1="'+(y-6)+'" x2="'+wx+'" y2="'+wy+'" stroke="'+I+'" stroke-width="2.5"/><circle cx="'+wx+'" cy="'+wy+'" r="'+r+'" fill="none" stroke="'+I+'" stroke-width="2.4"/>'+wheel+'<circle cx="'+wx+'" cy="'+wy+'" r="4" fill="'+I+'"/>';}
+  if(b==='coast')return '<rect x="'+(x-110)+'" y="'+(y-2)+'" width="220" height="14" fill="'+I+'" opacity=".65"/><path d="M'+(x+10)+' '+(y-14)+' l0 -16 l13 16 z" fill="'+I+'"/>';
+  if(b==='peak')return '<path d="M'+(x-80)+' '+y+' L'+(x-30)+' '+(y-90)+' L'+(x-5)+' '+(y-50)+' L'+(x+20)+' '+(y-110)+' L'+(x+50)+' '+(y-60)+' L'+(x+80)+' '+y+' Z" fill="'+I+'"/>';
+  return '<rect x="'+(x-1.6)+'" y="'+(y-26)+'" width="3.2" height="22" fill="'+I+'"/><circle cx="'+x+'" cy="'+(y-32)+'" r="13" fill="'+I+'"/>';
+}
+function panoHiker(x,y,fill){return '<g fill="'+fill+'"><circle cx="'+x+'" cy="'+(y-22)+'" r="3"/><rect x="'+(x-1.6)+'" y="'+(y-18)+'" width="3.2" height="11" rx="1.4"/><rect x="'+(x-1.6)+'" y="'+(y-7)+'" width="3.2" height="9" transform="rotate(18 '+x+' '+(y-7)+')"/><rect x="'+(x-1.6)+'" y="'+(y-7)+'" width="3.2" height="9" transform="rotate(-12 '+x+' '+(y-7)+')"/><rect x="'+(x-9)+'" y="'+(y-22)+'" width="16" height="2.2" transform="rotate(20 '+x+' '+(y-21)+')"/></g>';}
+
+function buildPanorama(j,walked,c){
+  c=c||sceneCSS();var W=PANO_W,H=PANO_H,groundY=210;
+  var hX=Math.max(0,Math.min(W,(walked/j.total)*W));
+  var topC={open:c.paper,golden:c.accS,dusk:c.acc,night:c.night};
+  var botC={open:c.accS,golden:c.acc,dusk:c.accD,night:c.nightH};
+  var keys=['open','golden','dusk','night','open'], fracs=[0,0.32,0.57,0.80,1];
+  var s='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" style="height:100%;width:auto;display:block">';
+  var defs='<defs>';
+  defs+='<linearGradient id="pTop" x1="0" y1="0" x2="'+W+'" y2="0" gradientUnits="userSpaceOnUse">';
+  for(var k=0;k<keys.length;k++)defs+='<stop offset="'+fracs[k]+'" stop-color="'+topC[keys[k]]+'"/>';
+  defs+='</linearGradient>';
+  defs+='<linearGradient id="pBot" x1="0" y1="0" x2="'+W+'" y2="0" gradientUnits="userSpaceOnUse">';
+  for(k=0;k<keys.length;k++)defs+='<stop offset="'+fracs[k]+'" stop-color="'+botC[keys[k]]+'"/>';
+  defs+='</linearGradient>';
+  defs+='<linearGradient id="pAlpha" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity="1"/></linearGradient>';
+  defs+='<mask id="pBotMask" maskUnits="userSpaceOnUse" x="0" y="0" width="'+W+'" height="'+H+'"><rect width="'+W+'" height="'+H+'" fill="url(#pAlpha)"/></mask>';
+  defs+='</defs>';
+  s+=defs;
+  s+='<rect width="'+W+'" height="'+H+'" fill="url(#pTop)"/>';
+  s+='<rect width="'+W+'" height="'+H+'" fill="url(#pBot)" mask="url(#pBotMask)"/>';
+  // stars across the dusk-to-night zone (~0.55..0.95 of W)
+  for(k=0;k<46;k++){var fx=0.55+k*0.009; if(fx>0.96)continue; var sx=Math.round(fx*W); var sy=10+((k*53)%75); var op=(0.55+0.35*Math.sin(k*1.7)).toFixed(2); s+='<circle cx="'+sx+'" cy="'+sy+'" r="1.1" fill="'+c.paper+'" opacity="'+op+'"/>';}
+  // sun (morning, left) and moon (night, right)
+  s+='<circle cx="'+Math.round(W*0.09)+'" cy="62" r="20" fill="'+c.acc+'" opacity=".95"/>';
+  s+='<circle cx="'+Math.round(W*0.82)+'" cy="50" r="14" fill="'+c.paper+'" opacity=".95"/>';
+  // continuous back haze ridge
+  var bp=[];for(var x=0;x<=W;x+=180)bp.push([x,Math.round(180+8*Math.sin(x*0.0028)+5*Math.sin(x*0.0067))]);
+  s+=panoRidge(bp,W,H,c.ink,0.22);
+  // mid ridge
+  var mp=[];for(x=0;x<=W;x+=160)mp.push([x,Math.round(198+10*Math.sin(x*0.0046+1.2)+7*Math.sin(x*0.011+0.8))]);
+  s+=panoRidge(mp,W,H,c.ink,0.48);
+  // continuous foreground ground (the walking strip)
+  var fp=[];for(x=0;x<=W;x+=140)fp.push([x,Math.round(groundY+6*Math.sin(x*0.006+3)+4*Math.sin(x*0.013+0.4))]);
+  s+=panoRidge(fp,W,H,c.ink,1);
+  // real-place landmark anchored at each stop's mile-fraction x
+  var biomes=SCENE_BIOMES[j.id]||[];
+  for(k=0;k<j.stops.length;k++){var lx=Math.round((j.stops[k].mi/j.total)*W); s+=panoLandmark(biomes[k]||'plains',lx,groundY-2,c);}
+  // hiker at current walked position, on top of everything
+  s+=panoHiker(Math.round(hX),groundY-2,c.ink);
+  s+='</svg>';return s;
+}
+
+function updatePanoOverlay(){
+  var jj=J(current); if(!jj) return;
+  var ps=document.getElementById('pano-scroll'); if(!ps) return;
+  var pxR=ps.clientHeight/PANO_H;
+  var centerI=(ps.scrollLeft+ps.clientWidth/2)/pxR;
+  var bestI=0,bestD=1e9;
+  for(var i=0;i<jj.stops.length;i++){var sx=(jj.stops[i].mi/jj.total)*PANO_W;var dd=Math.abs(sx-centerI);if(dd<bestD){bestD=dd;bestI=i;}}
+  var scn=sceneOf(jj.id,jj.stops[bestI],bestI,jj.stops.length);
+  document.getElementById('scene-place').textContent=jj.stops[bestI].n;
+  document.getElementById('scene-line').textContent=scn.cap;
+  var milesAt=clamp(centerI/PANO_W,0,1)*jj.total;
+  document.getElementById('scene-day').textContent='Día '+dayNum(current)+' · '+fmtMi(milesAt);
+}
+function setupPanoScroll(){var ps=document.getElementById('pano-scroll'); if(!ps||_panoWired)return; _panoWired=true; ps.addEventListener('scroll',updatePanoOverlay);}
+function autoScrollPanoIfNeeded(j,walked){
+  if(_panoAutoScrolled)return;
+  var ps=document.getElementById('pano-scroll'); if(!ps)return;
+  var pxR=ps.clientHeight/PANO_H;
+  var hxPx=(walked/j.total)*PANO_W*pxR;
+  setTimeout(function(){ps.scrollLeft=Math.max(0,hxPx-ps.clientWidth/2); _panoAutoScrolled=true; updatePanoOverlay();},10);
+}
 
 /* ----- Daily rank track ----- */
 function buildRankTrack(ts){
@@ -955,6 +1215,13 @@ function render(){
   document.getElementById('jtitle').innerHTML=j.name+'<small>'+j.sub+'</small>';
   document.getElementById('trail').innerHTML=buildTrail(j,walked);
 
+  // journey panorama — the whole route as one continuous landscape
+  var SC=sceneCSS();
+  document.getElementById('pano-art').innerHTML=buildPanorama(j,walked,SC);
+  setupPanoScroll();
+  updatePanoOverlay();
+  autoScrollPanoIfNeeded(j,walked);
+
   var leg=currentLeg(j,walked),locEl=document.getElementById('loc');
   if(done)locEl.innerHTML='¡Ruta <b>completada</b>! Recorriste '+fmtMi(j.total)+'.';
   else if(walked<=0)locEl.innerHTML='Listo para salir desde <b>'+leg.from+'</b>.';
@@ -989,18 +1256,20 @@ function render(){
   document.getElementById('goal-link').textContent=nFmt(state.goal)+' pasos';
   document.getElementById('undo-link').classList.toggle('hide',ts<=0);
 
-  // passport
+  // passport — each stop is a place you "collect" as a scene when you reach it
   var sc=document.getElementById('stops');sc.innerHTML='';
   var nextShown=false;
   j.stops.forEach(function(st,i){
     var on=walked>=st.mi-0.001;
     var isNext=!on&&!nextShown; if(isNext)nextShown=true;
-    var d=document.createElement('div');d.className='stop'+(on?'':' locked')+(isNext?' next':'');
-    var stClass=on?(i===0?'start':'on'):'off';
-    var mark=i===0?'✦':(on?'✓':'·');
+    var d=document.createElement('div');d.className='stop'+(on?'':' locked')+(isNext?' next':'')+(on?' clickable':'');
     var label=i===0?'Salida':fmtMi(st.mi)+' desde la salida';
-    var foot=on?st.f:(isNext?('Próximo sello — a '+fmtMi1(Math.max(0,st.mi-walked))+'.'):'Sello bloqueado — sigue caminando.');
-    d.innerHTML='<div class="stamp '+stClass+'">'+mark+'</div><div><div class="nm">'+st.n+'</div><div class="di">'+label+'</div><div class="ft">'+foot+'</div></div>';
+    var foot=on?st.f:(isNext?('Próxima parada — a '+fmtMi1(Math.max(0,st.mi-walked))+'.'):'Bloqueado — sigue caminando.');
+    var thumb;
+    if(on){ var s3=sceneOf(j.id,st,i,j.stops.length); thumb='<div class="stop-thumb">'+sceneSVG(s3.biome,s3.mood,SC)+'</div>'; }
+    else { thumb='<div class="stop-thumb locked">·</div>'; }
+    d.innerHTML=thumb+'<div class="stop-body"><div class="nm">'+st.n+'</div><div class="di">'+label+'</div><div class="ft">'+foot+'</div></div>';
+    if(on){ d.onclick=(function(idx){return function(){openScene(j,idx);};})(i); }
     sc.appendChild(d);
   });
   save();
