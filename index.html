@@ -229,21 +229,27 @@
   .landing-reto-label{color:var(--ink-soft);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.8px}
   .landing-reto-value{font-family:var(--font-display);color:var(--accent);font-size:17px;font-weight:700}
 
-  .landing-pickrow-label{font-size:10px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--ink-soft);margin:6px 0 0}
-  /* Active-route card on the landing (replaces inline pills — routes now live in a picker modal) */
-  .landing-routecard{
-    width:100%;max-width:340px;text-align:left;
+  /* Landing setup — three prominent selectors (route / character / coach) above the primary play CTA */
+  .landing-setup-label{
+    font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;
+    color:var(--ink-soft);margin:8px 0 2px;
+  }
+  .landing-selectors{display:flex;flex-direction:column;gap:10px;width:100%;max-width:340px;margin:0}
+  .landing-selector{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    width:100%;
     background:var(--paper);border:1px solid var(--ink-line);border-radius:14px;
-    padding:13px 15px;cursor:pointer;font-family:inherit;color:var(--ink);
+    padding:12px 16px;
+    font-family:inherit;color:var(--ink);text-align:left;cursor:pointer;
     transition:border-color .15s,transform .1s;
     touch-action:manipulation;user-select:none;-webkit-tap-highlight-color:transparent;
   }
-  .landing-routecard:active{transform:scale(.99)}
-  @media (hover:hover){.landing-routecard:hover{border-color:var(--ink-soft)}}
-  .lrc-name{font-family:var(--font-display);font-size:21px;font-weight:700;line-height:1.05;color:var(--ink)}
-  .lrc-sub{font-size:12.5px;color:var(--ink-soft);margin-top:3px;line-height:1.35}
-  .lrc-prog{font-size:12px;color:var(--accent);font-weight:700;margin-top:9px;letter-spacing:.2px}
-  .landing-change{background:none;border:0;color:var(--accent);font-weight:700;font-size:13.5px;text-decoration:underline;cursor:pointer;padding:6px;font-family:inherit;touch-action:manipulation}
+  .landing-selector:active{transform:scale(.99)}
+  @media (hover:hover){.landing-selector:hover{border-color:var(--ink-soft)}}
+  .sel-info{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+  .sel-label{font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:1.8px;text-transform:uppercase;color:var(--ink-soft)}
+  .sel-value{font-family:var(--font-display);font-size:19px;font-weight:700;color:var(--ink);line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .sel-chev{color:var(--accent);font-size:26px;font-weight:700;flex:none;line-height:1;margin-right:-2px}
 
   /* Route picker modal rows */
   .route-list{margin:16px 0 4px;display:flex;flex-direction:column;gap:10px}
@@ -291,8 +297,8 @@
     .landing-title{font-size:82px}
     .landing-tagline{font-size:24px;max-width:420px}
     .landing-reto-value{font-size:22px}
-    .landing-routecard{max-width:400px}
-    .lrc-name{font-size:24px}
+    .landing-selectors{max-width:400px}
+    .sel-value{font-size:22px}
     .landing-play{font-size:16px;padding:15px 28px;width:280px}
   }
 
@@ -453,7 +459,7 @@
   .scene-modal .scene-art{aspect-ratio:2/1;border-radius:12px;overflow:hidden;border:1px solid var(--ink-line)}
 
   /* ===== Journey panorama — one continuous scrollable landscape ===== */
-  .panorama{position:relative;border:1px solid var(--ink-line);border-radius:16px;overflow:hidden;margin:12px 0;background:var(--paper);height:280px}
+  .panorama{position:relative;border:1px solid var(--ink-line);border-radius:16px;overflow:hidden;margin:12px 0;background:var(--paper);height:360px}
   .pano-scroll{height:100%;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none}
   .pano-scroll::-webkit-scrollbar{display:none}
   .pano-art{height:100%;display:inline-block;line-height:0}
@@ -513,14 +519,31 @@
       <span class="landing-reto-label">Meta saludable</span>
       <span class="landing-reto-value" id="landing-goal">8.000 pasos</span>
     </div>
-    <div class="landing-pickrow-label" id="landing-pickrow-label">Tu ruta</div>
-    <button class="landing-routecard" id="landing-routecard" type="button">
-      <div class="lrc-name" id="lrc-name"></div>
-      <div class="lrc-sub" id="lrc-sub"></div>
-      <div class="lrc-prog" id="lrc-prog"></div>
-    </button>
-    <button class="landing-play" id="landing-play">Empezar ruta</button>
-    <button class="landing-change" id="landing-change" type="button">Seleccionar otra ruta</button>
+    <div class="landing-setup-label">Prepara tu paseo</div>
+    <div class="landing-selectors">
+      <button class="landing-selector" id="sel-route" type="button">
+        <div class="sel-info">
+          <span class="sel-label">Tu ruta</span>
+          <span class="sel-value" id="sel-route-val">—</span>
+        </div>
+        <span class="sel-chev" aria-hidden="true">›</span>
+      </button>
+      <button class="landing-selector" id="sel-character" type="button">
+        <div class="sel-info">
+          <span class="sel-label">Tu personaje</span>
+          <span class="sel-value" id="sel-character-val">Elegir</span>
+        </div>
+        <span class="sel-chev" aria-hidden="true">›</span>
+      </button>
+      <button class="landing-selector" id="sel-coach" type="button">
+        <div class="sel-info">
+          <span class="sel-label">Tu coach</span>
+          <span class="sel-value" id="sel-coach-val">Elegir</span>
+        </div>
+        <span class="sel-chev" aria-hidden="true">›</span>
+      </button>
+    </div>
+    <button class="landing-play" id="landing-play">Empezar caminata</button>
     <button class="landing-sub" id="landing-sub">Suscribirse al boletín</button>
     <div class="landing-credit">
       Una ruta diaria de <strong>Cortadito News</strong> · <span class="landing-credit-tagline">¡Lo esencial en un sorbo!</span>
@@ -863,39 +886,38 @@ function renderLanding(){
   document.getElementById('landing-date').textContent=longDate();
   document.getElementById('landing-goal').textContent=nFmt(RECOMMENDED)+' pasos';
 
-  var picked = !!state.picked || anyStarted();
-  var pickLabel=document.getElementById('landing-pickrow-label');
-  var card=document.getElementById('landing-routecard');
+  var j=J(state.selected), walked=miles(state.selected), done=walked>=j.total, started=cumSteps(state.selected)>0;
+
+  // Route selector value: route name + (status if any)
+  var routeStatus = done ? ' · ¡completada!'
+                  : started ? (' · '+Math.round(walked/j.total*100)+'%')
+                  : '';
+  document.getElementById('sel-route-val').textContent = j.name + routeStatus;
+
+  // Character & coach selectors (data will be populated once those modals are wired)
+  document.getElementById('sel-character-val').textContent = CHARACTER_NAMES[state.character] || 'Elegir';
+  document.getElementById('sel-coach-val').textContent     = COACH_NAMES[state.coach]         || 'Elegir';
+
+  // Play button — always visible; only the label changes with state
   var play=document.getElementById('landing-play');
-  var change=document.getElementById('landing-change');
+  play.textContent = done ? 'Ver caminata' : (started ? 'Continuar caminata' : 'Empezar caminata');
+  play.onclick = function(){ openJourney(state.selected); };
+}
 
-  if(!picked){
-    // First visit — a single "Selecciona tu ruta" button opens the picker.
-    pickLabel.classList.add('hide');
-    card.classList.add('hide');
-    play.classList.add('hide');
-    change.textContent='Selecciona tu ruta';
-    change.classList.remove('hide');
-    return;
-  }
-
-  pickLabel.classList.remove('hide');
-  card.classList.remove('hide');
-  play.classList.remove('hide');
-  change.textContent='Seleccionar otra ruta';
-  change.classList.remove('hide');
-
-  var j=J(state.selected),walked=miles(state.selected),done=walked>=j.total,started=cumSteps(state.selected)>0;
-  document.getElementById('lrc-name').textContent=j.name;
-  document.getElementById('lrc-sub').textContent=j.sub;
-  var prog=document.getElementById('lrc-prog');
-  if(done)prog.textContent='¡Completada! · '+fmtMi(j.total);
-  else if(started)prog.textContent=Math.round(walked/j.total*100)+'% · '+fmtMi1(walked)+' de '+fmtMi(j.total);
-  else prog.textContent=j.place+' · '+fmtMi(j.total)+' · '+j.stops.length+' paradas';
-
-  play.textContent=done?'Ver ruta':(started?'Continuar ruta':'Empezar ruta');
-  play.onclick=function(){openJourney(state.selected);};
-  card.onclick=function(){openJourney(state.selected);};
+/* Character + coach selection — placeholders for now; options arrive next. */
+var CHARACTER_NAMES = {};   // populated when the character options are defined
+var COACH_NAMES     = {};   // populated when the coach options are defined
+function showCharacterPicker(){
+  showInfo('Tu personaje',
+    '<p>Pronto podrás elegir tu personaje entre varias siluetas distintas. Por ahora, todos caminamos con el mismo viajero naranja.</p>'+
+    '<p class="muted">Vuelve aquí cuando habilitemos las opciones — tu elección se guarda en el dispositivo, así que el camino sigue siendo el tuyo.</p>'
+  );
+}
+function showCoachPicker(){
+  showInfo('Tu coach',
+    '<p>Pronto podrás elegir un coach que te acompañe con su propio estilo y mensajes en cada etapa del camino.</p>'+
+    '<p class="muted">Aviso: esto es solo el botón. Las opciones llegan en la siguiente actualización.</p>'
+  );
 }
 
 /* Route picker — every route persists its own progress; one is "activa". */
@@ -1163,7 +1185,7 @@ function openScene(j,i){var st=j.stops[i],s2=sceneOf(j.id,st,i,j.stops.length);
    The hiker stands at your current walked position; the area ahead is dimmed.
    Scrolling acts like scrubbing video — overlay labels update as you move.
 ============================================================================ */
-var PANO_W=3200, PANO_H=280, PANO_PADL=140, PANO_PADR=160;
+var PANO_W=3200, PANO_H=360, PANO_PADL=140, PANO_PADR=160;
 var _panoWired=false, _panoAutoScrolled=false;
 
 function panoRidge(pts,W,H,fill,op){var d='M0 '+H+' L0 '+pts[0][1];for(var i=0;i<pts.length;i++)d+=' L'+pts[i][0]+' '+pts[i][1];d+=' L'+W+' '+H+' Z';return '<path d="'+d+'" fill="'+fill+'"'+(op!=null?' opacity="'+op+'"':'')+'/>';}
@@ -1275,7 +1297,7 @@ function buildPanorama(j,walked,c){
   // ---- Elevation-aware ground (real profile when stop.el is provided) ----
   var hasEl=true; for(var k=0;k<N;k++) if(typeof j.stops[k].el!=='number'){hasEl=false;break;}
   // dramatic elevation: BASE = where the lowest stops sit; ELEV = how far the highest peaks climb
-  var profile=null, BASE=250, ELEV=215;
+  var profile=null, BASE=320, ELEV=280;
   if(hasEl){
     var minE=Infinity,maxE=-Infinity;
     for(k=0;k<N;k++){var e=j.stops[k].el;if(e<minE)minE=e;if(e>maxE)maxE=e;}
@@ -1288,7 +1310,7 @@ function buildPanorama(j,walked,c){
       var t=p2.x>p1.x?(x-p1.x)/(p2.x-p1.x):0; t=Math.max(0,Math.min(1,t));
       return p1.y + (p2.y-p1.y)*t + 2.5*Math.sin(x*0.013+1.4) + 1.6*Math.sin(x*0.022);
     }
-    return 210 + 6*Math.sin(x*0.006+3) + 4*Math.sin(x*0.013+0.4);
+    return 290 + 6*Math.sin(x*0.006+3) + 4*Math.sin(x*0.013+0.4);
   }
 
   // ---- Sky setup (smooth horizontal mood arc + vertical-fade horizon) ----
@@ -1707,7 +1729,9 @@ document.querySelectorAll('[data-act]').forEach(function(el){
   el.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();moreMenu.classList.remove('open');navAction(el.getAttribute('data-act'));});
 });
 document.getElementById('landing-sub').addEventListener('click',function(){navAction('news');});
-document.getElementById('landing-change').addEventListener('click',showRoutes);
+document.getElementById('sel-route').addEventListener('click',showRoutes);
+document.getElementById('sel-character').addEventListener('click',showCharacterPicker);
+document.getElementById('sel-coach').addEventListener('click',showCoachPicker);
 document.getElementById('landing-theme-btn').addEventListener('click',toggleTheme);
 document.getElementById('cel-share').addEventListener('click',sharePasos);
 
