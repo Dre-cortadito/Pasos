@@ -1163,7 +1163,7 @@ function openScene(j,i){var st=j.stops[i],s2=sceneOf(j.id,st,i,j.stops.length);
    The hiker stands at your current walked position; the area ahead is dimmed.
    Scrolling acts like scrubbing video — overlay labels update as you move.
 ============================================================================ */
-var PANO_W=3200, PANO_H=280;
+var PANO_W=3200, PANO_H=280, PANO_PADL=140, PANO_PADR=160;
 var _panoWired=false, _panoAutoScrolled=false;
 
 function panoRidge(pts,W,H,fill,op){var d='M0 '+H+' L0 '+pts[0][1];for(var i=0;i<pts.length;i++)d+=' L'+pts[i][0]+' '+pts[i][1];d+=' L'+W+' '+H+' Z';return '<path d="'+d+'" fill="'+fill+'"'+(op!=null?' opacity="'+op+'"':'')+'/>';}
@@ -1223,14 +1223,17 @@ function panoLandmark(b,x,y,c){var I=c.ink,P=c.paper;
   return '<rect x="'+(x-1.6)+'" y="'+(y-26)+'" width="3.2" height="22" fill="'+I+'"/><circle cx="'+x+'" cy="'+(y-32)+'" r="13" fill="'+I+'"/>';
 }
 function panoHiker(x,y,fill){
-  // a recognisable traveller silhouette ~42px tall: head, torso, backpack hump, two legs mid-stride, walking pole
-  return '<g fill="'+fill+'">'
-    +'<circle cx="'+x+'" cy="'+(y-36)+'" r="6"/>'
-    +'<rect x="'+(x-3)+'" y="'+(y-30)+'" width="6" height="19" rx="2.4"/>'
-    +'<path d="M'+(x-5)+' '+(y-26)+' Q'+(x-12)+' '+(y-19)+' '+(x-5)+' '+(y-10)+' Z"/>'
-    +'<rect x="'+(x-3)+'" y="'+(y-12)+'" width="3.6" height="14" rx="1.4" transform="rotate(18 '+(x-1.2)+' '+(y-12)+')"/>'
-    +'<rect x="'+(x-0.6)+'" y="'+(y-12)+'" width="3.6" height="14" rx="1.4" transform="rotate(-18 '+(x+1.2)+' '+(y-12)+')"/>'
-    +'<line x1="'+(x+10)+'" y1="'+(y-30)+'" x2="'+(x+6)+'" y2="'+(y+2)+'" stroke="'+fill+'" stroke-width="2.2" stroke-linecap="round"/>'
+  // Bright traveller silhouette (orange) so he's unmistakable on any backdrop.
+  // ~46px tall: head, torso, backpack hump, two legs mid-stride, walking pole.
+  // 'fill' is reserved for the dark scene ink; the hiker uses the brand accent directly.
+  var ACC='#ee6d20', ACCD='#c95613';
+  return '<g>'
+    +'<circle cx="'+x+'" cy="'+(y-40)+'" r="6.5" fill="'+ACC+'"/>'
+    +'<rect x="'+(x-3.5)+'" y="'+(y-33)+'" width="7" height="21" rx="2.6" fill="'+ACC+'"/>'
+    +'<path d="M'+(x-5.5)+' '+(y-29)+' Q'+(x-13)+' '+(y-21)+' '+(x-5.5)+' '+(y-11)+' Z" fill="'+ACCD+'"/>'
+    +'<rect x="'+(x-3.2)+'" y="'+(y-13)+'" width="3.8" height="15" rx="1.4" transform="rotate(20 '+(x-1.3)+' '+(y-13)+')" fill="'+ACC+'"/>'
+    +'<rect x="'+(x-0.6)+'" y="'+(y-13)+'" width="3.8" height="15" rx="1.4" transform="rotate(-20 '+(x+1.3)+' '+(y-13)+')" fill="'+ACC+'"/>'
+    +'<line x1="'+(x+11)+'" y1="'+(y-32)+'" x2="'+(x+7)+'" y2="'+(y+2)+'" stroke="'+ACCD+'" stroke-width="2.4" stroke-linecap="round"/>'
   +'</g>';
 }
 function panoLlama(x,y,fill){return '<g fill="'+fill+'"><ellipse cx="'+x+'" cy="'+(y-7)+'" rx="6" ry="3.3"/><rect x="'+(x+3)+'" y="'+(y-15)+'" width="2.2" height="9" rx="0.6"/><circle cx="'+(x+4.4)+'" cy="'+(y-16)+'" r="1.6"/><rect x="'+(x+5.4)+'" y="'+(y-17)+'" width="0.9" height="2"/><rect x="'+(x-5)+'" y="'+(y-4)+'" width="1.4" height="5"/><rect x="'+(x-2)+'" y="'+(y-4)+'" width="1.4" height="5"/><rect x="'+(x+1.4)+'" y="'+(y-4)+'" width="1.4" height="5"/><rect x="'+(x+4)+'" y="'+(y-4)+'" width="1.4" height="5"/></g>';}
@@ -1245,7 +1248,11 @@ var REGION_TINT={
 };
 function buildPanorama(j,walked,c){
   c=c||sceneCSS();var W=PANO_W,H=PANO_H;
-  var hX=Math.max(0,Math.min(W,(walked/j.total)*W));
+  // Inset the route so landmark silhouettes (Huayna Picchu, gateway, terraces…)
+  // have room to breathe at the very start (Km 82) and the very end (Machu Picchu).
+  var padL=140, padR=160, innerW=W-padL-padR;
+  function stopX(mi){return padL + (mi/j.total)*innerW;}
+  var hX=Math.max(padL, Math.min(W-padR, stopX(walked)));
   var N=j.stops.length, biomes=SCENE_BIOMES[j.id]||[];
 
   // ---- Elevation-aware ground (real profile when stop.el is provided) ----
@@ -1255,7 +1262,7 @@ function buildPanorama(j,walked,c){
   if(hasEl){
     var minE=Infinity,maxE=-Infinity;
     for(k=0;k<N;k++){var e=j.stops[k].el;if(e<minE)minE=e;if(e>maxE)maxE=e;}
-    profile=j.stops.map(function(s){var t=(s.el-minE)/Math.max(1,maxE-minE);return {x:(s.mi/j.total)*W, y: BASE - t*ELEV};});
+    profile=j.stops.map(function(s){var t=(s.el-minE)/Math.max(1,maxE-minE);return {x:stopX(s.mi), y: BASE - t*ELEV};});
   }
   function yAt(x){
     if(profile){
@@ -1283,7 +1290,8 @@ function buildPanorama(j,walked,c){
   defs+='<mask id="pBotMask" maskUnits="userSpaceOnUse" x="0" y="0" width="'+W+'" height="'+H+'"><rect width="'+W+'" height="'+H+'" fill="url(#pAlpha)"/></mask>';
   // ---- Region tint gradient: distant hills take on the biome's local colour ----
   defs+='<linearGradient id="pTint" x1="0" y1="0" x2="'+W+'" y2="0" gradientUnits="userSpaceOnUse">';
-  for(k=0;k<N;k++){var off=(j.stops[k].mi/j.total).toFixed(4); var col=REGION_TINT[biomes[k]||'plains']||c.ink; defs+='<stop offset="'+off+'" stop-color="'+col+'"/>';}
+  // tint stops are positioned in real x/W terms so they line up with the padded landmarks
+  for(k=0;k<N;k++){var off=(stopX(j.stops[k].mi)/W).toFixed(4); var col=REGION_TINT[biomes[k]||'plains']||c.ink; defs+='<stop offset="'+off+'" stop-color="'+col+'"/>';}
   defs+='</linearGradient>';
   defs+='</defs>';
   s+=defs;
@@ -1305,10 +1313,10 @@ function buildPanorama(j,walked,c){
   s+=panoRidge(fp,W,H,c.ink,1);
 
   // ---- Landmarks anchored to the actual ground at each stop's elevation ----
-  for(k=0;k<N;k++){var lx=Math.round((j.stops[k].mi/j.total)*W); var ly=Math.round(yAt(lx))-2; s+=panoLandmark(biomes[k]||'plains',lx,ly,c);}
+  for(k=0;k<N;k++){var lx=Math.round(stopX(j.stops[k].mi)); var ly=Math.round(yAt(lx))-2; s+=panoLandmark(biomes[k]||'plains',lx,ly,c);}
 
   // ---- Peruvian / cultural details: llamas on terraces, condors above the pass/snow ----
-  for(k=0;k<N-1;k++){var bi=biomes[k]||'plains', xa=(j.stops[k].mi/j.total)*W, xb=(j.stops[k+1].mi/j.total)*W;
+  for(k=0;k<N-1;k++){var bi=biomes[k]||'plains', xa=stopX(j.stops[k].mi), xb=stopX(j.stops[k+1].mi);
     if(bi==='terraces'||bi==='winaywayna'||bi==='machu'){
       for(var li=0;li<2;li++){var lx2=xa+(xb-xa)*(0.32+li*0.34); s+=panoLlama(Math.round(lx2),Math.round(yAt(lx2))-2,c.ink);}
     }
@@ -1328,7 +1336,8 @@ function updatePanoOverlay(){
   var ps=document.getElementById('pano-scroll'); if(!ps) return;
   var pxR=ps.clientHeight/PANO_H;
   var centerI=(ps.scrollLeft+ps.clientWidth/2)/pxR;
-  var milesAt=clamp(centerI/PANO_W,0,1)*jj.total;
+  var innerW=PANO_W-PANO_PADL-PANO_PADR;
+  var milesAt=clamp((centerI-PANO_PADL)/innerW,0,1)*jj.total;
 
   // figure out which section (between which two stops) we're in
   var sectionI=jj.stops.length-1;
@@ -1368,7 +1377,8 @@ function autoScrollPanoIfNeeded(j,walked){
   if(_panoAutoScrolled)return;
   var ps=document.getElementById('pano-scroll'); if(!ps)return;
   var pxR=ps.clientHeight/PANO_H;
-  var hxPx=(walked/j.total)*PANO_W*pxR;
+  var innerW=PANO_W-PANO_PADL-PANO_PADR;
+  var hxPx=(PANO_PADL+(walked/j.total)*innerW)*pxR;
   setTimeout(function(){ps.scrollLeft=Math.max(0,hxPx-ps.clientWidth/2); _panoAutoScrolled=true; updatePanoOverlay();},10);
 }
 
