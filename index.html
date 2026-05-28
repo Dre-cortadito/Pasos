@@ -332,11 +332,12 @@
   .char-tile.active{border-color:var(--accent);background:var(--accent-soft)}
   @media (hover:hover){.char-tile:hover{border-color:var(--ink-soft)}}
   .char-tile .char-silhouette{
-    width:100%;height:100%;
+    width:100%;height:100%;pointer-events:none;
     background-color:var(--accent);
     -webkit-mask-position:center bottom;mask-position:center bottom;
     -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
     -webkit-mask-size:contain;mask-size:contain;
+    -webkit-mask-mode:alpha;mask-mode:alpha;
   }
   @media (max-width:420px){
     .char-grid{grid-template-columns:repeat(4,1fr);gap:7px}
@@ -1049,16 +1050,17 @@ function showCharacterPicker(){
       }).join('')+
     '</div>';
   showInfo('Tu personaje', html);
-  // Wire clicks: pick character, save, close overlay, refresh landing
+  // Wire clicks: pick character, save, close overlay, refresh landing.
+  // closeAll() matches what the route/goal pickers use.
   document.querySelectorAll('#char-grid .char-tile').forEach(function(t){
-    t.addEventListener('click', function(){
+    t.onclick = function(){
       state.character = t.getAttribute('data-char');
       save();
-      closeOverlay('ov-info');
+      closeAll();
       renderLanding();
       // If the player is currently in a journey, re-render to swap the hiker
-      try{ render(); }catch(e){}
-    });
+      try{ if(current) render(); }catch(e){}
+    };
   });
 }
 function showCoachPicker(){
