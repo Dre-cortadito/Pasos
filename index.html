@@ -706,14 +706,15 @@ var JOURNEYS=[
     id:'inca', name:'Sendero Inca', sub:'Km 82 → Machu Picchu · Camino Inca clásico',
     place:'Perú', total:26, tag:'free', tagtxt:'Gratis',
     stops:[
-      {n:'Km 82 (Piscacucho)', mi:0,  f:'El control oficial junto al río Urubamba. Sellan tu permiso y empieza el camino empedrado por los incas.'},
-      {n:'Llaqtapata',         mi:3,  f:'Primer mirador de ruinas: andenes incas asomados sobre el valle. Buen sitio para el primer respiro.'},
-      {n:'Wayllabamba',        mi:9,  f:'Último caserío con familias quechuas. Aquí se acampa antes de la gran subida.'},
-      {n:'Warmiwañusca',       mi:13, f:'El "Paso de la Mujer Muerta", 4.215 m: el punto más alto de la ruta. Respira hondo y disfruta la vista.'},
-      {n:'Pacaymayo',          mi:15, f:'Campamento en el valle, entre cascadas y neblina. El cuerpo agradece el descenso.'},
-      {n:'Phuyupatamarca',     mi:19, f:'"Pueblo sobre las nubes": fuentes ceremoniales incas que aún corren con agua.'},
-      {n:'Wiñay Wayna',        mi:23, f:'"Para siempre joven" en quechua. Andenes colgados sobre el Urubamba, casi a las puertas de Machu Picchu.'},
-      {n:'Machu Picchu',       mi:26, f:'Cruzas el Inti Punku, la Puerta del Sol, al amanecer. La ciudadela aparece entre la bruma. ¡Lo lograste!'}
+      {n:'Km 82 (Piscacucho)', mi:0,  el:2600, f:'El control oficial junto al río Urubamba, a 2.600 m. Sellan tu permiso y empieza el camino empedrado por los incas.'},
+      {n:'Llaqtapata',         mi:3,  el:2750, f:'Primer mirador de ruinas: andenes incas asomados sobre el valle. Buen sitio para el primer respiro.'},
+      {n:'Wayllabamba',        mi:9,  el:3000, f:'Último caserío con familias quechuas a 3.000 m. Aquí se acampa antes de la gran subida.'},
+      {n:'Warmiwañusca',       mi:13, el:4215, f:'El "Paso de la Mujer Muerta", 4.215 m: el punto más alto del Camino Inca. Respira hondo y disfruta la vista.'},
+      {n:'Pacaymayo',          mi:15, el:3600, f:'Campamento en el valle a 3.600 m, entre cascadas y neblina. El cuerpo agradece el descenso.'},
+      {n:'Phuyupatamarca',     mi:19, el:3650, f:'"Pueblo sobre las nubes" a 3.650 m: fuentes ceremoniales incas que aún corren con agua.'},
+      {n:'Wiñay Wayna',        mi:23, el:2680, f:'"Para siempre joven" en quechua, 2.680 m. Andenes curvos colgados sobre el Urubamba, junto a un grupo de casas de piedra inca.'},
+      {n:'Inti Punku',         mi:25, el:2730, f:'La Puerta del Sol: portada de piedra incaica en la cresta, a 2.730 m. Primera vista de Machu Picchu allá abajo.'},
+      {n:'Machu Picchu',       mi:26, el:2430, f:'La ciudadela perdida, 2.430 m. Andenes, templos y el Huayna Picchu al fondo. ¡Lo lograste!'}
     ]
   },
   {
@@ -989,7 +990,7 @@ function statTile(v,l){return '<div class="stat"><div class="v">'+v+'</div><div 
    Colors are read live from the theme tokens, so scenes adapt to dark mode.
 ============================================================================ */
 var SCENE_BIOMES={
-  inca:    ['forest','terraces','forest','pass','forest','terraces','terraces','machu'],
+  inca:    ['forest','terraces','forest','pass','forest','terraces','winaywayna','intipunku','machu'],
   everest: ['forest','forest','peak','peak','snow','snow','snow','snow'],
   cafe:    ['city','palms','city','forest','city','forest','forest','palms'],
   santiago:['pass','plains','plains','cathedral','plains','peak','forest','cathedral'],
@@ -997,14 +998,15 @@ var SCENE_BIOMES={
   ruta66:  ['city','arch','city','plains','desert','desert','peak','pier']
 };
 var INCA_CAPS=[
-  'Sellas el permiso junto al río Urubamba y el camino de piedra se abre ante ti.',
-  'Llaqtapata asoma entre andenes incas; el valle queda muy abajo, verde y húmedo.',
-  'Última aldea quechua antes de la gran subida. Esta noche se acampa.',
-  'El Paso de la Mujer Muerta, 4.215 m. En el techo de la ruta, sin aliento.',
-  'Bajas entre cascadas y neblina; el campamento huele a tierra mojada.',
-  'Phuyupatamarca, el pueblo sobre las nubes. Las fuentes incas todavía cantan.',
-  '"Para siempre joven", andenes colgados sobre el rugido del Urubamba.',
-  'Cruzas el Inti Punku al amanecer y la ciudadela aparece entre la bruma. Lo lograste.'
+  'Sellas el permiso junto al río Urubamba y el camino empedrado se abre ante ti.',
+  'Los primeros andenes incas asoman entre la bruma; el valle queda muy abajo, verde y húmedo.',
+  'Última aldea quechua antes de la gran subida. Esta noche se acampa entre los cerros.',
+  'El Paso de la Mujer Muerta, 4.215 m. En el techo del Camino Inca, el aire ya casi no alcanza.',
+  'Bajas entre cascadas y neblina al campamento del valle; el cuerpo respira de nuevo.',
+  'Phuyupatamarca, el pueblo sobre las nubes. Las fuentes incas todavía cantan piedra abajo.',
+  'Andenes que se curvan por la ladera "para siempre jóvenes", junto a casas de piedra inca.',
+  'La Puerta del Sol al amanecer: una portada de piedra mira a Machu Picchu en el valle.',
+  'La ciudadela aparece entre la bruma. Andenes, templos y el Huayna Picchu al fondo. Lo lograste.'
 ];
 function firstSentence(s){if(!s)return '';var i=s.indexOf('. ');return (i<0?s:s.slice(0,i+1)).replace(/\s+$/,'');}
 function sceneOf(routeId,stop,i,total){
@@ -1018,6 +1020,9 @@ function sceneCSS(){return {paper:'#fbfaf6',ink:'#1a1614',inkLine:'#ece7df',acc:
 function ridgePath(pts,W,H,fill,op){var d='M0 '+H+' L0 '+pts[0][1];for(var i=0;i<pts.length;i++)d+=' L'+pts[i][0]+' '+pts[i][1];d+=' L'+W+' '+H+' Z';return '<path d="'+d+'" fill="'+fill+'"'+(op!=null?' opacity="'+op+'"':'')+'/>';}
 function frontBiome(b,W,H,c){
   var I=c.ink, P=c.paper;
+  // delegate the new Inca-specific biomes to their thematic neighbours in the small-scene viewer
+  if(b==='winaywayna') b='terraces';
+  if(b==='intipunku')  b='peak';
   if(b==='peak')   return ridgePath([[0,120],[35,68],[72,112],[112,54],[152,102],[196,60],[236,106],[276,74],[300,112]],W,H,I,1);
   if(b==='pass')   return ridgePath([[0,120],[52,58],[118,92],[150,86],[182,92],[248,56],[300,118]],W,H,I,1);
   if(b==='snow'){var pts=[[0,120],[40,64],[80,108],[120,50],[170,98],[215,58],[260,104],[300,84]];
@@ -1098,9 +1103,47 @@ var _panoWired=false, _panoAutoScrolled=false;
 function panoRidge(pts,W,H,fill,op){var d='M0 '+H+' L0 '+pts[0][1];for(var i=0;i<pts.length;i++)d+=' L'+pts[i][0]+' '+pts[i][1];d+=' L'+W+' '+H+' Z';return '<path d="'+d+'" fill="'+fill+'"'+(op!=null?' opacity="'+op+'"':'')+'/>';}
 
 function panoLandmark(b,x,y,c){var I=c.ink,P=c.paper;
-  if(b==='pass')return '<path d="M'+(x-90)+' '+y+' L'+(x-30)+' '+(y-110)+' L'+x+' '+(y-50)+' L'+(x+30)+' '+(y-110)+' L'+(x+90)+' '+y+' Z" fill="'+I+'"/>';
+  if(b==='pass'){// Warmiwañusca — asymmetric saddle ("reclining woman": taller head-peak left, body-peak right)
+    return '<path d="M'+(x-110)+' '+y+' L'+(x-60)+' '+(y-130)+' L'+(x-30)+' '+(y-85)+' L'+x+' '+(y-60)+' L'+(x+30)+' '+(y-95)+' L'+(x+70)+' '+(y-115)+' L'+(x+110)+' '+y+' Z" fill="'+I+'"/>';}
   if(b==='snow')return '<path d="M'+(x-100)+' '+y+' L'+(x-40)+' '+(y-100)+' L'+(x-15)+' '+(y-65)+' L'+(x+10)+' '+(y-120)+' L'+(x+50)+' '+(y-70)+' L'+(x+100)+' '+y+' Z" fill="'+I+'"/><path d="M'+(x+10)+' '+(y-120)+' l-14 22 l28 0 z" fill="'+P+'" opacity=".92"/><path d="M'+(x-40)+' '+(y-100)+' l-10 16 l20 0 z" fill="'+P+'" opacity=".85"/>';
-  if(b==='machu'){var ter='';for(var k=0;k<4;k++){ter+='<rect x="'+(x-50)+'" y="'+(y-22-k*5)+'" width="65" height="2" fill="'+P+'" opacity=".22"/>';}return '<path d="M'+(x-80)+' '+y+' L'+(x-60)+' '+(y-40)+' L'+(x-20)+' '+(y-30)+' L'+x+' '+y+' Z" fill="'+I+'"/><path d="M'+(x+10)+' '+y+' Q'+(x+30)+' '+(y-130)+' '+(x+60)+' '+y+' Z" fill="'+I+'"/>'+ter;}
+  if(b==='machu'){
+    // Faithful Machu Picchu: receding background ridges + Huayna Picchu sugarloaf + citadel terraces
+    var back='<path d="M'+(x-130)+' '+y+' L'+(x-90)+' '+(y-55)+' L'+(x-55)+' '+(y-25)+' L'+(x-20)+' '+(y-70)+' L'+(x+15)+' '+(y-40)+' L'+(x+50)+' '+(y-85)+' L'+(x+90)+' '+(y-40)+' L'+(x+130)+' '+y+' Z" fill="'+I+'" opacity="0.5"/>';
+    var leftHill='<path d="M'+(x-78)+' '+y+' Q'+(x-58)+' '+(y-50)+' '+(x-38)+' '+y+' Z" fill="'+I+'"/>';
+    // Huayna Picchu — tall sugarloaf peak rising right-of-center, slightly bulged
+    var hp='<path d="M'+(x-5)+' '+y+' Q'+(x+5)+' '+(y-90)+' '+(x+18)+' '+(y-160)+' Q'+(x+30)+' '+(y-90)+' '+(x+42)+' '+y+' Z" fill="'+I+'"/>';
+    // The citadel — cluster of stepped rectangular ruins arranged in a horseshoe
+    var cit='';
+    [[-46,0,11,8],[-32,-2,12,10],[-17,-3,13,11],[-2,-3,13,11],[12,-2,11,9]].forEach(function(o){cit+='<rect x="'+(x+o[0])+'" y="'+(y+o[1]-o[3])+'" width="'+o[2]+'" height="'+o[3]+'" fill="'+I+'"/>';});
+    [[-38,-14,8,6],[-26,-15,10,7],[-14,-15,10,7],[-2,-14,9,6]].forEach(function(o){cit+='<rect x="'+(x+o[0])+'" y="'+(y+o[1]-o[3])+'" width="'+o[2]+'" height="'+o[3]+'" fill="'+I+'"/>';});
+    // faint terrace lines on the citadel hill
+    var ter='';for(var k=0;k<3;k++)ter+='<rect x="'+(x-46)+'" y="'+(y-2-k*4)+'" width="68" height="1.4" fill="'+P+'" opacity="0.22"/>';
+    return back+leftHill+hp+cit+ter;
+  }
+  if(b==='winaywayna'){
+    // Wiñay Wayna — slope with sweeping curved terraces + cluster of stone buildings at the top
+    var slope='<path d="M'+(x-95)+' '+y+' L'+(x-65)+' '+(y-12)+' L'+(x-25)+' '+(y-45)+' L'+(x+30)+' '+(y-72)+' L'+(x+70)+' '+(y-55)+' L'+(x+95)+' '+y+' Z" fill="'+I+'"/>';
+    var ter='';
+    for(var k=0;k<7;k++){var ky=y-12-k*7,xl=x-58+k*7,xr=x+62-k*4;
+      ter+='<path d="M'+xl+' '+ky+' Q'+(x-5+k*2)+' '+(ky-4)+' '+xr+' '+ky+'" fill="none" stroke="'+P+'" stroke-width="1.4" opacity="0.36"/>';}
+    var bld='';
+    [[40,-64,9,9],[50,-66,8,8],[42,-72,9,7],[55,-74,7,6]].forEach(function(o){bld+='<rect x="'+(x+o[0])+'" y="'+(y+o[1]-o[3])+'" width="'+o[2]+'" height="'+o[3]+'" fill="'+I+'"/>';});
+    return slope+ter+bld;
+  }
+  if(b==='intipunku'){
+    // Sun Gate — snow-capped peaks behind + stone doorway on the crest with steps leading up
+    var peaks='<path d="M'+(x-130)+' '+y+' L'+(x-90)+' '+(y-100)+' L'+(x-50)+' '+(y-65)+' L'+(x-10)+' '+(y-115)+' L'+(x+30)+' '+(y-70)+' L'+(x+80)+' '+(y-100)+' L'+(x+130)+' '+y+' Z" fill="'+I+'" opacity="0.5"/>';
+    var snow='<path d="M'+(x-10)+' '+(y-115)+' l-12 19 l24 0 z" fill="'+P+'" opacity="0.88"/>'
+            +'<path d="M'+(x-90)+' '+(y-100)+' l-10 16 l20 0 z" fill="'+P+'" opacity="0.82"/>'
+            +'<path d="M'+(x+80)+' '+(y-100)+' l-10 16 l20 0 z" fill="'+P+'" opacity="0.82"/>';
+    var crest='<path d="M'+(x-70)+' '+y+' Q'+(x-30)+' '+(y-18)+' '+x+' '+(y-22)+' Q'+(x+30)+' '+(y-18)+' '+(x+70)+' '+y+' Z" fill="'+I+'"/>';
+    // Inca stone gateway (doorway with rectangular opening)
+    var bx=x-13, by=y-58;
+    var gate='<rect x="'+bx+'" y="'+by+'" width="26" height="38" fill="'+I+'"/>'
+           +'<rect x="'+(bx+9)+'" y="'+(by+9)+'" width="8" height="24" fill="'+P+'" opacity="0.88"/>';
+    var steps='';for(var k=0;k<4;k++)steps+='<rect x="'+(x-3)+'" y="'+(y-18-k*2)+'" width="6" height="2" fill="'+I+'"/>';
+    return peaks+snow+crest+gate+steps;
+  }
   if(b==='forest'){var tr='';[-50,-15,20,55].forEach(function(dx){tr+='<path d="M'+(x+dx)+' '+(y-5)+' l-9 0 l9 -32 l9 32 z" fill="'+I+'"/><rect x="'+(x+dx-1.6)+'" y="'+(y-5)+'" width="3.2" height="8" fill="'+I+'"/>';});return tr;}
   if(b==='palms'){var pa='';[-40,0,40].forEach(function(dx){var ph=100;pa+='<rect x="'+(x+dx-1.3)+'" y="'+(y-ph)+'" width="2.6" height="'+ph+'" fill="'+I+'"/><g transform="translate('+(x+dx)+' '+(y-ph)+')" stroke="'+I+'" stroke-width="2" fill="none" stroke-linecap="round"><path d="M0 0 q-12 -3 -18 6"/><path d="M0 0 q12 -3 18 6"/><path d="M0 0 q-7 -10 -3 -16"/><path d="M0 0 q7 -10 3 -16"/><path d="M0 0 q-15 1 -19 8"/><path d="M0 0 q15 1 19 8"/></g>';});return pa;}
   if(b==='terraces'){var t2='';for(var k=0;k<5;k++){t2+='<rect x="'+(x-40+k*5)+'" y="'+(y-30+k*5)+'" width="'+(80-k*10)+'" height="2" fill="'+P+'" opacity=".25"/>';}return '<path d="M'+(x-60)+' '+y+' L'+(x-20)+' '+(y-30)+' L'+(x+30)+' '+(y-12)+' L'+(x+50)+' '+y+' Z" fill="'+I+'"/>'+t2;}
@@ -1114,46 +1157,92 @@ function panoLandmark(b,x,y,c){var I=c.ink,P=c.paper;
   return '<rect x="'+(x-1.6)+'" y="'+(y-26)+'" width="3.2" height="22" fill="'+I+'"/><circle cx="'+x+'" cy="'+(y-32)+'" r="13" fill="'+I+'"/>';
 }
 function panoHiker(x,y,fill){return '<g fill="'+fill+'"><circle cx="'+x+'" cy="'+(y-22)+'" r="3"/><rect x="'+(x-1.6)+'" y="'+(y-18)+'" width="3.2" height="11" rx="1.4"/><rect x="'+(x-1.6)+'" y="'+(y-7)+'" width="3.2" height="9" transform="rotate(18 '+x+' '+(y-7)+')"/><rect x="'+(x-1.6)+'" y="'+(y-7)+'" width="3.2" height="9" transform="rotate(-12 '+x+' '+(y-7)+')"/><rect x="'+(x-9)+'" y="'+(y-22)+'" width="16" height="2.2" transform="rotate(20 '+x+' '+(y-21)+')"/></g>';}
+function panoLlama(x,y,fill){return '<g fill="'+fill+'"><ellipse cx="'+x+'" cy="'+(y-7)+'" rx="6" ry="3.3"/><rect x="'+(x+3)+'" y="'+(y-15)+'" width="2.2" height="9" rx="0.6"/><circle cx="'+(x+4.4)+'" cy="'+(y-16)+'" r="1.6"/><rect x="'+(x+5.4)+'" y="'+(y-17)+'" width="0.9" height="2"/><rect x="'+(x-5)+'" y="'+(y-4)+'" width="1.4" height="5"/><rect x="'+(x-2)+'" y="'+(y-4)+'" width="1.4" height="5"/><rect x="'+(x+1.4)+'" y="'+(y-4)+'" width="1.4" height="5"/><rect x="'+(x+4)+'" y="'+(y-4)+'" width="1.4" height="5"/></g>';}
+function panoCondor(x,y,fill){return '<path d="M'+(x-13)+' '+y+' Q'+(x-6)+' '+(y-4)+' '+x+' '+y+' Q'+(x+6)+' '+(y-4)+' '+(x+13)+' '+y+'" fill="none" stroke="'+fill+'" stroke-width="1.6" stroke-linecap="round" opacity="0.7"/>';}
 
+var REGION_TINT={
+  forest:'#3a5a3a', terraces:'#4f7038', winaywayna:'#3a6b3a', machu:'#9b6e4a',
+  pass:'#4a5a72', snow:'#7e9bc0', peak:'#52617a',
+  desert:'#9a4a30', city:'#3a3a4a', cathedral:'#7e6e52', arch:'#9a4a30',
+  pier:'#3a5a78', coast:'#3a5a78', plains:'#6f7e4a', palms:'#3a6b3a',
+  intipunku:'#5a6e82'
+};
 function buildPanorama(j,walked,c){
-  c=c||sceneCSS();var W=PANO_W,H=PANO_H,groundY=210;
+  c=c||sceneCSS();var W=PANO_W,H=PANO_H;
   var hX=Math.max(0,Math.min(W,(walked/j.total)*W));
+  var N=j.stops.length, biomes=SCENE_BIOMES[j.id]||[];
+
+  // ---- Elevation-aware ground (real profile when stop.el is provided) ----
+  var hasEl=true; for(var k=0;k<N;k++) if(typeof j.stops[k].el!=='number'){hasEl=false;break;}
+  var profile=null, BASE=222, ELEV=92;
+  if(hasEl){
+    var minE=Infinity,maxE=-Infinity;
+    for(k=0;k<N;k++){var e=j.stops[k].el;if(e<minE)minE=e;if(e>maxE)maxE=e;}
+    profile=j.stops.map(function(s){var t=(s.el-minE)/Math.max(1,maxE-minE);return {x:(s.mi/j.total)*W, y: BASE - t*ELEV};});
+  }
+  function yAt(x){
+    if(profile){
+      var seg=0; while(seg<profile.length-1 && profile[seg+1].x<x) seg++;
+      var p1=profile[seg], p2=profile[Math.min(profile.length-1,seg+1)];
+      var t=p2.x>p1.x?(x-p1.x)/(p2.x-p1.x):0; t=Math.max(0,Math.min(1,t));
+      return p1.y + (p2.y-p1.y)*t + 2.5*Math.sin(x*0.013+1.4) + 1.6*Math.sin(x*0.022);
+    }
+    return 210 + 6*Math.sin(x*0.006+3) + 4*Math.sin(x*0.013+0.4);
+  }
+
+  // ---- Sky setup (smooth horizontal mood arc + vertical-fade horizon) ----
   var topC={open:c.paper,golden:c.accS,dusk:c.acc,night:c.night};
   var botC={open:c.accS,golden:c.acc,dusk:c.accD,night:c.nightH};
   var keys=['open','golden','dusk','night','open'], fracs=[0,0.32,0.57,0.80,1];
   var s='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" style="height:100%;width:auto;display:block">';
   var defs='<defs>';
   defs+='<linearGradient id="pTop" x1="0" y1="0" x2="'+W+'" y2="0" gradientUnits="userSpaceOnUse">';
-  for(var k=0;k<keys.length;k++)defs+='<stop offset="'+fracs[k]+'" stop-color="'+topC[keys[k]]+'"/>';
+  for(k=0;k<keys.length;k++)defs+='<stop offset="'+fracs[k]+'" stop-color="'+topC[keys[k]]+'"/>';
   defs+='</linearGradient>';
   defs+='<linearGradient id="pBot" x1="0" y1="0" x2="'+W+'" y2="0" gradientUnits="userSpaceOnUse">';
   for(k=0;k<keys.length;k++)defs+='<stop offset="'+fracs[k]+'" stop-color="'+botC[keys[k]]+'"/>';
   defs+='</linearGradient>';
   defs+='<linearGradient id="pAlpha" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity="1"/></linearGradient>';
   defs+='<mask id="pBotMask" maskUnits="userSpaceOnUse" x="0" y="0" width="'+W+'" height="'+H+'"><rect width="'+W+'" height="'+H+'" fill="url(#pAlpha)"/></mask>';
+  // ---- Region tint gradient: distant hills take on the biome's local colour ----
+  defs+='<linearGradient id="pTint" x1="0" y1="0" x2="'+W+'" y2="0" gradientUnits="userSpaceOnUse">';
+  for(k=0;k<N;k++){var off=(j.stops[k].mi/j.total).toFixed(4); var col=REGION_TINT[biomes[k]||'plains']||c.ink; defs+='<stop offset="'+off+'" stop-color="'+col+'"/>';}
+  defs+='</linearGradient>';
   defs+='</defs>';
   s+=defs;
   s+='<rect width="'+W+'" height="'+H+'" fill="url(#pTop)"/>';
   s+='<rect width="'+W+'" height="'+H+'" fill="url(#pBot)" mask="url(#pBotMask)"/>';
-  // stars across the dusk-to-night zone (~0.55..0.95 of W)
+
+  // stars across the dusk-to-night zone
   for(k=0;k<46;k++){var fx=0.55+k*0.009; if(fx>0.96)continue; var sx=Math.round(fx*W); var sy=10+((k*53)%75); var op=(0.55+0.35*Math.sin(k*1.7)).toFixed(2); s+='<circle cx="'+sx+'" cy="'+sy+'" r="1.1" fill="'+c.paper+'" opacity="'+op+'"/>';}
   // sun (morning, left) and moon (night, right)
   s+='<circle cx="'+Math.round(W*0.09)+'" cy="62" r="20" fill="'+c.acc+'" opacity=".95"/>';
   s+='<circle cx="'+Math.round(W*0.82)+'" cy="50" r="14" fill="'+c.paper+'" opacity=".95"/>';
-  // continuous back haze ridge
-  var bp=[];for(var x=0;x<=W;x+=180)bp.push([x,Math.round(180+8*Math.sin(x*0.0028)+5*Math.sin(x*0.0067))]);
-  s+=panoRidge(bp,W,H,c.ink,0.22);
-  // mid ridge
-  var mp=[];for(x=0;x<=W;x+=160)mp.push([x,Math.round(198+10*Math.sin(x*0.0046+1.2)+7*Math.sin(x*0.011+0.8))]);
-  s+=panoRidge(mp,W,H,c.ink,0.48);
-  // continuous foreground ground (the walking strip)
-  var fp=[];for(x=0;x<=W;x+=140)fp.push([x,Math.round(groundY+6*Math.sin(x*0.006+3)+4*Math.sin(x*0.013+0.4))]);
+
+  // ---- Three ridges, all following the elevation profile ----
+  var bp=[],mp=[],fp=[];
+  for(var x=0;x<=W;x+=42){var y=yAt(x); fp.push([x,Math.round(y)]); mp.push([x,Math.round(y-14)]); bp.push([x,Math.round(y-28)]);}
+  // back ridge: tinted by region (so distant hills take on the biome colour)
+  s+=panoRidge(bp,W,H,'url(#pTint)',0.62);
+  s+=panoRidge(mp,W,H,c.ink,0.50);
   s+=panoRidge(fp,W,H,c.ink,1);
-  // real-place landmark anchored at each stop's mile-fraction x
-  var biomes=SCENE_BIOMES[j.id]||[];
-  for(k=0;k<j.stops.length;k++){var lx=Math.round((j.stops[k].mi/j.total)*W); s+=panoLandmark(biomes[k]||'plains',lx,groundY-2,c);}
-  // hiker at current walked position, on top of everything
-  s+=panoHiker(Math.round(hX),groundY-2,c.ink);
+
+  // ---- Landmarks anchored to the actual ground at each stop's elevation ----
+  for(k=0;k<N;k++){var lx=Math.round((j.stops[k].mi/j.total)*W); var ly=Math.round(yAt(lx))-2; s+=panoLandmark(biomes[k]||'plains',lx,ly,c);}
+
+  // ---- Peruvian / cultural details: llamas on terraces, condors above the pass/snow ----
+  for(k=0;k<N-1;k++){var bi=biomes[k]||'plains', xa=(j.stops[k].mi/j.total)*W, xb=(j.stops[k+1].mi/j.total)*W;
+    if(bi==='terraces'||bi==='winaywayna'||bi==='machu'){
+      for(var li=0;li<2;li++){var lx2=xa+(xb-xa)*(0.32+li*0.34); s+=panoLlama(Math.round(lx2),Math.round(yAt(lx2))-2,c.ink);}
+    }
+    if(bi==='pass'||bi==='snow'){
+      s+=panoCondor(Math.round(xa+(xb-xa)*0.45), 50, c.ink);
+      s+=panoCondor(Math.round(xa+(xb-xa)*0.72), 38, c.ink);
+    }
+  }
+
+  // hiker on the actual ground at walked position
+  s+=panoHiker(Math.round(hX),Math.round(yAt(hX))-2,c.ink);
   s+='</svg>';return s;
 }
 

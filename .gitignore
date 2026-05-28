@@ -17,3 +17,10 @@
 # and pasos-footprints.png at the root, so those must ship.
 _reference/
 _archive/
+
+# Reference drops — these never belong in the deployed game.
+# (We deliberately do NOT ignore *.png at root because the game ships three of them.)
+*.pdf
+*.webp
+*.jpg
+*.jpeg
