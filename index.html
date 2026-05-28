@@ -1,0 +1,1226 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pasos · Cortadito</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Newsreader:ital,wght@0,400..800;1,400..800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* ---- Universal neutrals (Cortadito design system, do not retune) ---- */
+    --bg:#ffffff;
+    --paper:#fbfaf6;
+    --ink:#1a1614;
+    --ink-soft:#8a847f;
+    --ink-line:#ece7df;
+    --ink-line-strong:#c9c2b3;
+    --success:#6b8e3d;
+    --error:#b03434;
+
+    /* ---- Pasos accent pair · drawn from the logo (orange sleeve + bootprints) ---- */
+    /* The orange is the only saturated color on the page (same role cherry
+       plays in Racimo / terracota in Sudoku). Secondary accent is the ink-black
+       of the cup lid and the bootprints. */
+    --accent:#ee6d20;       --accent-deep:#c95613;   --accent-soft:#fde2cc;
+    --accent-2:#1a1614;     --accent-2-deep:#000000; --accent-2-soft:#fdf3e1;
+    --footprint:#1a1614;    /* header bootprints: black in claro, orange in dark (set below) */
+
+    --font-display:'Newsreader','DM Serif Display',Georgia,serif;
+    --font-ui:'Helvetica Neue',Helvetica,Arial,sans-serif;
+
+    --header-h:56px;
+    --rank-top:66px; /* 56 header + 10 gap — fixed per design system §2 */
+  }
+  body[data-theme="black"]{
+    --bg:#0e0c0a; --paper:#1a1614;
+    --ink:#f3eee4; --ink-soft:#8a8278;
+    --ink-line:#2a2420; --ink-line-strong:#4a4138;
+    --accent:#f6892f; --accent-deep:#d97121; --accent-soft:#2a1a0c;
+    --accent-2:#f3eee4; --accent-2-deep:#ffffff; --accent-2-soft:#241a12;
+    --footprint:var(--accent);    /* dark theme: bootprints in orange */
+    --success:#86a85a;
+  }
+
+  *{box-sizing:border-box}
+  html{height:100%;background:var(--bg);overscroll-behavior:contain}
+  body{
+    margin:0;min-height:100%;
+    background:var(--bg);color:var(--ink);
+    font-family:var(--font-ui);
+    -webkit-text-size-adjust:100%;
+    opacity:0;transition:opacity .2s ease;
+  }
+  body.ready{opacity:1}
+  html, body.game-active{overflow:hidden;overscroll-behavior:contain}
+  body.game-active{height:100dvh}
+  .hide{display:none!important}
+  h1,h2,h3{font-family:var(--font-display);margin:0;font-weight:700;letter-spacing:-.01em}
+  button{font-family:var(--font-ui);cursor:pointer}
+  a{color:inherit}
+
+  /* ============================================================== HEADER
+     Shared Cortadito header standard — matched 1:1 to Racimo & Sudoku:
+     hidden on the landing, shown only in-game; home = house SVG inside the
+     nav (right); wordmark display-font 22px/700; nav 14px/600 with ▾; rules
+     link wears the accent; hamburger = three-line SVG opening a dropdown. */
+  .page-header{
+    display:none;                 /* hidden on landing — shown once game-active */
+    align-items:center;justify-content:space-between;
+    padding:6px 16px 12px;
+    border-bottom:1px solid var(--ink-line);
+    position:fixed;top:0;left:0;right:0;
+    background:var(--bg);
+    z-index:1700;height:56px;
+  }
+  body.game-active .page-header{display:flex}
+  .title-block{display:flex;align-items:center;gap:10px}
+  .page-logo{
+    width:23px;height:27px;flex:none;display:block;     /* footprints aspect ~0.855 (w/h) */
+    background-color:var(--footprint);
+    -webkit-mask:url("pasos-footprints.png") center/contain no-repeat;
+    mask:url("pasos-footprints.png") center/contain no-repeat;
+  }
+  .wordmark{
+    margin:0;font-family:var(--font-display);
+    font-size:22px;font-weight:700;letter-spacing:-.5px;
+    color:var(--ink);line-height:1;
+  }
+  .header-home{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:32px;height:32px;flex-shrink:0;
+    border-radius:50%;border:1px solid var(--ink-line);
+    background:transparent;color:var(--ink);padding:0;cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+    transition:background .15s,color .15s,border-color .15s;
+  }
+  .header-home svg{width:17px;height:17px}
+  .header-nav{display:flex;align-items:center;gap:18px;font-size:14px;font-weight:600}
+  .header-nav a{
+    color:var(--ink);text-decoration:none;cursor:pointer;
+    font:inherit;font-weight:600;background:none;border:none;padding:0;white-space:nowrap;
+  }
+  .header-nav a.nav-rules-link{color:var(--accent)}
+  .header-nav a.trigger-open{color:var(--accent)}
+  .nav-more-wrap{position:relative;display:inline-flex;align-items:center}
+  .header-nav .more{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:36px;height:36px;border-radius:50%;
+    background:transparent;border:none;padding:0;color:var(--ink);cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .header-nav .more svg,.header-nav .more *{pointer-events:none}
+  .more-menu{
+    position:absolute;top:44px;right:0;z-index:45;
+    background:var(--paper);border:1px solid var(--ink-line);
+    border-radius:12px;padding:6px;min-width:208px;
+    box-shadow:0 14px 40px rgba(0,0,0,.18);
+    display:none;flex-direction:column;text-align:left;
+  }
+  .more-menu.open{display:flex}
+  .more-menu button{
+    background:none;border:0;text-align:left;padding:10px 12px;border-radius:8px;
+    font-size:14px;color:var(--ink);font-family:var(--font-ui);cursor:pointer;
+    display:flex;justify-content:space-between;gap:12px;align-items:center;
+  }
+  .more-menu .more-theme-name{color:var(--ink-soft);font-weight:600}
+  .more-menu .more-item-cta{color:var(--accent);font-weight:700}
+  @media (hover:hover){
+    .header-home:hover{background:var(--paper);color:var(--accent);border-color:var(--ink-soft)}
+    .header-nav a:hover{color:var(--accent)}
+    .header-nav a.nav-rules-link:hover{color:var(--accent-deep)}
+    .header-nav .more:hover{background:var(--paper);color:var(--accent)}
+    .more-menu button:hover{background:var(--accent-soft)}
+  }
+  /* In-game on mobile: footprints logo only (wordmark hides) — matches the family. */
+  @media (max-width:600px){
+    .wordmark{display:none}
+    body.game-active .page-logo{width:31px;height:36px}
+  }
+  @media (max-width:420px){
+    .page-header{padding:6px 10px 12px}
+    .header-nav{gap:9px;font-size:12px}
+    .header-home{width:30px;height:30px}
+    .header-nav .more{width:32px;height:32px}
+  }
+  @media (max-width:360px){.header-nav{gap:6px;font-size:11px}}
+
+  main{
+    padding-top:var(--rank-top);   /* rank bar lands at 66px (design system §2) */
+    padding-bottom:48px;
+    max-width:640px;
+    margin:0 auto;
+    padding-left:18px;padding-right:18px;
+    height:100dvh;overflow-y:auto;overscroll-behavior:contain;
+  }
+
+  /* ============================================================== BUTTONS */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:7px;
+    background:var(--bg);border:1px solid var(--ink-line);
+    color:var(--ink);
+    padding:12px 22px;font-size:15px;font-weight:500;
+    border-radius:999px;
+    transition:transform .08s ease,background .15s,border-color .15s,color .15s;
+    touch-action:manipulation;user-select:none;
+    -webkit-tap-highlight-color:transparent;
+    font-family:var(--font-ui);
+  }
+  .btn:active{transform:scale(.97);background:var(--paper)}
+  .btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:700}
+  .btn.primary:active{background:var(--ink);color:var(--bg)}
+  .btn.block{width:100%}
+  .btn.sm{padding:9px 16px;font-size:13.5px}
+  .btn[disabled]{opacity:.55;cursor:default}
+  @media (hover:hover){
+    .btn:hover{border-color:var(--ink)}
+    .btn.primary:hover{background:#000;border-color:#000}
+  }
+
+  /* ============================================================== LANDING */
+  .landing{
+    position:fixed;inset:0;z-index:1000;
+    background:var(--bg);
+    display:flex;justify-content:center;
+    padding:18px 24px;
+    overflow-y:auto;overscroll-behavior:contain;
+  }
+  body.game-active .landing{display:none}
+  .landing-inner{
+    margin:0 auto;width:100%;max-width:430px;
+    text-align:center;
+    display:flex;flex-direction:column;align-items:center;
+    gap:13px;
+    padding-top:48px;
+  }
+  .landing-theme{
+    position:absolute;top:18px;right:18px;z-index:3;
+    width:42px;height:42px;border-radius:999px;
+    background:transparent;border:1px solid var(--ink-line);
+    color:var(--ink);
+    display:inline-flex;align-items:center;justify-content:center;
+    padding:0;cursor:pointer;
+    transition:background .15s,color .15s,border-color .15s,transform .1s;
+  }
+  .landing-theme:active{transform:scale(.94)}
+  @media (hover:hover){
+    .landing-theme:hover{background:var(--paper);border-color:var(--ink-soft)}
+  }
+  .landing-theme svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+  .landing-logo-row{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:auto}
+  .landing-logo{
+    width:92px;height:auto;flex:none;display:block;margin:0;
+    user-select:none;-webkit-user-drag:none;pointer-events:none;
+  }
+  .landing-title{
+    font-family:var(--font-display);font-weight:700;
+    font-size:54px;letter-spacing:-1.2px;line-height:.92;
+    margin:0;color:var(--ink);
+  }
+  .landing-tagline{
+    margin:0;font-size:19px;color:var(--ink);
+    max-width:320px;line-height:1.35;
+    font-family:var(--font-display);font-style:italic;font-weight:400;
+  }
+  .landing-date{margin:0;color:var(--ink);font-size:14px;text-transform:capitalize;font-feature-settings:"tnum"}
+  .landing-reto{margin:0;display:inline-flex;align-items:baseline;justify-content:center;gap:8px;letter-spacing:.3px}
+  .landing-reto-label{color:var(--ink-soft);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.8px}
+  .landing-reto-value{font-family:var(--font-display);color:var(--accent);font-size:17px;font-weight:700}
+
+  .landing-pickrow-label{font-size:10px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--ink-soft);margin:6px 0 0}
+  /* Active-route card on the landing (replaces inline pills — routes now live in a picker modal) */
+  .landing-routecard{
+    width:100%;max-width:340px;text-align:left;
+    background:var(--paper);border:1px solid var(--ink-line);border-radius:14px;
+    padding:13px 15px;cursor:pointer;font-family:inherit;color:var(--ink);
+    transition:border-color .15s,transform .1s;
+    touch-action:manipulation;user-select:none;-webkit-tap-highlight-color:transparent;
+  }
+  .landing-routecard:active{transform:scale(.99)}
+  @media (hover:hover){.landing-routecard:hover{border-color:var(--ink-soft)}}
+  .lrc-name{font-family:var(--font-display);font-size:21px;font-weight:700;line-height:1.05;color:var(--ink)}
+  .lrc-sub{font-size:12.5px;color:var(--ink-soft);margin-top:3px;line-height:1.35}
+  .lrc-prog{font-size:12px;color:var(--accent);font-weight:700;margin-top:9px;letter-spacing:.2px}
+  .landing-change{background:none;border:0;color:var(--accent);font-weight:700;font-size:13.5px;text-decoration:underline;cursor:pointer;padding:6px;font-family:inherit;touch-action:manipulation}
+
+  /* Route picker modal rows */
+  .route-list{margin:16px 0 4px;display:flex;flex-direction:column;gap:10px}
+  .route-item{
+    display:flex;gap:12px;align-items:flex-start;justify-content:space-between;
+    background:var(--bg);border:1px solid var(--ink-line);border-radius:13px;padding:13px 14px;
+    cursor:pointer;transition:border-color .15s,transform .08s;text-align:left;width:100%;
+    font-family:inherit;color:var(--ink);
+    touch-action:manipulation;user-select:none;-webkit-tap-highlight-color:transparent;
+  }
+  .route-item:active{transform:scale(.99)}
+  .route-item.active{border-color:var(--accent)}
+  @media (hover:hover){.route-item:hover{border-color:var(--ink-soft)}}
+  .route-item .ri-name{font-family:var(--font-display);font-size:18px;font-weight:700;line-height:1.1;color:var(--ink)}
+  .route-item .ri-sub{font-size:12.5px;color:var(--ink-soft);margin-top:2px;line-height:1.35}
+  .route-item .ri-meta{font-size:11.5px;color:var(--ink-soft);margin-top:6px;letter-spacing:.2px}
+  .route-item .ri-right{flex:none;text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+  .ri-tag{font-size:9.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;padding:3px 8px;border-radius:999px;border:1px solid var(--ink-line);color:var(--ink-soft);white-space:nowrap}
+  .ri-tag.free{color:var(--success);border-color:var(--success)}
+  .ri-tag.club{color:var(--accent);border-color:var(--accent)}
+  .ri-status{font-size:11px;font-weight:700;color:var(--accent);white-space:nowrap}
+  .ri-status.activa{color:var(--success)}
+
+  .landing-play{
+    margin-top:6px;
+    background:var(--ink);color:var(--bg);
+    border:2px solid var(--ink);border-radius:999px;
+    padding:13px 24px;width:250px;max-width:100%;box-sizing:border-box;
+    font-family:var(--font-ui);font-weight:700;font-size:15px;letter-spacing:.4px;
+    cursor:pointer;
+    transition:background .15s,color .15s,border-color .15s,transform .1s;
+    touch-action:manipulation;user-select:none;-webkit-tap-highlight-color:transparent;
+  }
+  @media (hover:hover){.landing-play:hover{background:var(--accent);border-color:var(--accent);color:#fff}}
+  .landing-play:active{transform:scale(.98)}
+  .landing-sub{color:var(--ink-soft);font-size:13px;text-decoration:underline;background:none;border:0;cursor:pointer;padding:6px;font-family:inherit}
+  .landing-credit{color:var(--ink-soft);font-size:12px;margin-top:8px;margin-bottom:auto;line-height:1.55;letter-spacing:.2px}
+  .landing-credit strong{color:var(--ink);font-weight:700}
+  .landing-credit-tagline{color:var(--accent);font-weight:700}
+
+  @media (min-width:560px){.landing-logo{width:120px}.landing-title{font-size:64px}}
+  @media (min-width:880px){
+    .landing-inner{max-width:480px;gap:18px;padding-top:80px}
+    .landing-logo{width:150px}
+    .landing-title{font-size:82px}
+    .landing-tagline{font-size:24px;max-width:420px}
+    .landing-reto-value{font-size:22px}
+    .landing-routecard{max-width:400px}
+    .lrc-name{font-size:24px}
+    .landing-play{font-size:16px;padding:15px 28px;width:280px}
+  }
+
+  /* ============================================================== RANK BAR
+     The DAILY rank: today's steps drive a 10-rung ladder whose top rung
+     (Maestro/a) is the science-recommended 8.000 steps. (Design system §3.2) */
+  .rank-bar{
+    display:flex;align-items:center;gap:10px;
+    width:100%;max-width:560px;margin:0 auto 4px;
+    cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;
+    padding:2px 0;
+  }
+  .rank-label{
+    font-family:var(--font-display);font-size:14px;font-weight:700;
+    color:var(--ink);white-space:nowrap;flex:none;min-width:78px;
+  }
+  .rank-label.at-maestro{color:var(--accent)}
+  .rank-track{
+    position:relative;flex:1;height:26px;
+    display:flex;align-items:center;
+  }
+  .rank-line{position:absolute;left:12px;right:12px;top:50%;height:2px;background:var(--ink-line);transform:translateY(-50%);border-radius:2px}
+  .rank-line-fill{position:absolute;left:12px;top:50%;height:2px;background:var(--accent);transform:translateY(-50%);border-radius:2px}
+  .rank-dot{position:absolute;top:50%;width:6px;height:6px;border-radius:50%;transform:translate(-50%,-50%);background:var(--ink-soft)}
+  .rank-dot.passed{background:var(--ink)}
+  .rank-marker{position:absolute;top:50%;width:3px;height:26px;border-radius:2px;transform:translate(-50%,-50%);background:var(--accent);opacity:.95}
+  .rank-marker.done{background:var(--success)}
+  .rank-bubble{
+    position:absolute;top:50%;width:24px;height:24px;border-radius:50%;
+    transform:translate(-50%,-50%);
+    background:var(--accent);color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-ui);font-size:9px;font-weight:800;letter-spacing:-.3px;
+    box-shadow:0 1px 4px rgba(0,0,0,.18);z-index:2;
+  }
+  .rank-chev{color:var(--ink-soft);font-size:13px;flex:none}
+
+  /* ============================================================== JOURNEY */
+  .j-head{margin:10px 0 6px}
+  .j-title{font-family:var(--font-display);font-size:30px;line-height:1;color:var(--ink);font-weight:700;letter-spacing:-.01em}
+  .j-title small{display:block;font-family:var(--font-ui);font-size:12.5px;color:var(--ink-soft);font-weight:400;margin-top:6px;letter-spacing:.2px}
+
+  .trail{background:var(--paper);border:1px solid var(--ink-line);border-radius:16px;padding:14px 14px 8px;margin:12px 0}
+  .trail svg{display:block;width:100%;height:auto}
+  .loc{font-size:14.5px;color:var(--ink);margin:6px 4px 12px;text-align:center;line-height:1.45}
+  .loc b{color:var(--accent);font-weight:700}
+
+  /* Two ETAs — days to finish at your rate vs. the healthy rate */
+  .eta-card{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+  .eta{background:var(--paper);border:1px solid var(--ink-line);border-radius:13px;padding:12px 10px;text-align:center}
+  .eta.healthy{border-color:var(--accent-soft);background:var(--accent-soft)}
+  body[data-theme="black"] .eta.healthy{background:var(--accent-soft);border-color:var(--accent-deep)}
+  .eta .v{font-family:var(--font-display);font-size:24px;font-weight:700;color:var(--ink);line-height:1}
+  .eta.healthy .v{color:var(--accent)}
+  .eta .l{font-size:10.5px;letter-spacing:.4px;color:var(--ink-soft);margin-top:5px;line-height:1.3}
+
+  .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}
+  .stat{background:var(--paper);border:1px solid var(--ink-line);border-radius:13px;padding:13px 8px;text-align:center}
+  .stat .v{font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--accent);line-height:1}
+  .stat .l{font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:var(--ink-soft);margin-top:6px;font-weight:600}
+
+  /* Steps-of-the-day card — sync-first (design demo), manual fallback */
+  .day{background:var(--paper);border:1px solid var(--ink-line);border-radius:16px;padding:16px;margin-bottom:14px}
+  .day-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:4px}
+  .day-top h3{font-size:16px;color:var(--ink)}
+  .day-rank{font-size:12px;color:var(--ink-soft);font-weight:600}
+  .day-rank b{color:var(--accent)}
+  .day-count{font-family:var(--font-display);font-size:40px;font-weight:700;color:var(--ink);line-height:1;letter-spacing:-1px}
+  .day-count small{font-family:var(--font-ui);font-size:14px;color:var(--ink-soft);font-weight:400;letter-spacing:0}
+  .day-goalbar{height:8px;border-radius:999px;background:var(--ink-line);margin:12px 0 4px;position:relative;overflow:visible}
+  .day-goalbar > i{display:block;height:100%;border-radius:999px;background:var(--accent);max-width:100%}
+  .day-goalbar > .pin{position:absolute;top:-3px;width:2px;height:14px;background:var(--ink);border-radius:2px}
+  .day-goalbar > .pin::after{content:attr(data-l);position:absolute;top:-15px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--ink-soft);white-space:nowrap;font-weight:700;letter-spacing:.3px}
+  .day-tiers{display:flex;justify-content:space-between;font-size:11px;color:var(--ink-soft);margin-top:8px}
+  .day-tiers b{display:block;font-size:13px}
+  .day-tiers .hit{color:var(--success)}
+  .day-tiers .hit b{color:var(--success)}
+  .day-sync{margin-top:14px}
+  .sync-sub{text-align:center;font-size:11.5px;color:var(--ink-soft);margin-top:7px;letter-spacing:.3px}
+  .sync-sub .demo{display:block;margin-top:2px;font-style:italic}
+  details.manual{margin-top:10px;border-top:1px solid var(--ink-line);padding-top:10px}
+  details.manual summary{font-size:13px;color:var(--ink-soft);cursor:pointer;list-style:none;text-align:center}
+  details.manual summary::-webkit-details-marker{display:none}
+  details.manual summary:hover{color:var(--accent)}
+  .manual-row{display:flex;gap:9px;align-items:stretch;margin-top:10px}
+  .manual-row input{flex:1;min-width:0;border:1px solid var(--ink-line);border-radius:10px;padding:11px 12px;font-size:16px;font-family:var(--font-ui);background:var(--bg);color:var(--ink)}
+  .manual-row input:focus{outline:none;border-color:var(--ink)}
+  .day-meta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--ink-soft);margin-top:10px}
+  .day-meta a{color:var(--accent);font-weight:600;text-decoration:underline;cursor:pointer}
+
+  .passport h3{font-size:18px;color:var(--ink);margin:4px 2px 12px}
+  .stop{display:flex;gap:14px;align-items:flex-start;background:var(--paper);border:1px solid var(--ink-line);border-radius:13px;padding:12px 14px;margin-bottom:10px;transition:border-color .15s}
+  .stop.next{border-color:var(--accent-soft)}
+  .stamp{width:44px;height:44px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;font-family:var(--font-display)}
+  .stamp.on{background:var(--accent);color:#fff;box-shadow:inset 0 0 0 2px rgba(255,255,255,.25)}
+  .stamp.start{background:var(--ink);color:var(--bg)}
+  .stamp.off{background:var(--bg);border:2px dashed var(--ink-line-strong);color:var(--ink-line-strong)}
+  .stop .nm{font-family:var(--font-display);font-weight:700;font-size:17px;color:var(--ink);line-height:1.15}
+  .stop .di{font-size:12px;color:var(--ink-soft);margin-top:2px;letter-spacing:.2px}
+  .stop .ft{font-size:13.5px;color:var(--ink);margin-top:6px;line-height:1.5}
+  .stop.locked .nm,.stop.locked .ft{color:var(--ink-soft)}
+
+  .credit{text-align:center;color:var(--ink-soft);font-size:12px;margin:18px 0 8px;line-height:1.5}
+
+  /* ============================================================== MODALS */
+  .modal-overlay{position:fixed;inset:0;z-index:2000;background:rgba(20,18,14,.55);display:none;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto;overscroll-behavior:contain}
+  body[data-theme="black"] .modal-overlay{background:rgba(0,0,0,.78)}
+  .modal-overlay.open{display:flex}
+  .modal{position:relative;width:100%;max-width:480px;max-height:85vh;overflow:auto;overscroll-behavior:contain;background:var(--paper);border:1.5px solid var(--ink-line);border-radius:16px;padding:30px 32px 28px;box-shadow:0 16px 50px rgba(0,0,0,.18)}
+  .modal h2{font-family:var(--font-display);font-size:28px;margin:0 0 10px;color:var(--ink);letter-spacing:-.01em}
+  .modal p{color:var(--ink);line-height:1.55;font-size:14.5px;margin:8px 0}
+  .modal .muted{color:var(--ink-soft);font-size:13.5px}
+  .modal hr{border:0;border-top:1px solid var(--ink-line);margin:16px 0}
+  .modal-close{position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:50%;border:1px solid var(--ink-line);background:var(--bg);color:var(--ink);font-size:18px;line-height:1;cursor:pointer;touch-action:manipulation}
+  .modal.celebrate{text-align:center;background:#ffffff;color:#1a1614}
+  .modal.celebrate h2{color:#1a1614}
+  .modal.celebrate h2.accent{color:var(--accent)}
+  .modal.celebrate p{color:#5a544e}
+  .modal.celebrate .mk{width:104px;height:104px;margin:0 auto 8px;display:block;border-radius:50%;background:#fde2cc;padding:8px;object-fit:contain}
+  .modal.celebrate .actions{display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap}
+  .modal.celebrate .actions .btn{min-width:140px}
+
+  /* Rank list (Rangos modal) */
+  .rank-list{margin:14px 0 4px}
+  .rank-row{display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:10px}
+  .rank-row.cur{background:var(--accent-soft)}
+  .rank-row.cur.is-top{background:var(--accent)}
+  .rank-row .ri{width:22px;text-align:right;font-size:12px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+  .rank-row .rn{flex:1;font-family:var(--font-display);font-size:16px;color:var(--ink);font-weight:600}
+  .rank-row.is-top .rn{color:var(--accent);font-weight:700}
+  .rank-row.cur.is-top .rn{color:#fff}
+  .rank-row.cur.is-top .ri,.rank-row.cur.is-top .rs{color:#fff}
+  .rank-row .rs{font-size:12.5px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+
+  /* Stats grid */
+  .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 6px}
+  .stats-grid .stat{padding:11px 12px;text-align:left}
+  .stats-grid .stat .l{margin-top:4px;text-align:left;text-transform:none;letter-spacing:.2px}
+  .stats-grid .stat .v{font-size:22px;text-align:left}
+</style>
+</head>
+<body>
+
+<!-- ============================================================== HEADER -->
+<header class="page-header">
+  <div class="title-block">
+    <!-- In-game header logo: the two bootprints from the mug, exact shape + direction.
+         Uses the real silhouette as a CSS mask so it recolors by theme
+         (black in claro, orange in dark). -->
+    <span class="page-logo" role="img" aria-label="Pasos"></span>
+    <h1 class="wordmark">Pasos</h1>
+  </div>
+  <nav class="header-nav" aria-label="Más">
+    <button class="header-home" id="header-home" type="button" aria-label="Inicio">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>
+    </button>
+    <a class="nav-rules-link" data-act="howto" href="#" role="button">Reglas ▾</a>
+    <a data-act="stats" href="#" role="button">Estadísticas ▾</a>
+    <span class="nav-more-wrap">
+      <button class="more" id="nav-more" type="button" aria-label="Más opciones">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/>
+        </svg>
+      </button>
+      <div class="more-menu" id="more-menu">
+        <button data-act="theme"><span>Tema</span><span class="more-theme-name" id="more-theme-name">Claro</span></button>
+        <button data-act="rangos">Rangos del día</button>
+        <button data-act="howto">Cómo funciona</button>
+        <button data-act="share">Compartir resultado</button>
+        <button data-act="about">Sobre Pasos</button>
+        <button data-act="news" class="more-item-cta">Suscribirse al boletín</button>
+      </div>
+    </span>
+  </nav>
+</header>
+
+<!-- ============================================================== LANDING -->
+<div class="landing" id="landing">
+  <button class="landing-theme" id="landing-theme-btn" type="button" aria-label="Cambiar tema">
+    <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+  <div class="landing-inner">
+    <div class="landing-logo-row">
+      <img class="landing-logo" src="Logo Orange transparent.png" alt="">
+      <h1 class="landing-title">Pasos</h1>
+    </div>
+    <p class="landing-tagline">El mundo, paso a paso.</p>
+    <div class="landing-date" id="landing-date"></div>
+    <div class="landing-reto">
+      <span class="landing-reto-label">Meta saludable</span>
+      <span class="landing-reto-value" id="landing-goal">8.000 pasos</span>
+    </div>
+    <div class="landing-pickrow-label" id="landing-pickrow-label">Tu ruta</div>
+    <button class="landing-routecard" id="landing-routecard" type="button">
+      <div class="lrc-name" id="lrc-name"></div>
+      <div class="lrc-sub" id="lrc-sub"></div>
+      <div class="lrc-prog" id="lrc-prog"></div>
+    </button>
+    <button class="landing-play" id="landing-play">Empezar ruta</button>
+    <button class="landing-change" id="landing-change" type="button">Seleccionar otra ruta</button>
+    <button class="landing-sub" id="landing-sub">Suscribirse al boletín</button>
+    <div class="landing-credit">
+      Una ruta diaria de <strong>Cortadito News</strong> · <span class="landing-credit-tagline">¡Lo esencial en un sorbo!</span>
+    </div>
+  </div>
+</div>
+
+<main>
+  <!-- ============================================================ JOURNEY -->
+  <div id="journey" class="hide">
+
+    <!-- DAILY RANK BAR (today's steps → rank; Maestro = recommended) -->
+    <div class="rank-bar" id="rankbar" role="button" aria-label="Rangos del día">
+      <span class="rank-label" id="rank-label">Debutante</span>
+      <div class="rank-track" id="rank-track"></div>
+      <span class="rank-chev">▾</span>
+    </div>
+
+    <div class="j-head">
+      <div class="j-title" id="jtitle"></div>
+    </div>
+
+    <div class="trail" id="trail"></div>
+    <div class="loc" id="loc"></div>
+
+    <div class="eta-card">
+      <div class="eta" id="eta-mine"><div class="v" id="eta-mine-v">—</div><div class="l" id="eta-mine-l">a tu ritmo</div></div>
+      <div class="eta healthy" id="eta-health"><div class="v" id="eta-health-v">—</div><div class="l" id="eta-health-l">al ritmo saludable</div></div>
+    </div>
+
+    <div class="stats" id="stats"></div>
+
+    <!-- STEPS OF THE DAY -->
+    <div class="day">
+      <div class="day-top">
+        <h3>Pasos de hoy</h3>
+        <span class="day-rank" id="day-rank"></span>
+      </div>
+      <div class="day-count"><span id="day-count">0</span> <small>pasos</small></div>
+
+      <div class="day-goalbar"><i id="day-fill"></i><span class="pin" id="pin-goal" data-l="tu meta"></span></div>
+      <div class="day-tiers" id="day-tiers"></div>
+
+      <div class="day-sync">
+        <button class="btn primary block" id="sync-btn">Sincronizar pasos</button>
+        <div class="sync-sub">Apple Salud · Google Fit
+          <span class="demo">Demo: simula la lectura de tu reloj. En la app, se sincroniza solo.</span>
+        </div>
+      </div>
+
+      <details class="manual">
+        <summary>Anotar mis pasos a mano</summary>
+        <div class="manual-row">
+          <input id="steps-in" type="number" inputmode="numeric" placeholder="p. ej. 8.000" min="0">
+          <button class="btn primary sm" id="log-btn">Guardar</button>
+        </div>
+      </details>
+
+      <div class="day-meta">
+        <span>Tu meta: <a id="goal-link"></a> · Saludable: 8.000</span>
+        <a id="undo-link" class="hide">Borrar pasos de hoy</a>
+      </div>
+    </div>
+
+    <div class="passport">
+      <h3>Pasaporte</h3>
+      <div id="stops"></div>
+    </div>
+
+    <button class="btn block sm" id="reset-btn" style="margin-top:6px">Reiniciar esta ruta</button>
+
+    <p class="credit"><small>2.000 pasos ≈ 1 milla · distancias reales aproximadas.</small></p>
+  </div>
+</main>
+
+<!-- ============================================================== INFO MODAL -->
+<div class="modal-overlay" id="ov-info"><div class="modal">
+  <button class="modal-close" data-close>×</button>
+  <h2 id="info-title">Cómo funciona</h2>
+  <div id="info-body"></div>
+</div></div>
+
+<!-- ============================================================== ROUTE PICKER -->
+<div class="modal-overlay" id="ov-routes"><div class="modal">
+  <button class="modal-close" data-close>×</button>
+  <h2>Elige tu ruta</h2>
+  <p class="muted">Tus pasos avanzan la <b>ruta activa</b>. Cambiar de ruta no borra nada: cada ruta guarda su propio progreso y puedes volver a ella cuando quieras.</p>
+  <div class="route-list" id="route-list"></div>
+</div></div>
+
+<!-- ============================================================== RANGOS MODAL -->
+<div class="modal-overlay" id="ov-rangos"><div class="modal">
+  <button class="modal-close" data-close>×</button>
+  <h2>Rangos del día</h2>
+  <p class="muted">Tu rango se calcula con los <b>pasos de hoy</b> y se reinicia cada día. Llegar a la meta saludable te hace <b style="color:var(--accent)">Maestro/a</b>.</p>
+  <div class="rank-list" id="rank-list"></div>
+  <hr>
+  <p class="muted">La meta saludable de <b>8.000 pasos</b> está basada en investigación: un metaanálisis de 2022 (Lancet Public Health, Paluch et al.) halló que el riesgo de mortalidad se estabiliza alrededor de 8.000–10.000 pasos diarios en adultos y de 6.000–8.000 en mayores de 60.</p>
+</div></div>
+
+<!-- ============================================================== STATS MODAL -->
+<div class="modal-overlay" id="ov-stats"><div class="modal">
+  <button class="modal-close" data-close>×</button>
+  <h2>Estadísticas</h2>
+  <p class="muted">Tu día de hoy y tu recorrido total con Pasos.</p>
+  <div class="stats-grid" id="stats-grid"></div>
+  <hr>
+  <p class="muted" id="stats-foot"></p>
+</div></div>
+
+<!-- ============================================================== CELEBRATION -->
+<div class="modal-overlay" id="ov-cel"><div class="modal celebrate">
+  <button class="modal-close" data-close>×</button>
+  <img class="mk" id="cel-mk" alt="">
+  <h2 id="cel-title"></h2>
+  <p id="cel-body"></p>
+  <div class="actions">
+    <button class="btn primary" id="cel-share">Compartir</button>
+    <button class="btn" data-close>Seguir caminando</button>
+  </div>
+</div></div>
+
+<script>
+"use strict";
+
+/* ============================================================================
+   Storage guard — never let blocked localStorage crash startup (design §4.4).
+============================================================================ */
+var LS=(function(){
+  try{localStorage.setItem('__t','1');localStorage.removeItem('__t');return localStorage;}
+  catch(e){var m={};return{
+    getItem:function(k){return k in m?m[k]:null;},
+    setItem:function(k,v){m[k]=String(v);},
+    removeItem:function(k){delete m[k];}
+  };}
+})();
+
+var WALKER="cortadito-orange.png"; /* running cortadito (drawn facing left) */
+
+/* ============================================================================
+   Per-game config
+============================================================================ */
+var GAME='pasos';
+var STEPS_PER_MILE = 2000;
+var RECOMMENDED    = 8000;   /* science-based daily target = Maestro/a */
+var DEFAULT_GOAL   = 6000;   /* personal goal (editable) */
+var LEYENDA        = 12000;  /* surpass tier (the "bonus" achievement) */
+
+var STORE_KEY = GAME+'-state';
+var TWEAKS    = GAME+'-tweaks';
+
+/* Fixed Cortadito rank ladder (names + order never change; only thresholds
+   differ per game — design system §3.3). Top rung lands exactly on RECOMMENDED. */
+var RANKS=['Debutante','Eficiente','Constante','Diligente','Admirable','Excelente','Increíble','Brillante','Eminente','Maestro/a'];
+var RANK_STEPS=[0,1000,2000,3000,4000,5000,6000,7000,7500,8000];
+
+/* ============================================================================
+   Routes — verified real-world distances + real milestone towns.
+   total: miles to destination; stops: cumulative miles from start, with a fact.
+============================================================================ */
+var JOURNEYS=[
+  {
+    id:'inca', name:'Sendero Inca', sub:'Km 82 → Machu Picchu · Camino Inca clásico',
+    place:'Perú', total:26, tag:'free', tagtxt:'Gratis',
+    stops:[
+      {n:'Km 82 (Piscacucho)', mi:0,  f:'El control oficial junto al río Urubamba. Sellan tu permiso y empieza el camino empedrado por los incas.'},
+      {n:'Llaqtapata',         mi:3,  f:'Primer mirador de ruinas: andenes incas asomados sobre el valle. Buen sitio para el primer respiro.'},
+      {n:'Wayllabamba',        mi:9,  f:'Último caserío con familias quechuas. Aquí se acampa antes de la gran subida.'},
+      {n:'Warmiwañusca',       mi:13, f:'El "Paso de la Mujer Muerta", 4.215 m: el punto más alto de la ruta. Respira hondo y disfruta la vista.'},
+      {n:'Pacaymayo',          mi:15, f:'Campamento en el valle, entre cascadas y neblina. El cuerpo agradece el descenso.'},
+      {n:'Phuyupatamarca',     mi:19, f:'"Pueblo sobre las nubes": fuentes ceremoniales incas que aún corren con agua.'},
+      {n:'Wiñay Wayna',        mi:23, f:'"Para siempre joven" en quechua. Andenes colgados sobre el Urubamba, casi a las puertas de Machu Picchu.'},
+      {n:'Machu Picchu',       mi:26, f:'Cruzas el Inti Punku, la Puerta del Sol, al amanecer. La ciudadela aparece entre la bruma. ¡Lo lograste!'}
+    ]
+  },
+  {
+    id:'everest', name:'Campo Base del Everest', sub:'Lukla → Campo Base (Khumbu, Nepal)',
+    place:'Nepal', total:39, tag:'club', tagtxt:'Club',
+    stops:[
+      {n:'Lukla',              mi:0,  f:'La pista de aterrizaje más vertiginosa del mundo, a 2.860 m. Aquí empieza el camino al techo del planeta.'},
+      {n:'Phakding',           mi:5,  f:'Primer alto junto al río Dudh Koshi, entre puentes colgantes y banderas de oración.'},
+      {n:'Namche Bazaar',      mi:12, f:'La capital sherpa, en anfiteatro a 3.440 m. Mercado, panaderías y café con vista al Everest.'},
+      {n:'Tengboche',          mi:19, f:'Su monasterio budista es el más famoso del Khumbu, frente a la cumbre del Ama Dablam.'},
+      {n:'Dingboche',          mi:26, f:'Muros de piedra y campos de cebada a 4.410 m. Día de aclimatación obligado.'},
+      {n:'Lobuche',            mi:33, f:'Últimos refugios antes del glaciar. El aire ya pesa: la mitad de oxígeno que al nivel del mar.'},
+      {n:'Gorak Shep',         mi:36, f:'El último asentamiento, 5.164 m, al borde del glaciar Khumbu. Desde aquí, el empujón final.'},
+      {n:'Campo Base',         mi:39, f:'5.364 m. Banderas, seracs y la mole del Everest sobre ti. El campamento de quienes sueñan con la cima.'}
+    ]
+  },
+  {
+    id:'cafe', name:'Eje Cafetero', sub:'Manizales → Valle de Cocora (Colombia)',
+    place:'Colombia', total:62, tag:'club', tagtxt:'Club',
+    stops:[
+      {n:'Manizales',          mi:0,  f:'Capital de Caldas, encaramada entre montañas. Cafés de altura y el aroma del tueste recién hecho.'},
+      {n:'Chinchiná',          mi:12, f:'Tierra de fincas cafeteras clásicas; aquí está Cenicafé, el centro de investigación del grano.'},
+      {n:'Pereira',            mi:25, f:'"La Perla del Otún", corazón comercial del eje. Bullicio, miradores y buen tinto.'},
+      {n:'Santa Rosa de Cabal',mi:31, f:'Famosa por sus termales y su chorizo. Verde, húmeda y profundamente cafetera.'},
+      {n:'Armenia',            mi:44, f:'Capital del Quindío y puerta del Paisaje Cultural Cafetero, Patrimonio de la Humanidad.'},
+      {n:'Filandia',           mi:50, f:'Balcones de colores y miradores sobre el valle. El pueblo más fotogénico del eje.'},
+      {n:'Salento',            mi:56, f:'Calles empedradas y willys jeep. Campamento base para el valle de las palmas de cera.'},
+      {n:'Valle de Cocora',    mi:62, f:'Palmas de cera de 60 m —el árbol nacional de Colombia— entre la niebla. Fin de la ruta del café.'}
+    ]
+  },
+  {
+    id:'santiago', name:'Camino de Santiago', sub:'Saint-Jean-Pied-de-Port → Santiago · Camino Francés',
+    place:'Francia · España', total:485, tag:'club', tagtxt:'Club',
+    stops:[
+      {n:'Saint-Jean-Pied-de-Port', mi:0,   f:'El arranque clásico en los Pirineos franceses. Mochila lista y la primera etapa cruzando la montaña.'},
+      {n:'Pamplona',                mi:47,  f:'Ciudad de los sanfermines y del primer café fuerte del Camino.'},
+      {n:'Logroño',                 mi:93,  f:'Corazón de La Rioja: tapas en la calle Laurel y viñedos hasta el horizonte.'},
+      {n:'Burgos',                  mi:175, f:'Su catedral gótica es Patrimonio de la Humanidad. Aquí empieza la meseta.'},
+      {n:'León',                    mi:303, f:'Mitad del Camino. La meseta queda atrás y la vidriera de su catedral te despide.'},
+      {n:'Ponferrada',              mi:350, f:'Castillo templario y la subida hacia O Cebreiro, ya rozando Galicia.'},
+      {n:'Sarria',                  mi:419, f:'Desde aquí salen muchos para los últimos 100 km que dan derecho a la Compostela.'},
+      {n:'Santiago de Compostela',  mi:485, f:'Plaza del Obradoiro, botafumeiro y el abrazo al apóstol. ¡Buen Camino!'}
+    ]
+  },
+  {
+    id:'cuba', name:'Carretera Central', sub:'La Habana → Santiago de Cuba · a lo largo de la isla',
+    place:'Cuba', total:534, tag:'club', tagtxt:'Club',
+    stops:[
+      {n:'La Habana',         mi:0,   f:'Kilómetro cero de la Carretera Central. Malecón, son y el primer cortadito del viaje.'},
+      {n:'Santa Clara',       mi:171, f:'Ciudad del Che y de su mausoleo. Cruce de caminos en el centro de la isla.'},
+      {n:'Sancti Spíritus',   mi:220, f:'Una de las primeras villas fundadas por Diego Velázquez, con su puente sobre el Yayabo.'},
+      {n:'Camagüey',          mi:332, f:'La ciudad de los tinajones y el laberinto de calles que despistaba a los piratas.'},
+      {n:'Las Tunas',         mi:410, f:'"El balcón del oriente cubano", tierra de poetas y de la décima campesina.'},
+      {n:'Holguín',           mi:451, f:'La ciudad de los parques y de la Loma de la Cruz, 458 escalones hasta la vista.'},
+      {n:'Bayamo',            mi:477, f:'Cuna del himno nacional cubano. Coches de caballos y calma colonial.'},
+      {n:'Santiago de Cuba',  mi:534, f:'Capital del son y del Caribe cubano. Calor, trova y un café bien cargado para celebrar.'}
+    ]
+  },
+  {
+    id:'ruta66', name:'Ruta 66', sub:'Chicago → Santa Mónica · la Mother Road',
+    place:'EE. UU.', total:2278, tag:'club', tagtxt:'Club',
+    stops:[
+      {n:'Chicago, IL',      mi:0,    f:'El cartel "Begin Route 66" en Adams Street. Diners, jazz y un café fuerte para arrancar la Mother Road.'},
+      {n:'San Luis, MO',     mi:290,  f:'El Gateway Arch te recibe sobre el Misisipi. Aquí empieza el Oeste.'},
+      {n:'Tulsa, OK',        mi:660,  f:'Art déco petrolero y murales de la vieja ruta en Oklahoma.'},
+      {n:'Oklahoma City, OK',mi:770,  f:'Cruce de praderas y rodeos, en pleno corazón del país.'},
+      {n:'Amarillo, TX',     mi:1100, f:'Llanuras infinitas del Panhandle y el mítico Cadillac Ranch.'},
+      {n:'Albuquerque, NM',  mi:1420, f:'Desierto alto, adobe y chile verde. La ruta cruza el casco viejo.'},
+      {n:'Flagstaff, AZ',    mi:1840, f:'Pinares a 2.100 m, cerca del Gran Cañón. El aire huele a montaña.'},
+      {n:'Santa Mónica, CA', mi:2278, f:'El muelle y el Pacífico: el cartel "End of the Trail". ¡Llegaste de orilla a orilla!'}
+    ]
+  }
+];
+function J(id){for(var i=0;i<JOURNEYS.length;i++)if(JOURNEYS[i].id===id)return JOURNEYS[i];return null;}
+
+/* ============================================================================
+   State
+   j[id] = { started:ISO, days:{ 'YYYY-MM-DD': steps } }  — per-day step totals.
+============================================================================ */
+var state=(function(){
+  try{
+    var raw=LS.getItem(STORE_KEY);
+    if(raw){var p=JSON.parse(raw);if(p&&typeof p==='object'){
+      if(typeof p.goal!=='number')p.goal=DEFAULT_GOAL;
+      if(!p.j)p.j={};
+      // migrate any legacy {steps,log[]} shape → {days:{}}
+      Object.keys(p.j).forEach(function(id){
+        var rec=p.j[id]; if(rec && !rec.days){ rec.days={}; if(rec.steps>0)rec.days[rec.started||todayISO()]=rec.steps; delete rec.steps; delete rec.log; }
+      });
+      return p;
+    }}
+  }catch(e){}
+  return {goal:DEFAULT_GOAL, j:{}};
+})();
+function save(){try{LS.setItem(STORE_KEY,JSON.stringify(state));}catch(e){}}
+
+/* ============================================================================
+   Helpers
+============================================================================ */
+function nFmt(n){return Math.round(n).toLocaleString('es');}
+function fmtMi(mi){return nFmt(mi)+' mi';}
+function fmtMi1(mi){return (Math.round(mi*10)/10).toLocaleString('es',{minimumFractionDigits:0,maximumFractionDigits:1})+' mi';}
+function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function todayISO(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function shortName(n){return n.split(',')[0].split(' (')[0];}
+function longDate(){try{var d=new Date();return cap(d.toLocaleDateString('es-ES',{weekday:'long'}))+', '+d.getDate()+' de '+d.toLocaleDateString('es-ES',{month:'long'})+' de '+d.getFullYear();}catch(e){return todayISO();}}
+function prettyDate(){try{var d=new Date();return d.getDate()+' '+cap(d.toLocaleDateString('es-ES',{month:'long'}))+' '+d.getFullYear();}catch(e){return todayISO();}}
+
+function days(id){var p=state.j[id];return (p&&p.days)?p.days:{};}
+function cumSteps(id){var d=days(id),t=0;for(var k in d)t+=d[k]||0;return t;}
+function miles(id){return cumSteps(id)/STEPS_PER_MILE;}
+function todaySteps(id){return days(id)[todayISO()]||0;}
+
+/* daily totals across ALL journeys, keyed by date — for streaks / lifetime */
+function dailyTotals(){
+  var out={};
+  Object.keys(state.j).forEach(function(id){
+    var d=days(id);for(var k in d){out[k]=(out[k]||0)+(d[k]||0);}
+  });
+  return out;
+}
+function rankIndex(steps){var r=0;for(var i=0;i<RANK_STEPS.length;i++){if(steps>=RANK_STEPS[i])r=i;}return r;}
+
+/* ============================================================================
+   Theme — light default, persisted in pasos-tweaks (design §1.3 / §4.3)
+============================================================================ */
+function loadTheme(){try{var t=JSON.parse(LS.getItem(TWEAKS)||'{}');return t.theme==='black'?'black':'light';}catch(e){return 'light';}}
+function setTheme(t){document.body.setAttribute('data-theme',t);try{var tw=JSON.parse(LS.getItem(TWEAKS)||'{}');tw.theme=t;LS.setItem(TWEAKS,JSON.stringify(tw));}catch(e){}var tn=document.getElementById('more-theme-name');if(tn)tn.textContent=(t==='black'?'Oscuro':'Claro');if(current)render();}
+function toggleTheme(){setTheme(document.body.getAttribute('data-theme')==='black'?'light':'black');}
+
+/* ============================================================================
+   Landing
+============================================================================ */
+function defaultSelected(){
+  for(var i=0;i<JOURNEYS.length;i++){var id=JOURNEYS[i].id,c=cumSteps(id);if(c>0 && c/STEPS_PER_MILE<JOURNEYS[i].total)return id;}
+  return JOURNEYS[0].id;
+}
+function anyStarted(){return JOURNEYS.some(function(jj){return cumSteps(jj.id)>0;});}
+
+function renderLanding(){
+  if(!state.selected||!J(state.selected))state.selected=defaultSelected();
+  document.getElementById('landing-date').textContent=longDate();
+  document.getElementById('landing-goal').textContent=nFmt(RECOMMENDED)+' pasos';
+
+  var picked = !!state.picked || anyStarted();
+  var pickLabel=document.getElementById('landing-pickrow-label');
+  var card=document.getElementById('landing-routecard');
+  var play=document.getElementById('landing-play');
+  var change=document.getElementById('landing-change');
+
+  if(!picked){
+    // First visit — a single "Selecciona tu ruta" button opens the picker.
+    pickLabel.classList.add('hide');
+    card.classList.add('hide');
+    play.classList.add('hide');
+    change.textContent='Selecciona tu ruta';
+    change.classList.remove('hide');
+    return;
+  }
+
+  pickLabel.classList.remove('hide');
+  card.classList.remove('hide');
+  play.classList.remove('hide');
+  change.textContent='Seleccionar otra ruta';
+  change.classList.remove('hide');
+
+  var j=J(state.selected),walked=miles(state.selected),done=walked>=j.total,started=cumSteps(state.selected)>0;
+  document.getElementById('lrc-name').textContent=j.name;
+  document.getElementById('lrc-sub').textContent=j.sub;
+  var prog=document.getElementById('lrc-prog');
+  if(done)prog.textContent='¡Completada! · '+fmtMi(j.total);
+  else if(started)prog.textContent=Math.round(walked/j.total*100)+'% · '+fmtMi1(walked)+' de '+fmtMi(j.total);
+  else prog.textContent=j.place+' · '+fmtMi(j.total)+' · '+j.stops.length+' paradas';
+
+  play.textContent=done?'Ver ruta':(started?'Continuar ruta':'Empezar ruta');
+  play.onclick=function(){openJourney(state.selected);};
+  card.onclick=function(){openJourney(state.selected);};
+}
+
+/* Route picker — every route persists its own progress; one is "activa". */
+function showRoutes(){
+  var list=document.getElementById('route-list');list.innerHTML='';
+  JOURNEYS.forEach(function(j){
+    var c=cumSteps(j.id),w=c/STEPS_PER_MILE,done=w>=j.total,started=c>0;
+    var isActive=(j.id===state.selected)&&(!!state.picked||started);
+    var status='';
+    if(isActive)status='<span class="ri-status activa">● Activa</span>';
+    else if(done)status='<span class="ri-status">✓ Completada</span>';
+    else if(started)status='<span class="ri-status">'+Math.round(w/j.total*100)+'% en curso</span>';
+    var item=document.createElement('button');item.type='button';
+    item.className='route-item'+(isActive?' active':'');
+    item.innerHTML='<div><div class="ri-name">'+j.name+'</div><div class="ri-sub">'+j.sub+'</div>'+
+      '<div class="ri-meta">'+j.place+' · '+fmtMi(j.total)+' · '+j.stops.length+' paradas</div></div>'+
+      '<div class="ri-right"><span class="ri-tag '+j.tag+'">'+j.tagtxt+'</span>'+status+'</div>';
+    item.onclick=function(){ state.selected=j.id; state.picked=true; save(); closeAll(); renderLanding(); };
+    list.appendChild(item);
+  });
+  openOverlay('ov-routes');
+}
+
+/* ============================================================================
+   Journey — open / render
+============================================================================ */
+var current=null;
+function openJourney(id){
+  current=id;
+  if(!state.j[id])state.j[id]={started:todayISO(),days:{}};
+  state.selected=id;save();
+  document.getElementById('journey').classList.remove('hide');
+  document.body.classList.add('game-active');
+  var m=document.querySelector('main'); if(m)m.scrollTop=0;
+  render();
+}
+function goHome(){
+  closeAll();
+  document.getElementById('journey').classList.add('hide');
+  document.body.classList.remove('game-active');
+  current=null;renderLanding();window.scrollTo(0,0);
+}
+document.getElementById('header-home').onclick=goHome;
+
+/* ----- Trail SVG ----- */
+function buildTrail(j,walked){
+  var cs=getComputedStyle(document.body);
+  var ACC=(cs.getPropertyValue('--accent')||'#ee6d20').trim();
+  var DP =(cs.getPropertyValue('--accent-deep')||'#c95613').trim();
+  var LN =(cs.getPropertyValue('--ink-line')||'#ece7df').trim();
+  var SF =(cs.getPropertyValue('--ink-soft')||'#8a847f').trim();
+  var BG =(cs.getPropertyValue('--bg')||'#fff').trim();
+  var W=1000,H=200,padL=46,padR=46,y=128,iw=W-padL-padR;
+  var frac=clamp(walked/j.total,0,1), fx=padL+frac*iw;
+  var s='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">';
+  s+='<line x1="'+padL+'" y1="'+y+'" x2="'+(W-padR)+'" y2="'+y+'" stroke="'+LN+'" stroke-width="8" stroke-linecap="round"/>';
+  s+='<line x1="'+padL+'" y1="'+y+'" x2="'+fx+'" y2="'+y+'" stroke="'+ACC+'" stroke-width="8" stroke-linecap="round"/>';
+  j.stops.forEach(function(st){
+    var sx=padL+(st.mi/j.total)*iw, on=walked>=st.mi-0.001;
+    s+='<circle cx="'+sx+'" cy="'+y+'" r="'+(on?9:7)+'" fill="'+(on?ACC:BG)+'" stroke="'+(on?DP:LN)+'" stroke-width="3"/>';
+  });
+  s+='<circle cx="'+fx+'" cy="'+y+'" r="10" fill="'+ACC+'" stroke="'+DP+'" stroke-width="3"/>';
+  var iw2=64,ih2=64,mx=fx,my=y-ih2-12;
+  s+='<g transform="translate('+mx+' '+my+') scale(-1 1)"><image href="'+WALKER+'" xlink:href="'+WALKER+'" x="'+(-iw2/2)+'" y="0" width="'+iw2+'" height="'+ih2+'"/></g>';
+  s+='<text x="'+padL+'" y="'+(y+30)+'" font-family="Newsreader,Georgia,serif" font-size="17" fill="'+SF+'">'+shortName(j.stops[0].n)+'</text>';
+  s+='<text x="'+(W-padR)+'" y="'+(y+30)+'" text-anchor="end" font-family="Newsreader,Georgia,serif" font-size="17" fill="'+SF+'">'+shortName(j.stops[j.stops.length-1].n)+'</text>';
+  s+='</svg>';return s;
+}
+function currentLeg(j,walked){
+  if(walked>=j.total)return{done:true};
+  for(var i=0;i<j.stops.length-1;i++){if(walked>=j.stops[i].mi&&walked<j.stops[i+1].mi)return{from:shortName(j.stops[i].n),to:shortName(j.stops[i+1].n)};}
+  return{from:shortName(j.stops[0].n),to:shortName(j.stops[1].n)};
+}
+function statTile(v,l){return '<div class="stat"><div class="v">'+v+'</div><div class="l">'+l+'</div></div>';}
+
+/* ----- Daily rank track ----- */
+function buildRankTrack(ts){
+  var max=RECOMMENDED, html='';
+  var frac=clamp(ts/max,0,1);
+  function pct(steps){return clamp(steps/max,0,1)*100;}
+  html+='<div class="rank-line"></div>';
+  html+='<div class="rank-line-fill" style="width:calc((100% - 24px) * '+frac+')"></div>';
+  RANK_STEPS.forEach(function(thr,i){
+    if(i===0)return; // skip the 0-dot under the bubble origin
+    var passed=ts>=thr;
+    html+='<div class="rank-dot'+(passed?' passed':'')+'" style="left:calc(12px + (100% - 24px) * '+(thr/max)+')"></div>';
+  });
+  // personal-goal marker ("tu meta")
+  var gpos=clamp(state.goal/max,0,1);
+  var gdone=ts>=state.goal;
+  html+='<div class="rank-marker'+(gdone?' done':'')+'" style="left:calc(12px + (100% - 24px) * '+gpos+')" title="tu meta"></div>';
+  // current bubble
+  var lbl = ts>=1000 ? Math.round(ts/1000)+'k' : String(ts);
+  html+='<div class="rank-bubble" style="left:calc(12px + (100% - 24px) * '+frac+')">'+lbl+'</div>';
+  return html;
+}
+
+function render(){
+  var j=J(current);if(!j)return;
+  var walked=miles(current), done=walked>=j.total;
+  var ts=todaySteps(current), ri=rankIndex(ts), atMaestro=ri>=RANKS.length-1;
+
+  // rank bar
+  document.getElementById('rank-track').innerHTML=buildRankTrack(ts);
+  var rl=document.getElementById('rank-label');
+  rl.textContent=RANKS[ri];
+  rl.classList.toggle('at-maestro',atMaestro);
+
+  document.getElementById('jtitle').innerHTML=j.name+'<small>'+j.sub+'</small>';
+  document.getElementById('trail').innerHTML=buildTrail(j,walked);
+
+  var leg=currentLeg(j,walked),locEl=document.getElementById('loc');
+  if(done)locEl.innerHTML='¡Ruta <b>completada</b>! Recorriste '+fmtMi(j.total)+'.';
+  else if(walked<=0)locEl.innerHTML='Listo para salir desde <b>'+leg.from+'</b>.';
+  else locEl.innerHTML='Vas entre <b>'+leg.from+'</b> y <b>'+leg.to+'</b>.';
+
+  // two ETAs
+  var remainMi=Math.max(0,j.total-walked), remainSteps=remainMi*STEPS_PER_MILE;
+  var dMine=done?0:Math.ceil(remainSteps/Math.max(1,state.goal));
+  var dHealth=done?0:Math.ceil(remainSteps/RECOMMENDED);
+  document.getElementById('eta-mine-v').textContent=done?'¡Listo!':nFmt(dMine);
+  document.getElementById('eta-mine-l').innerHTML=done?'ruta completada':'días a tu ritmo<br>'+nFmt(state.goal)+'/día';
+  document.getElementById('eta-health-v').textContent=done?'✓':nFmt(dHealth);
+  document.getElementById('eta-health-l').innerHTML=done?'¡bien hecho!':'días al ritmo saludable<br>'+nFmt(RECOMMENDED)+'/día';
+
+  // stats row
+  var pct=Math.min(100,Math.round(walked/j.total*100));
+  document.getElementById('stats').innerHTML=
+    statTile(fmtMi1(walked),'Recorrido')+statTile(pct+'%','Completado')+statTile(fmtMi1(remainMi),'Faltan');
+
+  // day card
+  document.getElementById('day-count').textContent=nFmt(ts);
+  document.getElementById('day-rank').innerHTML='Rango de hoy: <b>'+RANKS[ri]+'</b>';
+  document.getElementById('day-fill').style.width=clamp(ts/RECOMMENDED,0,1)*100+'%';
+  var pin=document.getElementById('pin-goal');
+  pin.style.left=clamp(state.goal/RECOMMENDED,0,1)*100+'%';
+  var hitGoal=ts>=state.goal, hitRec=ts>=RECOMMENDED, hitLey=ts>=LEYENDA;
+  document.getElementById('day-tiers').innerHTML=
+    '<span class="'+(hitGoal?'hit':'')+'">'+(hitGoal?'✓ ':'')+'Tu meta<b>'+nFmt(state.goal)+'</b></span>'+
+    '<span class="'+(hitRec?'hit':'')+'" style="text-align:center">'+(hitRec?'✓ ':'')+'Saludable<b>'+nFmt(RECOMMENDED)+'</b></span>'+
+    '<span class="'+(hitLey?'hit':'')+'" style="text-align:right">'+(hitLey?'✓ ':'')+'Leyenda<b>'+nFmt(LEYENDA)+'</b></span>';
+
+  document.getElementById('goal-link').textContent=nFmt(state.goal)+' pasos';
+  document.getElementById('undo-link').classList.toggle('hide',ts<=0);
+
+  // passport
+  var sc=document.getElementById('stops');sc.innerHTML='';
+  var nextShown=false;
+  j.stops.forEach(function(st,i){
+    var on=walked>=st.mi-0.001;
+    var isNext=!on&&!nextShown; if(isNext)nextShown=true;
+    var d=document.createElement('div');d.className='stop'+(on?'':' locked')+(isNext?' next':'');
+    var stClass=on?(i===0?'start':'on'):'off';
+    var mark=i===0?'✦':(on?'✓':'·');
+    var label=i===0?'Salida':fmtMi(st.mi)+' desde la salida';
+    var foot=on?st.f:(isNext?('Próximo sello — a '+fmtMi1(Math.max(0,st.mi-walked))+'.'):'Sello bloqueado — sigue caminando.');
+    d.innerHTML='<div class="stamp '+stClass+'">'+mark+'</div><div><div class="nm">'+st.n+'</div><div class="di">'+label+'</div><div class="ft">'+foot+'</div></div>';
+    sc.appendChild(d);
+  });
+  save();
+}
+
+/* ============================================================================
+   Recording steps — sync (demo) + manual. Sets TODAY's total for current route.
+============================================================================ */
+function recordToday(newTotal){
+  var j=J(current);if(!j)return;
+  newTotal=Math.max(0,Math.round(newTotal));
+  var p=state.j[current];p.days=p.days||{};
+  var iso=todayISO();
+  var prevToday=p.days[iso]||0;
+  var beforeMi=cumSteps(current)/STEPS_PER_MILE;
+  p.days[iso]=newTotal;
+  var afterMi=cumSteps(current)/STEPS_PER_MILE;
+  save();render();
+
+  // ---- celebrations (show one modal, highest priority; gate the rest) ----
+  // 1) route milestone / finish
+  var reached=null, finished=(afterMi>=j.total && beforeMi<j.total);
+  j.stops.forEach(function(st){if(st.mi>0 && beforeMi<st.mi-0.001 && afterMi>=st.mi-0.001)reached=st;});
+
+  // 2) daily tiers (gate per date so they fire once a day)
+  var iso2=iso, gMeta='pasos-meta-'+iso2, gRec='pasos-rec-'+iso2, gLey='pasos-ley-'+iso2;
+  var newMeta = newTotal>=state.goal && prevToday<state.goal && !LS.getItem(gMeta);
+  var newRec  = newTotal>=RECOMMENDED && prevToday<RECOMMENDED && !LS.getItem(gRec);
+  var newLey  = newTotal>=LEYENDA && prevToday<LEYENDA && !LS.getItem(gLey);
+  if(newMeta)LS.setItem(gMeta,'1');
+  if(newRec)LS.setItem(gRec,'1');
+  if(newLey)LS.setItem(gLey,'1');
+
+  if(finished){
+    var last=j.stops[j.stops.length-1];
+    celebrate(true,'¡Llegaste a '+shortName(last.n)+'!','¡Ruta completada! Recorriste '+fmtMi(j.total)+'. '+last.f);
+  } else if(reached){
+    celebrate(false,'Sello: '+shortName(reached.n),reached.f);
+  } else if(newRec){
+    celebrate(true,'¡Maestro/a del día!','Alcanzaste los '+nFmt(RECOMMENDED)+' pasos que recomienda la ciencia. Hoy llegas a lo más alto del rango.'+(newLey?' Y de paso, ¡día de leyenda!':''));
+  } else if(newLey){
+    celebrate(true,'¡Día de leyenda!','Superaste los '+nFmt(LEYENDA)+' pasos. Pocos caminan tanto en un día.');
+  } else if(newMeta){
+    celebrate(false,'¡Buen trabajo!','Cumpliste tu meta de '+nFmt(state.goal)+' pasos. Vas por buen camino — la meta saludable está en '+nFmt(RECOMMENDED)+'.');
+  }
+}
+
+/* sync demo: simulate the watch reporting more steps since the last read */
+var syncing=false;
+function syncSteps(){
+  if(syncing||!current)return;syncing=true;
+  var btn=document.getElementById('sync-btn'),old=btn.textContent;
+  btn.textContent='Sincronizando…';btn.disabled=true;
+  setTimeout(function(){
+    var cur=todaySteps(current);
+    var add=1800+Math.floor(Math.random()*2200);            // ~steps since last sync
+    var dayCap=7000+Math.floor(Math.random()*6500);          // a believable daily total
+    var next=Math.max(cur, Math.min(cur+add, dayCap));
+    if(next<=cur) next=cur+add;                              // always show progress in the demo
+    btn.textContent=old;btn.disabled=false;syncing=false;
+    recordToday(next);
+  },650);
+}
+
+/* ============================================================================
+   Modals (scroll-lock per design §3.5)
+============================================================================ */
+function openOverlay(id){var o=document.getElementById(id);if(!o)return;o.scrollTop=0;document.body.style.overflow='hidden';o.classList.add('open');}
+function closeAll(){
+  document.querySelectorAll('.modal-overlay.open').forEach(function(o){o.classList.remove('open');});
+  var menu=document.getElementById('more-menu');if(menu)menu.classList.remove('open');
+  document.body.style.overflow=''; var m=document.querySelector('main');
+  window.scrollTo(0,0);document.documentElement.scrollTop=0;document.body.scrollTop=0;if(m)m.scrollTop=m.scrollTop;
+}
+document.querySelectorAll('[data-close]').forEach(function(b){b.onclick=closeAll;});
+document.querySelectorAll('.modal-overlay').forEach(function(o){o.addEventListener('click',function(e){if(e.target===o)closeAll();});});
+
+function celebrate(accentTitle,t,b){
+  document.getElementById('cel-mk').src=WALKER;
+  var h=document.getElementById('cel-title');h.textContent=t;h.classList.toggle('accent',!!accentTitle);
+  document.getElementById('cel-body').textContent=b;
+  openOverlay('ov-cel');
+}
+function showInfo(title,html){document.getElementById('info-title').textContent=title;document.getElementById('info-body').innerHTML=html;openOverlay('ov-info');}
+
+function showRangos(){
+  var ts=current?todaySteps(current):0, ri=rankIndex(ts);
+  var html='';
+  for(var i=0;i<RANKS.length;i++){
+    var isTop=i===RANKS.length-1, cur=i===ri;
+    var label=i===0?'0+':( '≥ '+nFmt(RANK_STEPS[i])+' pasos');
+    html+='<div class="rank-row'+(cur?' cur':'')+(isTop?' is-top':'')+'">'+
+          '<span class="ri">'+(i+1)+'</span><span class="rn">'+RANKS[i]+'</span><span class="rs">'+label+'</span></div>';
+  }
+  document.getElementById('rank-list').innerHTML=html;
+  openOverlay('ov-rangos');
+}
+
+function showStats(){
+  var totals=dailyTotals(), dayKeys=Object.keys(totals);
+  var lifetimeSteps=0;dayKeys.forEach(function(k){lifetimeSteps+=totals[k];});
+  var lifetimeMi=lifetimeSteps/STEPS_PER_MILE;
+  var daysPlayed=dayKeys.length;
+  var recDays=0;dayKeys.forEach(function(k){if(totals[k]>=RECOMMENDED)recDays++;});
+  var finished=0;Object.keys(state.j).forEach(function(id){var jj=J(id);if(jj&&cumSteps(id)/STEPS_PER_MILE>=jj.total)finished++;});
+
+  // streak: consecutive days (ending today or yesterday) meeting personal goal
+  function streakFrom(startOffset){
+    var n=0,d=new Date();d.setDate(d.getDate()-startOffset);
+    while(true){var iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+      if((totals[iso]||0)>=state.goal){n++;d.setDate(d.getDate()-1);}else break;}
+    return n;
+  }
+  var streak=Math.max(streakFrom(0),(totals[todayISO()]||0)>=state.goal?0:streakFrom(1));
+  var ts=current?todaySteps(current):(totals[todayISO()]||0);
+
+  document.getElementById('stats-grid').innerHTML=
+    statTile(nFmt(ts),'Pasos hoy')+
+    statTile(current?RANKS[rankIndex(todaySteps(current))]:RANKS[rankIndex(totals[todayISO()]||0)],'Rango de hoy')+
+    statTile(streak+(streak===1?' día':' días'),'Racha (≥ tu meta)')+
+    statTile(recDays,'Días al nivel saludable')+
+    statTile(fmtMi1(lifetimeMi),'Total recorrido')+
+    statTile(finished,'Rutas completadas');
+  document.getElementById('stats-foot').textContent=
+    daysPlayed+(daysPlayed===1?' día registrado en total.':' días registrados en total.')+
+    '  Tu meta: '+nFmt(state.goal)+' · Saludable: '+nFmt(RECOMMENDED)+' pasos.';
+  openOverlay('ov-stats');
+}
+
+/* ============================================================================
+   Share (design §4.2)
+============================================================================ */
+function sharePasos(){
+  var L=[];L.push('Pasos · '+prettyDate());L.push('');
+  if(current){
+    var j=J(current),w=miles(current),done=w>=j.total,ts=todaySteps(current),ri=rankIndex(ts),pct=Math.min(100,Math.round(w/j.total*100));
+    if(done){L.push('🏁 ¡Completada! '+j.name);L.push('   '+fmtMi(j.total)+' recorridas.');}
+    else if(w<=0){L.push('🥾 '+j.name);L.push('   Lista para salir desde '+shortName(j.stops[0].n)+'.');}
+    else{var leg=currentLeg(j,w);L.push('🥾 '+j.name+' · '+pct+'%');L.push('   '+fmtMi1(w)+' de '+fmtMi(j.total)+' (entre '+leg.from+' y '+leg.to+')');}
+    L.push('👟 '+nFmt(ts)+' pasos hoy');
+    if(ri>=RANKS.length-1)L.push('👑 ¡Maestro/a del día!');
+    else L.push('🏆 Rango: '+RANKS[ri]);
+  }else{
+    L.push('🥾 Pasos — el mundo, paso a paso.');L.push('   Meta saludable: '+nFmt(RECOMMENDED)+' pasos.');
+  }
+  L.push('');L.push('https://cortadito.news');
+  var txt=L.join('\n');
+  if(navigator.share){navigator.share({text:txt}).catch(function(){});}
+  else if(navigator.clipboard){navigator.clipboard.writeText(txt).then(function(){showInfo('Copiado','<p>Resultado copiado al portapapeles. ¡Compártelo donde quieras!</p>');},function(){fallback(txt);});}
+  else{fallback(txt);}
+}
+function fallback(txt){try{prompt('Copia tu resultado:',txt);}catch(e){}}
+
+/* ============================================================================
+   Goal editor + clear-today + reset + manual entry
+============================================================================ */
+document.getElementById('goal-link').onclick=function(){
+  var v=prompt('¿Tu meta diaria de pasos? (la meta saludable basada en ciencia es 8.000)',state.goal);
+  var n=parseInt(v,10);if(n>0){state.goal=n;save();render();}
+};
+document.getElementById('undo-link').onclick=function(){
+  var p=state.j[current];if(!p||!p.days)return;delete p.days[todayISO()];save();render();
+};
+document.getElementById('reset-btn').onclick=function(){
+  if(confirm('¿Reiniciar esta ruta desde cero?')){state.j[current]={started:todayISO(),days:{}};save();render();}
+};
+document.getElementById('sync-btn').onclick=syncSteps;
+document.getElementById('log-btn').onclick=function(){
+  var inp=document.getElementById('steps-in');var n=parseInt(inp.value,10);
+  if(n>=0)recordToday(n);inp.value='';
+};
+document.getElementById('steps-in').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('log-btn').click();});
+document.getElementById('rankbar').addEventListener('click',showRangos);
+
+/* ============================================================================
+   Content
+============================================================================ */
+var HOWTO=
+  '<p>Elige una <b>ruta real</b> del mundo. La app cuenta los pasos que das cada día y <span style="color:var(--accent);font-weight:600">tu cortadito recorre la distancia</span> a tu lado. Cada <b>2.000 pasos ≈ 1 milla</b>.</p>'+
+  '<p>Tienes <b>dos metas cada día</b>: la <b>tuya</b> (la que tú fijas) y la <b>saludable</b> de 8.000 pasos, basada en la ciencia. Cumple la tuya y verás un "¡Buen trabajo!"; alcanza la saludable y llegas a <b style="color:var(--accent)">Maestro/a</b> del día. Pásate de los 12.000 y es <b>día de leyenda</b>.</p>'+
+  '<p>Al cruzar cada ciudad de la ruta ganas un <b>sello</b> en el pasaporte con un dato del lugar. La app te dice <b>cuántos días te faltan</b> para llegar: a tu ritmo y al ritmo saludable.</p>'+
+  '<p class="muted">Una ruta gratis a la vez; con <b>Cortadito Club</b>, la biblioteca completa y varias rutas en marcha.</p>';
+
+var ABOUT=
+  '<p><b>Pasos</b> convierte tus pasos en un viaje por rutas legendarias. Es parte de la familia diaria de <b>Cortadito News</b> — junto a Sudoku, Racimo y los demás juegos. <span style="color:var(--accent);font-weight:600">¡Lo esencial en un sorbo!</span></p>'+
+  '<p class="muted">La meta saludable de 8.000 pasos viene de la investigación: un metaanálisis de 2022 (Lancet Public Health) encontró que el beneficio para la salud se estabiliza alrededor de 8.000–10.000 pasos diarios en adultos.</p>'+
+  '<p class="muted">En la app nativa los pasos se sincronizan solos desde Apple Salud o Google Fit. Aquí, en el prototipo, el botón <b>Sincronizar</b> simula esa lectura (o anótalos a mano). Sin anuncios, sin distracciones: solo tú, el cortadito y el camino.</p>';
+
+/* ============================================================================
+   Hamburger + nav wiring
+============================================================================ */
+var navMore=document.getElementById('nav-more'),moreMenu=document.getElementById('more-menu');
+navMore.addEventListener('click',function(e){e.stopPropagation();moreMenu.classList.toggle('open');});
+document.addEventListener('click',function(){moreMenu.classList.remove('open');});
+
+function navAction(act){
+  if(act==='howto')showInfo('Cómo funciona',HOWTO);
+  else if(act==='about')showInfo('Sobre Pasos',ABOUT);
+  else if(act==='rangos')showRangos();
+  else if(act==='stats')showStats();
+  else if(act==='theme')toggleTheme();
+  else if(act==='share')sharePasos();
+  else if(act==='news')showInfo('Suscribirse al boletín',
+    '<p>Recibe las novedades de Cortadito News (juegos, recetas, café) directo en tu correo. Una vez por semana, sin spam.</p>'+
+    '<p class="muted">Esta versión es un prototipo. La inscripción real llegará pronto — mientras tanto, sigue caminando.</p>');
+}
+document.querySelectorAll('[data-act]').forEach(function(el){
+  el.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();moreMenu.classList.remove('open');navAction(el.getAttribute('data-act'));});
+});
+document.getElementById('landing-sub').addEventListener('click',function(){navAction('news');});
+document.getElementById('landing-change').addEventListener('click',showRoutes);
+document.getElementById('landing-theme-btn').addEventListener('click',toggleTheme);
+document.getElementById('cel-share').addEventListener('click',sharePasos);
+
+/* ============================================================================
+   Boot — try/finally guarantees the page reveals (design §4.4)
+============================================================================ */
+try{setTheme(loadTheme());renderLanding();}
+catch(e){}
+finally{document.body.classList.add('ready');}
+</script>
+</body>
+</html>

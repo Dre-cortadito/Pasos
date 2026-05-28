@@ -1,0 +1,11 @@
+# Files that must never be served publicly — only the game ships
+# (index.html + cortadito-orange.png + Logo Orange transparent.png +
+#  pasos-footprints.png).
+.git
+.gitignore
+.assetsignore
+wrangler.jsonc
+.wrangler
+*.command
+_reference
+_archive
