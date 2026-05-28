@@ -458,7 +458,8 @@
   .pano-scroll::-webkit-scrollbar{display:none}
   .pano-art{height:100%;display:inline-block;line-height:0}
   .pano-art svg{display:block;height:100%;width:auto}
-  .pano-overlay{position:absolute;left:0;right:0;bottom:0;padding:38px 16px 14px;background:linear-gradient(to top,rgba(12,9,6,.78),rgba(12,9,6,0));pointer-events:none}
+  .pano-top{position:absolute;left:0;right:0;top:0;padding:12px 16px 34px;background:linear-gradient(to bottom,rgba(12,9,6,.74),rgba(12,9,6,0));pointer-events:none}
+  .pano-bottom{position:absolute;left:0;right:0;bottom:0;padding:34px 16px 14px;background:linear-gradient(to top,rgba(12,9,6,.78),rgba(12,9,6,0));pointer-events:none}
 </style>
 </head>
 <body>
@@ -547,9 +548,11 @@
       <div class="pano-scroll" id="pano-scroll">
         <div class="pano-art" id="pano-art"></div>
       </div>
-      <div class="pano-overlay">
+      <div class="pano-top">
         <div class="scene-day" id="scene-day"></div>
         <div class="scene-place" id="scene-place"></div>
+      </div>
+      <div class="pano-bottom">
         <div class="scene-line" id="scene-line"></div>
       </div>
     </div>
@@ -1008,6 +1011,69 @@ var INCA_CAPS=[
   'La Puerta del Sol al amanecer: una portada de piedra mira a Machu Picchu en el valle.',
   'La ciudadela aparece entre la bruma. Andenes, templos y el Huayna Picchu al fondo. Lo lograste.'
 ];
+
+/* In-between moments — small narrative beats that appear as you scroll along
+   the trail (the panorama overlay shows the moment nearest the viewport). */
+var MOMENTS={
+  inca:[
+    {mi:0.3,  cap:'Saludas a los guías quechuas con un "Allianchu" en runa simi.'},
+    {mi:0.7,  cap:'Cruzas el puente colgante sobre el Urubamba; el río ruge abajo.'},
+    {mi:1.5,  cap:'Una llama te observa desde una piedra, sin apuro.'},
+    {mi:2.2,  cap:'Paras a llenar la botella en un manantial helado.'},
+    {mi:2.7,  cap:'Los primeros andenes incas asoman entre los árboles.'},
+    {mi:4.0,  cap:'Subes entre orquídeas silvestres del bosque nublado.'},
+    {mi:5.5,  cap:'Un puente de piedra inca, intacto desde hace cinco siglos.'},
+    {mi:6.5,  cap:'Te detienes a respirar; el camino se empina.'},
+    {mi:7.5,  cap:'Sobre tu cabeza, el chillido de un loro andino.'},
+    {mi:8.3,  cap:'El sol baja y se encienden las primeras estrellas.'},
+    {mi:9.5,  cap:'Empieza la gran subida. El aire ya se siente más delgado.'},
+    {mi:10.5, cap:'Polylepis, los últimos árboles antes de la puna.'},
+    {mi:11.5, cap:'Una viscacha te mira desde una roca al borde del camino.'},
+    {mi:12.3, cap:'Cada paso pesa el doble. Te apoyas en el bastón.'},
+    {mi:12.8, cap:'Las piernas tiemblan, pero la vista ya se abre.'},
+    {mi:13.5, cap:'Bajada de mil escalones de piedra inca, uno a uno.'},
+    {mi:14.2, cap:'Aparecen las primeras cascadas; el aire huele a tierra mojada.'},
+    {mi:14.7, cap:'Encuentras el campamento al caer la noche.'},
+    {mi:16.0, cap:'Subes de nuevo, pero más despacio. El cuerpo ya entiende.'},
+    {mi:17.0, cap:'Ruinas circulares de Runkurakay: un mirador inca en la curva.'},
+    {mi:17.8, cap:'Otra cumbre, otro paso. La cordillera no se acaba.'},
+    {mi:18.7, cap:'Phuyupatamarca asoma entre las nubes.'},
+    {mi:19.5, cap:'Mil escalones más, ahora bajando entre la niebla.'},
+    {mi:20.5, cap:'Bosque nublado pleno: bromelias, orquídeas, colibríes.'},
+    {mi:21.5, cap:'Un cóndor cruza el cielo lentamente, sin batir las alas.'},
+    {mi:22.2, cap:'El sonido del Urubamba vuelve a crecer en el valle.'},
+    {mi:23.4, cap:'Te quedas mirando los andenes curvos de Wiñay Wayna.'},
+    {mi:24.2, cap:'Última subida del Camino. Los pies ya van solos.'},
+    {mi:24.8, cap:'El sol empieza a teñir las montañas de naranja.'},
+    {mi:25.3, cap:'Pasas la portada del Sol y la ciudadela aparece allá abajo.'},
+    {mi:25.7, cap:'Bajas el camino real hacia la ciudadela: cada curva, una postal.'}
+  ]
+};
+
+/* Wilderness labels: shown when the scroll is between stops, in place of the
+   milestone town's name. Per-route SECTIONS take priority (one label per
+   inter-stop section); otherwise a biome-based fallback is used. */
+var SECTIONS={
+  inca:[
+    'En el bosque junto al río',
+    'Entre andenes incas',
+    'Subiendo al paso',
+    'Bajando entre cascadas',
+    'Subiendo entre nubes',
+    'Bajando hacia el Urubamba',
+    'Última subida al Sol',
+    'Descenso a la ciudadela'
+  ]
+};
+var WILDERNESS={
+  forest:'En el bosque nublado', terraces:'Entre andenes', winaywayna:'Por los andenes',
+  pass:'En el paso de altura', intipunku:'Hacia la portada del Sol', machu:'En el camino al Inca',
+  peak:'En la cordillera', snow:'En el nevado',
+  desert:'En el desierto', city:'Cruzando la ciudad', cathedral:'Entre catedrales',
+  arch:'Hacia el arco', pier:'Por la costa', coast:'Junto al mar',
+  plains:'En la llanura', palms:'Entre las palmas'
+};
+
 function firstSentence(s){if(!s)return '';var i=s.indexOf('. ');return (i<0?s:s.slice(0,i+1)).replace(/\s+$/,'');}
 function sceneOf(routeId,stop,i,total){
   var arr=SCENE_BIOMES[routeId]||[], biome=arr[i]||'plains';
@@ -1103,8 +1169,8 @@ var _panoWired=false, _panoAutoScrolled=false;
 function panoRidge(pts,W,H,fill,op){var d='M0 '+H+' L0 '+pts[0][1];for(var i=0;i<pts.length;i++)d+=' L'+pts[i][0]+' '+pts[i][1];d+=' L'+W+' '+H+' Z';return '<path d="'+d+'" fill="'+fill+'"'+(op!=null?' opacity="'+op+'"':'')+'/>';}
 
 function panoLandmark(b,x,y,c){var I=c.ink,P=c.paper;
-  if(b==='pass'){// Warmiwañusca — asymmetric saddle ("reclining woman": taller head-peak left, body-peak right)
-    return '<path d="M'+(x-110)+' '+y+' L'+(x-60)+' '+(y-130)+' L'+(x-30)+' '+(y-85)+' L'+x+' '+(y-60)+' L'+(x+30)+' '+(y-95)+' L'+(x+70)+' '+(y-115)+' L'+(x+110)+' '+y+' Z" fill="'+I+'"/>';}
+  if(b==='pass'){// Warmiwañusca — modest saddle on top of the already-high ground (the ground does the climbing)
+    return '<path d="M'+(x-110)+' '+y+' L'+(x-58)+' '+(y-44)+' L'+(x-28)+' '+(y-22)+' L'+x+' '+(y-12)+' L'+(x+28)+' '+(y-26)+' L'+(x+62)+' '+(y-40)+' L'+(x+110)+' '+y+' Z" fill="'+I+'"/>';}
   if(b==='snow')return '<path d="M'+(x-100)+' '+y+' L'+(x-40)+' '+(y-100)+' L'+(x-15)+' '+(y-65)+' L'+(x+10)+' '+(y-120)+' L'+(x+50)+' '+(y-70)+' L'+(x+100)+' '+y+' Z" fill="'+I+'"/><path d="M'+(x+10)+' '+(y-120)+' l-14 22 l28 0 z" fill="'+P+'" opacity=".92"/><path d="M'+(x-40)+' '+(y-100)+' l-10 16 l20 0 z" fill="'+P+'" opacity=".85"/>';
   if(b==='machu'){
     // Faithful Machu Picchu: receding background ridges + Huayna Picchu sugarloaf + citadel terraces
@@ -1156,7 +1222,17 @@ function panoLandmark(b,x,y,c){var I=c.ink,P=c.paper;
   if(b==='peak')return '<path d="M'+(x-80)+' '+y+' L'+(x-30)+' '+(y-90)+' L'+(x-5)+' '+(y-50)+' L'+(x+20)+' '+(y-110)+' L'+(x+50)+' '+(y-60)+' L'+(x+80)+' '+y+' Z" fill="'+I+'"/>';
   return '<rect x="'+(x-1.6)+'" y="'+(y-26)+'" width="3.2" height="22" fill="'+I+'"/><circle cx="'+x+'" cy="'+(y-32)+'" r="13" fill="'+I+'"/>';
 }
-function panoHiker(x,y,fill){return '<g fill="'+fill+'"><circle cx="'+x+'" cy="'+(y-22)+'" r="3"/><rect x="'+(x-1.6)+'" y="'+(y-18)+'" width="3.2" height="11" rx="1.4"/><rect x="'+(x-1.6)+'" y="'+(y-7)+'" width="3.2" height="9" transform="rotate(18 '+x+' '+(y-7)+')"/><rect x="'+(x-1.6)+'" y="'+(y-7)+'" width="3.2" height="9" transform="rotate(-12 '+x+' '+(y-7)+')"/><rect x="'+(x-9)+'" y="'+(y-22)+'" width="16" height="2.2" transform="rotate(20 '+x+' '+(y-21)+')"/></g>';}
+function panoHiker(x,y,fill){
+  // a recognisable traveller silhouette ~42px tall: head, torso, backpack hump, two legs mid-stride, walking pole
+  return '<g fill="'+fill+'">'
+    +'<circle cx="'+x+'" cy="'+(y-36)+'" r="6"/>'
+    +'<rect x="'+(x-3)+'" y="'+(y-30)+'" width="6" height="19" rx="2.4"/>'
+    +'<path d="M'+(x-5)+' '+(y-26)+' Q'+(x-12)+' '+(y-19)+' '+(x-5)+' '+(y-10)+' Z"/>'
+    +'<rect x="'+(x-3)+'" y="'+(y-12)+'" width="3.6" height="14" rx="1.4" transform="rotate(18 '+(x-1.2)+' '+(y-12)+')"/>'
+    +'<rect x="'+(x-0.6)+'" y="'+(y-12)+'" width="3.6" height="14" rx="1.4" transform="rotate(-18 '+(x+1.2)+' '+(y-12)+')"/>'
+    +'<line x1="'+(x+10)+'" y1="'+(y-30)+'" x2="'+(x+6)+'" y2="'+(y+2)+'" stroke="'+fill+'" stroke-width="2.2" stroke-linecap="round"/>'
+  +'</g>';
+}
 function panoLlama(x,y,fill){return '<g fill="'+fill+'"><ellipse cx="'+x+'" cy="'+(y-7)+'" rx="6" ry="3.3"/><rect x="'+(x+3)+'" y="'+(y-15)+'" width="2.2" height="9" rx="0.6"/><circle cx="'+(x+4.4)+'" cy="'+(y-16)+'" r="1.6"/><rect x="'+(x+5.4)+'" y="'+(y-17)+'" width="0.9" height="2"/><rect x="'+(x-5)+'" y="'+(y-4)+'" width="1.4" height="5"/><rect x="'+(x-2)+'" y="'+(y-4)+'" width="1.4" height="5"/><rect x="'+(x+1.4)+'" y="'+(y-4)+'" width="1.4" height="5"/><rect x="'+(x+4)+'" y="'+(y-4)+'" width="1.4" height="5"/></g>';}
 function panoCondor(x,y,fill){return '<path d="M'+(x-13)+' '+y+' Q'+(x-6)+' '+(y-4)+' '+x+' '+y+' Q'+(x+6)+' '+(y-4)+' '+(x+13)+' '+y+'" fill="none" stroke="'+fill+'" stroke-width="1.6" stroke-linecap="round" opacity="0.7"/>';}
 
@@ -1174,7 +1250,8 @@ function buildPanorama(j,walked,c){
 
   // ---- Elevation-aware ground (real profile when stop.el is provided) ----
   var hasEl=true; for(var k=0;k<N;k++) if(typeof j.stops[k].el!=='number'){hasEl=false;break;}
-  var profile=null, BASE=222, ELEV=92;
+  // dramatic elevation: BASE = where the lowest stops sit; ELEV = how far the highest peaks climb
+  var profile=null, BASE=240, ELEV=185;
   if(hasEl){
     var minE=Infinity,maxE=-Infinity;
     for(k=0;k<N;k++){var e=j.stops[k].el;if(e<minE)minE=e;if(e>maxE)maxE=e;}
@@ -1251,13 +1328,40 @@ function updatePanoOverlay(){
   var ps=document.getElementById('pano-scroll'); if(!ps) return;
   var pxR=ps.clientHeight/PANO_H;
   var centerI=(ps.scrollLeft+ps.clientWidth/2)/pxR;
-  var bestI=0,bestD=1e9;
-  for(var i=0;i<jj.stops.length;i++){var sx=(jj.stops[i].mi/jj.total)*PANO_W;var dd=Math.abs(sx-centerI);if(dd<bestD){bestD=dd;bestI=i;}}
-  var scn=sceneOf(jj.id,jj.stops[bestI],bestI,jj.stops.length);
-  document.getElementById('scene-place').textContent=jj.stops[bestI].n;
-  document.getElementById('scene-line').textContent=scn.cap;
   var milesAt=clamp(centerI/PANO_W,0,1)*jj.total;
-  document.getElementById('scene-day').textContent='Día '+dayNum(current)+' · '+fmtMi(milesAt);
+
+  // figure out which section (between which two stops) we're in
+  var sectionI=jj.stops.length-1;
+  for(var i=0;i<jj.stops.length-1;i++){
+    if(milesAt >= jj.stops[i].mi - 0.001 && milesAt < jj.stops[i+1].mi){sectionI=i;break;}
+  }
+  if(milesAt >= jj.stops[jj.stops.length-1].mi - 0.001) sectionI=jj.stops.length-1;
+
+  // place label: nearest stop name when within ~half a section of one; otherwise the wilderness label
+  var nearStop, dStart=Math.abs(milesAt-jj.stops[sectionI].mi);
+  var dEnd=(sectionI<jj.stops.length-1)?Math.abs(milesAt-jj.stops[sectionI+1].mi):Infinity;
+  nearStop = dStart<dEnd ? jj.stops[sectionI] : jj.stops[sectionI+1];
+  var halfSeg = (sectionI<jj.stops.length-1) ? (jj.stops[sectionI+1].mi-jj.stops[sectionI].mi)/2 : 0.5;
+  var nearStopThresh = Math.max(0.4, Math.min(halfSeg*0.55, 2));   // adapt to section length
+  var placeLabel;
+  if(Math.min(dStart,dEnd) < nearStopThresh){
+    placeLabel = nearStop.n;
+  } else {
+    var sect=(SECTIONS[jj.id]||[])[sectionI];
+    if(sect){ placeLabel = sect; }
+    else { var biome=(SCENE_BIOMES[jj.id]||[])[sectionI] || 'plains'; placeLabel = WILDERNESS[biome] || 'En el camino'; }
+  }
+  document.getElementById('scene-place').textContent=placeLabel;
+
+  // caption tracks the NEAREST MOMENT (stops + in-between narrative beats)
+  var moments=(MOMENTS[jj.id]||[]).slice();
+  for(i=0;i<jj.stops.length;i++){var sc=sceneOf(jj.id,jj.stops[i],i,jj.stops.length); moments.push({mi:jj.stops[i].mi, cap:sc.cap});}
+  var bestM=moments[0], bestMD=1e9;
+  for(var k=0;k<moments.length;k++){var dd=Math.abs(moments[k].mi-milesAt); if(dd<bestMD){bestMD=dd;bestM=moments[k];}}
+  document.getElementById('scene-line').textContent=bestM ? bestM.cap : '';
+
+  // day = how many days the user has been on THIS trail (calendar)
+  document.getElementById('scene-day').textContent='Día '+dayNum(current);
 }
 function setupPanoScroll(){var ps=document.getElementById('pano-scroll'); if(!ps||_panoWired)return; _panoWired=true; ps.addEventListener('scroll',updatePanoOverlay);}
 function autoScrollPanoIfNeeded(j,walked){
