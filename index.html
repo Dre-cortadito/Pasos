@@ -305,6 +305,12 @@
   .goal-item .gi-desc{font-size:12.5px;color:var(--ink-soft);margin-top:3px;line-height:1.35}
   .goal-item .gi-tag{flex:none;font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);white-space:nowrap}
   .goal-item .gi-tag.muted{color:var(--ink-soft)}
+  /* The minimum-recommended row pops with a warm wash + accent border + filled tag */
+  .goal-item.rec{background:var(--accent-soft);border-color:var(--accent)}
+  .goal-item.rec .gi-name,
+  .goal-item.rec .gi-name small{color:var(--accent-deep)}
+  .goal-item.rec .gi-desc{color:var(--accent-deep);opacity:.85}
+  .goal-item.rec .gi-tag{background:var(--accent);color:#fff;padding:4px 9px;border-radius:999px;letter-spacing:.8px}
 
   .landing-play{
     margin-top:6px;
@@ -546,16 +552,17 @@
       <img class="landing-logo" src="Logo Orange transparent.png" alt="">
       <h1 class="landing-title">Pasos</h1>
     </div>
-    <p class="landing-tagline">El mundo, paso a paso.</p>
+    <p class="landing-tagline">Mejorando tu salud paso a paso.</p>
     <div class="landing-date" id="landing-date"></div>
-    <div class="landing-reto">
-      <span class="landing-reto-label">Meta saludable</span>
-      <span class="landing-reto-value" id="landing-goal">8.000 pasos</span>
-    </div>
     <div class="landing-setup">
       <button class="landing-row" id="sel-route" type="button">
         <span class="row-label">Ruta</span>
         <span class="sel-value" id="sel-route-val">—</span>
+        <span class="row-chev" aria-hidden="true">›</span>
+      </button>
+      <button class="landing-row" id="sel-goal" type="button">
+        <span class="row-label">Meta</span>
+        <span class="sel-value" id="sel-goal-val">—</span>
         <span class="row-chev" aria-hidden="true">›</span>
       </button>
       <button class="landing-row" id="sel-character" type="button">
@@ -566,11 +573,6 @@
       <button class="landing-row" id="sel-coach" type="button">
         <span class="row-label">Coach</span>
         <span class="sel-value" id="sel-coach-val">Elegir</span>
-        <span class="row-chev" aria-hidden="true">›</span>
-      </button>
-      <button class="landing-row" id="sel-goal" type="button">
-        <span class="row-label">Meta</span>
-        <span class="sel-value" id="sel-goal-val">—</span>
         <span class="row-chev" aria-hidden="true">›</span>
       </button>
     </div>
@@ -923,7 +925,6 @@ function anyStarted(){return JOURNEYS.some(function(jj){return cumSteps(jj.id)>0
 function renderLanding(){
   if(!state.selected||!J(state.selected))state.selected=defaultSelected();
   document.getElementById('landing-date').textContent=longDate();
-  document.getElementById('landing-goal').textContent=nFmt(RECOMMENDED)+' pasos';
 
   var j=J(state.selected), walked=miles(state.selected), done=walked>=j.total, started=cumSteps(state.selected)>0;
 
@@ -937,10 +938,8 @@ function renderLanding(){
   document.getElementById('sel-character-val').textContent = CHARACTER_NAMES[state.character] || 'Elegir';
   document.getElementById('sel-coach-val').textContent     = COACH_NAMES[state.coach]         || 'Elegir';
 
-  // Personal step goal — current value, with the "Saludable" badge when it's exactly 8.000
-  var goalLabel = nFmt(state.goal)+' pasos/día';
-  if(state.goal===RECOMMENDED) goalLabel += ' · saludable';
-  document.getElementById('sel-goal-val').textContent = goalLabel;
+  // Personal step goal — current value (the picker carries the framing)
+  document.getElementById('sel-goal-val').textContent = nFmt(state.goal)+' pasos/día';
 
   // Play button — always visible; only the label changes with state
   var play=document.getElementById('landing-play');
@@ -964,21 +963,23 @@ function showCoachPicker(){
   );
 }
 
-/* Personal step goal — preset choices plus a custom number. */
+/* Personal step goal — preset choices plus a custom number.
+   8.000 is highlighted as the science-backed MINIMUM recommended (anything
+   above is also great — the higher tiers are framed as "extra credit"). */
 var GOAL_PRESETS=[
-  {v:4000,  tag:'Suave',     desc:'Para empezar a moverte cada día.'},
-  {v:6000,  tag:'Constante', desc:'Un buen ritmo diario, alcanzable.'},
-  {v:8000,  tag:'Saludable', desc:'La meta basada en la ciencia (Lancet 2022).'},
-  {v:10000, tag:'Activo',    desc:'El clásico "diez mil pasos".'},
-  {v:12000, tag:'Ambicioso', desc:'Para días en los que quieres superarte.'}
+  {v:4000,  tag:'Suave',        desc:'Para empezar a moverte cada día.'},
+  {v:6000,  tag:'Constante',    desc:'Un buen ritmo diario, alcanzable.'},
+  {v:8000,  tag:'Recomendada',  desc:'La mínima recomendada por la ciencia para una vida más sana (Lancet 2022). Más también suma.', rec:true},
+  {v:10000, tag:'Activo',       desc:'El clásico "diez mil pasos". Suma sobre la mínima — excelente.'},
+  {v:12000, tag:'Leyenda',      desc:'Para días en los que quieres superarte. Día de leyenda al cruzarlo.'}
 ];
 function showGoalPicker(){
   var list=document.getElementById('goal-list'); list.innerHTML='';
   GOAL_PRESETS.forEach(function(g){
     var item=document.createElement('button'); item.type='button';
-    item.className='goal-item'+(state.goal===g.v?' active':'');
+    item.className='goal-item'+(g.rec?' rec':'')+(state.goal===g.v?' active':'');
     item.innerHTML='<div><div class="gi-name">'+nFmt(g.v)+' <small>pasos / día</small></div><div class="gi-desc">'+g.desc+'</div></div>'
-      +'<span class="gi-tag">'+g.tag+'</span>';
+      +'<span class="gi-tag'+(g.rec?'':'')+'">'+g.tag+'</span>';
     item.onclick=function(){state.goal=g.v; save(); closeAll(); renderLanding(); if(current) render();};
     list.appendChild(item);
   });
@@ -1734,7 +1735,7 @@ function sharePasos(){
     if(ri>=RANKS.length-1)L.push('👑 ¡Maestro/a del día!');
     else L.push('🏆 Rango: '+RANKS[ri]);
   }else{
-    L.push('🥾 Pasos — el mundo, paso a paso.');L.push('   Meta saludable: '+nFmt(RECOMMENDED)+' pasos.');
+    L.push('🥾 Pasos — mejorando tu salud paso a paso.');L.push('   Mínima recomendada: '+nFmt(RECOMMENDED)+' pasos.');
   }
   L.push('');L.push('https://cortadito.news');
   var txt=L.join('\n');
