@@ -211,8 +211,11 @@
 
   .landing-logo-row{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:auto}
   .landing-logo{
-    width:92px;height:auto;flex:none;display:block;margin:0;
-    user-select:none;-webkit-user-drag:none;pointer-events:none;
+    width:88px;height:108px;flex:none;display:block;margin:0;     /* footprints aspect ~0.82 w/h */
+    background-color:var(--accent);
+    -webkit-mask:url("pasos-footprints.png") center/contain no-repeat;
+    mask:url("pasos-footprints.png") center/contain no-repeat;
+    user-select:none;-webkit-touch-callout:none;pointer-events:none;
   }
   .landing-title{
     font-family:var(--font-display);font-weight:700;
@@ -329,10 +332,10 @@
   .landing-credit strong{color:var(--ink);font-weight:700}
   .landing-credit-tagline{color:var(--accent);font-weight:700}
 
-  @media (min-width:560px){.landing-logo{width:120px}.landing-title{font-size:64px}}
+  @media (min-width:560px){.landing-logo{width:120px;height:147px}.landing-title{font-size:64px}}
   @media (min-width:880px){
     .landing-inner{max-width:480px;gap:18px;padding-top:80px}
-    .landing-logo{width:150px}
+    .landing-logo{width:150px;height:184px}
     .landing-title{font-size:82px}
     .landing-tagline{font-size:24px;max-width:420px}
     .landing-reto-value{font-size:22px}
@@ -549,7 +552,7 @@
   </button>
   <div class="landing-inner">
     <div class="landing-logo-row">
-      <img class="landing-logo" src="Logo Orange transparent.png" alt="">
+      <span class="landing-logo" role="img" aria-label="Pasos"></span>
       <h1 class="landing-title">Pasos</h1>
     </div>
     <p class="landing-tagline">Mejorando tu salud paso a paso.</p>
