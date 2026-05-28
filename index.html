@@ -31,8 +31,7 @@
     --font-ui:'Helvetica Neue',Helvetica,Arial,sans-serif;
 
     --header-h:56px;
-    --masthead-h:26px;     /* the brand strip under the header */
-    --rank-top:92px; /* 56 header + 26 masthead + 10 gap — fixed pixel layout */
+    --rank-top:66px; /* 56 header + 10 gap — fixed pixel layout */
   }
   body[data-theme="black"]{
     --bg:#0e0c0a; --paper:#1a1614;
@@ -146,29 +145,6 @@
     .header-nav .more{width:32px;height:32px}
   }
   @media (max-width:360px){.header-nav{gap:6px;font-size:11px}}
-
-  /* ===== Masthead — newspaper brand strip under the in-game header ===== */
-  .masthead{
-    display:none;
-    position:fixed;top:var(--header-h);left:0;right:0;z-index:1600;
-    height:var(--masthead-h);
-    background:var(--bg);
-    border-bottom:1px solid var(--ink-line);
-    text-align:center;
-    font-family:var(--font-ui);font-size:11px;letter-spacing:.3px;
-    color:var(--ink-soft);
-    line-height:var(--masthead-h);
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-    padding:0 16px;
-  }
-  body.game-active .masthead{display:block}
-  .masthead .masthead-tag{
-    color:var(--accent);font-weight:700;
-    font-family:var(--font-display);font-style:italic;
-    letter-spacing:0;margin-left:2px;
-  }
-  @media (max-width:560px){.masthead{font-size:10.5px}}
-  @media (max-width:380px){.masthead{font-size:10px;letter-spacing:.2px}}
 
   main{
     padding-top:var(--rank-top);   /* rank bar lands at 66px (design system §2) */
@@ -551,6 +527,7 @@
     </button>
     <a class="nav-rules-link" data-act="howto" href="#" role="button">Reglas ▾</a>
     <a data-act="stats" href="#" role="button">Estadísticas ▾</a>
+    <a data-act="goal" href="#" role="button">Meta ▾</a>
     <span class="nav-more-wrap">
       <button class="more" id="nav-more" type="button" aria-label="Más opciones">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
@@ -568,12 +545,6 @@
     </span>
   </nav>
 </header>
-
-<!-- ============================================================== MASTHEAD
-     A thin newspaper-style brand strip under the in-game header bar. Hidden on
-     the landing (it'd be redundant with the credit line at the bottom) and
-     shown only when the player's actually inside a journey. -->
-<div class="masthead">Cortadito News · <span class="masthead-tag">¡Lo esencial en un sorbo!</span></div>
 
 <!-- ============================================================== LANDING -->
 <div class="landing" id="landing">
@@ -1822,6 +1793,7 @@ function navAction(act){
   else if(act==='about')showInfo('Sobre Pasos',ABOUT);
   else if(act==='rangos')showRangos();
   else if(act==='stats')showStats();
+  else if(act==='goal')showGoalPicker();
   else if(act==='theme')toggleTheme();
   else if(act==='share')sharePasos();
   else if(act==='news')showInfo('Suscribirse al boletín',
