@@ -288,6 +288,24 @@
   .ri-status{font-size:11px;font-weight:700;color:var(--accent);white-space:nowrap}
   .ri-status.activa{color:var(--success)}
 
+  /* Goal picker rows — preset step targets + custom */
+  .goal-list{display:flex;flex-direction:column;gap:10px;margin:14px 0 4px}
+  .goal-item{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    width:100%;background:var(--bg);border:1px solid var(--ink-line);border-radius:13px;
+    padding:12px 14px;text-align:left;cursor:pointer;color:var(--ink);font-family:inherit;
+    transition:border-color .15s,transform .08s;
+    touch-action:manipulation;user-select:none;-webkit-tap-highlight-color:transparent;
+  }
+  .goal-item:active{transform:scale(.99)}
+  .goal-item.active{border-color:var(--accent)}
+  @media (hover:hover){.goal-item:hover{border-color:var(--ink-soft)}}
+  .goal-item .gi-name{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--ink);line-height:1.1}
+  .goal-item .gi-name small{font-family:var(--font-ui);font-size:12px;color:var(--ink-soft);font-weight:400;margin-left:5px}
+  .goal-item .gi-desc{font-size:12.5px;color:var(--ink-soft);margin-top:3px;line-height:1.35}
+  .goal-item .gi-tag{flex:none;font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);white-space:nowrap}
+  .goal-item .gi-tag.muted{color:var(--ink-soft)}
+
   .landing-play{
     margin-top:6px;
     background:var(--ink);color:var(--bg);
@@ -550,6 +568,11 @@
         <span class="sel-value" id="sel-coach-val">Elegir</span>
         <span class="row-chev" aria-hidden="true">›</span>
       </button>
+      <button class="landing-row" id="sel-goal" type="button">
+        <span class="row-label">Meta</span>
+        <span class="sel-value" id="sel-goal-val">—</span>
+        <span class="row-chev" aria-hidden="true">›</span>
+      </button>
     </div>
     <button class="landing-play" id="landing-play">Empezar caminata</button>
     <button class="landing-sub" id="landing-sub">Suscribirse al boletín</button>
@@ -646,6 +669,14 @@
   <button class="modal-close" data-close>×</button>
   <h2 id="info-title">Cómo funciona</h2>
   <div id="info-body"></div>
+</div></div>
+
+<!-- ============================================================== GOAL PICKER -->
+<div class="modal-overlay" id="ov-goal"><div class="modal">
+  <button class="modal-close" data-close>×</button>
+  <h2>Tu meta diaria</h2>
+  <p class="muted">¿Cuántos pasos quieres caminar cada día? La meta <b>saludable</b> de 8.000 pasos viene de la investigación; tu meta personal puede ser menor o mayor.</p>
+  <div class="goal-list" id="goal-list"></div>
 </div></div>
 
 <!-- ============================================================== ROUTE PICKER -->
@@ -906,6 +937,11 @@ function renderLanding(){
   document.getElementById('sel-character-val').textContent = CHARACTER_NAMES[state.character] || 'Elegir';
   document.getElementById('sel-coach-val').textContent     = COACH_NAMES[state.coach]         || 'Elegir';
 
+  // Personal step goal — current value, with the "Saludable" badge when it's exactly 8.000
+  var goalLabel = nFmt(state.goal)+' pasos/día';
+  if(state.goal===RECOMMENDED) goalLabel += ' · saludable';
+  document.getElementById('sel-goal-val').textContent = goalLabel;
+
   // Play button — always visible; only the label changes with state
   var play=document.getElementById('landing-play');
   play.textContent = done ? 'Ver caminata' : (started ? 'Continuar caminata' : 'Empezar caminata');
@@ -926,6 +962,34 @@ function showCoachPicker(){
     '<p>Pronto podrás elegir un coach que te acompañe con su propio estilo y mensajes en cada etapa del camino.</p>'+
     '<p class="muted">Aviso: esto es solo el botón. Las opciones llegan en la siguiente actualización.</p>'
   );
+}
+
+/* Personal step goal — preset choices plus a custom number. */
+var GOAL_PRESETS=[
+  {v:4000,  tag:'Suave',     desc:'Para empezar a moverte cada día.'},
+  {v:6000,  tag:'Constante', desc:'Un buen ritmo diario, alcanzable.'},
+  {v:8000,  tag:'Saludable', desc:'La meta basada en la ciencia (Lancet 2022).'},
+  {v:10000, tag:'Activo',    desc:'El clásico "diez mil pasos".'},
+  {v:12000, tag:'Ambicioso', desc:'Para días en los que quieres superarte.'}
+];
+function showGoalPicker(){
+  var list=document.getElementById('goal-list'); list.innerHTML='';
+  GOAL_PRESETS.forEach(function(g){
+    var item=document.createElement('button'); item.type='button';
+    item.className='goal-item'+(state.goal===g.v?' active':'');
+    item.innerHTML='<div><div class="gi-name">'+nFmt(g.v)+' <small>pasos / día</small></div><div class="gi-desc">'+g.desc+'</div></div>'
+      +'<span class="gi-tag">'+g.tag+'</span>';
+    item.onclick=function(){state.goal=g.v; save(); closeAll(); renderLanding(); if(current) render();};
+    list.appendChild(item);
+  });
+  var custom=document.createElement('button'); custom.type='button'; custom.className='goal-item';
+  var isPreset=GOAL_PRESETS.some(function(g){return g.v===state.goal;});
+  if(!isPreset) custom.className+=' active';
+  custom.innerHTML='<div><div class="gi-name">Otro número…</div><div class="gi-desc">Ingresa una meta personalizada en pasos.</div></div>'
+    +'<span class="gi-tag muted">›</span>';
+  custom.onclick=function(){var v=prompt('¿Tu meta diaria de pasos?',state.goal); var n=parseInt(v,10); if(n>0){state.goal=n; save(); closeAll(); renderLanding(); if(current) render();}};
+  list.appendChild(custom);
+  openOverlay('ov-goal');
 }
 
 /* Route picker — every route persists its own progress; one is "activa". */
@@ -1683,10 +1747,7 @@ function fallback(txt){try{prompt('Copia tu resultado:',txt);}catch(e){}}
 /* ============================================================================
    Goal editor + clear-today + reset + manual entry
 ============================================================================ */
-document.getElementById('goal-link').onclick=function(){
-  var v=prompt('¿Tu meta diaria de pasos? (la meta saludable basada en ciencia es 8.000)',state.goal);
-  var n=parseInt(v,10);if(n>0){state.goal=n;save();render();}
-};
+document.getElementById('goal-link').onclick=showGoalPicker;   // same modal as the landing's Meta selector
 document.getElementById('undo-link').onclick=function(){
   var p=state.j[current];if(!p||!p.days)return;delete p.days[todayISO()];save();render();
 };
@@ -1740,6 +1801,7 @@ document.getElementById('landing-sub').addEventListener('click',function(){navAc
 document.getElementById('sel-route').addEventListener('click',showRoutes);
 document.getElementById('sel-character').addEventListener('click',showCharacterPicker);
 document.getElementById('sel-coach').addEventListener('click',showCoachPicker);
+document.getElementById('sel-goal').addEventListener('click',showGoalPicker);
 document.getElementById('landing-theme-btn').addEventListener('click',toggleTheme);
 document.getElementById('cel-share').addEventListener('click',sharePasos);
 
