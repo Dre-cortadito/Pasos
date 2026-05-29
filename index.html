@@ -345,10 +345,11 @@
   /* Active = thick mint border, white card stays white. No mint fill. */
   .coach-card.active{border-color:var(--accent);border-width:2.5px;padding:7px 7px 9px}
   @media (hover:hover){.coach-card:hover{border-color:var(--ink-soft)}}
-  /* Frame ratio matches the normalized 400x480 coach canvas exactly (5:6 =
-     1:1.2), so every coach renders at the same scale inside the same frame. */
+  /* Frame ratio matches the normalized 500x540 coach canvas (25:27 ≈ 1:1.08).
+     Canvas has 40px breathing on every side baked in, so the figure never
+     touches the frame edge regardless of pose. */
   .coach-card .cc-frame{
-    width:100%;aspect-ratio:1/1.2;border-radius:10px;background:var(--bg);
+    width:100%;aspect-ratio:25/27;border-radius:10px;background:var(--bg);
     overflow:hidden;position:relative;margin-bottom:6px;
   }
   .coach-card .cc-img{
@@ -381,7 +382,7 @@
   /* Coach picker — step 2: detail view (portrait + name + personality + sample line + confirm) */
   .coach-detail{display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:6px}
   .coach-detail .cd-frame{
-    width:220px;height:264px;border-radius:18px;background:var(--bg);
+    width:250px;height:270px;border-radius:18px;background:var(--bg);
     border:1.5px solid var(--ink-line);
     overflow:hidden;position:relative;
   }
