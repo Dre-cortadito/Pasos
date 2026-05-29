@@ -545,8 +545,8 @@
     position:relative;flex:1;height:22px;
     display:flex;align-items:center;
   }
-  .rank-line{position:absolute;left:12px;right:12px;top:50%;height:3px;background:var(--ink-line);transform:translateY(-50%);border-radius:2px;z-index:0}
-  .rank-line-fill{position:absolute;left:12px;top:50%;height:3px;background:var(--accent);transform:translateY(-50%);border-radius:2px;z-index:1;transition:width .3s ease}
+  .rank-line{position:absolute;left:0;right:0;top:50%;height:3px;background:var(--ink-line);transform:translateY(-50%);border-radius:2px;z-index:0}
+  .rank-line-fill{position:absolute;left:0;top:50%;height:3px;background:var(--accent);transform:translateY(-50%);border-radius:2px;z-index:1;transition:width .3s ease}
   .rank-dot{position:absolute;top:50%;width:6px;height:6px;border-radius:50%;transform:translate(-50%,-50%);background:var(--ink-soft);z-index:3}
   .rank-dot.passed{background:var(--ink)}
   .rank-marker{position:absolute;top:50%;width:3px;height:26px;border-radius:2px;transform:translate(-50%,-50%);background:var(--accent);opacity:.95;z-index:2}
@@ -2697,23 +2697,26 @@ function autoScrollPanoIfNeeded(j,walked){
 
 /* ----- Daily rank track ----- */
 function buildRankTrack(ts){
+  // Positioning matches Sudoku exactly: dots at left:pct% directly, so the
+  // last rank (Maestro) sits flush at the track's right edge. The track line
+  // also spans the full 0–100% so there's no 12px inset gap on either side.
   var max=RECOMMENDED, html='';
   var frac=clamp(ts/max,0,1);
-  function pct(steps){return clamp(steps/max,0,1)*100;}
   html+='<div class="rank-line"></div>';
-  html+='<div class="rank-line-fill" style="width:calc((100% - 24px) * '+frac+')"></div>';
+  html+='<div class="rank-line-fill" style="width:'+(frac*100)+'%"></div>';
   RANK_STEPS.forEach(function(thr,i){
     if(i===0)return; // skip the 0-dot under the bubble origin
     var passed=ts>=thr;
-    html+='<div class="rank-dot'+(passed?' passed':'')+'" style="left:calc(12px + (100% - 24px) * '+(thr/max)+')"></div>';
+    var pct = (thr/max)*100;
+    html+='<div class="rank-dot'+(passed?' passed':'')+'" style="left:'+pct+'%"></div>';
   });
   // personal-goal marker ("tu meta")
   var gpos=clamp(state.goal/max,0,1);
   var gdone=ts>=state.goal;
-  html+='<div class="rank-marker'+(gdone?' done':'')+'" style="left:calc(12px + (100% - 24px) * '+gpos+')" title="tu meta"></div>';
+  html+='<div class="rank-marker'+(gdone?' done':'')+'" style="left:'+(gpos*100)+'%" title="tu meta"></div>';
   // current bubble
   var lbl = ts>=1000 ? Math.round(ts/1000)+'k' : String(ts);
-  html+='<div class="rank-bubble" style="left:calc(12px + (100% - 24px) * '+frac+')">'+lbl+'</div>';
+  html+='<div class="rank-bubble" style="left:'+(frac*100)+'%">'+lbl+'</div>';
   return html;
 }
 
