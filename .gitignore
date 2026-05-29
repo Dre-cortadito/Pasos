@@ -11,15 +11,19 @@
 # Local deploy scripts — they contain your GitHub token. NEVER publish them.
 *.command
 
-# Local reference + archive — not part of the deployable game.
-# NOTE: unlike Sudoku/Racimo we do NOT ignore *.png here — Pasos's
-# index.html references cortadito-orange.png, Logo Orange transparent.png
-# and pasos-footprints.png at the root, so those must ship.
+# Local-only folders (not part of the deployable game):
+#   _reference  — reference docs, briefs, PDFs
+#   _archive    — old/legacy assets, screenshots
+#   _source-art — high-res source PNGs used to generate the production assets
+#                 (characters/, coaches/, pasos-footprints.png)
+# NOTE: Pasos's index.html references cortadito-orange.png + pasos-footprints.png
+# at root, plus everything in characters/ and coaches/ — so those must ship.
 _reference/
 _archive/
+_source-art/
 
-# Reference drops — these never belong in the deployed game.
-# (We deliberately do NOT ignore *.png at root because the game ships three of them.)
+# Reference drops — never belong in the deployed game.
+# (We deliberately do NOT ignore *.png at root because the game ships two of them.)
 *.pdf
 *.webp
 *.jpg

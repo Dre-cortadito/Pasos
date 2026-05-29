@@ -1,11 +1,13 @@
-# Files that must never be served publicly — only the game ships
-# (index.html + cortadito-orange.png + Logo Orange transparent.png +
-#  pasos-footprints.png).
+# Files that must never be served publicly. The game ships:
+#   index.html, cortadito-orange.png, pasos-footprints.png,
+#   characters/, coaches/, Open Pasos (live).webloc
 .git
 .gitignore
 .assetsignore
 wrangler.jsonc
 .wrangler
+.DS_Store
 *.command
 _reference
 _archive
+_source-art

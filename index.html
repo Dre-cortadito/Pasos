@@ -725,7 +725,7 @@
   .scene-modal .scene-art{aspect-ratio:2/1;border-radius:12px;overflow:hidden;border:1px solid var(--ink-line)}
 
   /* ===== Journey panorama — one continuous scrollable landscape ===== */
-  .panorama{position:relative;border:1px solid var(--ink-line);border-radius:16px;overflow:hidden;margin:12px 0;background:var(--paper);height:360px}
+  .panorama{position:relative;border:1px solid var(--ink-line);border-radius:16px;overflow:hidden;margin:12px 0;background:var(--paper);height:240px}
   .pano-scroll{height:100%;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none}
   .pano-scroll::-webkit-scrollbar{display:none}
   .pano-art{height:100%;display:inline-block;line-height:0}
@@ -827,20 +827,6 @@
       <div class="j-title" id="jtitle"></div>
     </div>
 
-    <!-- THE JOURNEY PANORAMA — one continuous landscape; scroll to "replay" the trip -->
-    <div class="panorama">
-      <div class="pano-scroll" id="pano-scroll">
-        <div class="pano-art" id="pano-art"></div>
-      </div>
-      <div class="pano-top">
-        <div class="scene-day" id="scene-day"></div>
-        <div class="scene-place" id="scene-place"></div>
-      </div>
-      <div class="pano-bottom">
-        <div class="scene-line" id="scene-line"></div>
-      </div>
-    </div>
-
     <!-- COACH HERO — persistent voice-of-your-coach panel sitting at the top
          of the journey. Big pose + speech bubble. Hidden until a coach is
          chosen. Updates on game-entry and on sync/log. -->
@@ -855,8 +841,23 @@
       </div>
     </div>
 
+    <!-- PROGRESS BAR — the route trail (sits between coach and panorama) -->
     <div class="trail" id="trail"></div>
     <div class="loc" id="loc"></div>
+
+    <!-- THE JOURNEY PANORAMA — one continuous landscape; scroll to "replay" the trip -->
+    <div class="panorama">
+      <div class="pano-scroll" id="pano-scroll">
+        <div class="pano-art" id="pano-art"></div>
+      </div>
+      <div class="pano-top">
+        <div class="scene-day" id="scene-day"></div>
+        <div class="scene-place" id="scene-place"></div>
+      </div>
+      <div class="pano-bottom">
+        <div class="scene-line" id="scene-line"></div>
+      </div>
+    </div>
 
     <div class="eta-card">
       <div class="eta" id="eta-mine"><div class="v" id="eta-mine-v">—</div><div class="l" id="eta-mine-l">a tu ritmo</div></div>
@@ -1376,102 +1377,102 @@ COACH_MILESTONE['ristretto'] = {
 };
 COACH_LINES_POS['puchi'] = {
   start: [
-    "¡Hola! Qué lindo verte hoy. Salimos a caminar.",
-    "Me alegra el día estar contigo en este camino.",
-    "Buenos días. Qué dicha empezar juntos esta caminata.",
-    "Un primer paso lleno de cariño. ¡Vamos!",
-    "¡Qué lindo despertar para caminar! Te acompaño.",
-    "Hoy te acompaño en cada paso. Me llena el corazón.",
-    "Empezamos suave, con mucha buena vibra.",
-    "Qué bello iniciar el día así, juntos.",
-    "Me encanta que hayas dicho que sí a caminar hoy.",
-    "Un paso, una sonrisa. Qué linda manera de empezar.",
-    "Estás aquí — eso ya es suficiente. Vamos.",
-    "Qué orgullo me da verte salir. Empezamos.",
-    "Hoy me llena de alegría caminar contigo.",
-    "Gracias por dejarme acompañarte. Primer paso.",
-    "Qué hermoso este momento. Vamos a disfrutarlo.",
+    "¡Hola! Calienta caminando suave los primeros cinco minutos — el cuerpo agradece.",
+    "Buenos días. Hombros sueltos, cabeza alta, primer paso.",
+    "Empezamos despacito. Pisada del talón a la punta, sin apurar.",
+    "¡Vamos! Ata bien los cordones — un detalle que cuida tus pies.",
+    "Un primer paso con ritmo cómodo: poder hablar pero no cantar, esa es la zona.",
+    "Hidrátate un poquito antes de salir. Ayuda mucho más de lo que parece.",
+    "Empezamos. Pasos cortos y rápidos cuidan las rodillas mejor que zancadas largas.",
+    "Buenos días. Camina los primeros minutos como calentamiento, después subimos.",
+    "Hoy te acompaño. Cabeza alta, mirada al frente — protege tu cuello.",
+    "Listo, listo — los primeros cinco minutos son los más valiosos.",
+    "Un primer paso con propósito. Eso suma más de lo que parece.",
+    "Empezamos suaves. Brazos sueltos, que sigan el ritmo natural de tu paso.",
+    "Tu yo de mañana te lo agradece desde ya. Vamos.",
+    "Hola, qué dicha verte salir. Hoy todo lo que camines cuenta el doble.",
+    "Empezamos. En cinco minutos el cuerpo despierta solo — confía.",
   ],
   early: [
-    "Qué lindo este trayecto. Sigue así.",
-    "Me llena el corazón verte caminar.",
-    "Qué bonito vas — sigue con esa actitud.",
-    "Estoy contigo en cada paso, te lo prometo.",
-    "Qué dicha estar aquí contigo en este reto.",
-    "Mira qué bello se ve el día. Aprovéchalo.",
-    "Te estás regalando salud. Qué bonito gesto.",
-    "Me alegra el alma verte así de constante.",
-    "Cada paso suma — y yo lo celebro contigo.",
-    "Qué bonito ritmo llevas. Sigue, sigue.",
-    "Te abrazo desde aquí en cada esquina que cruzas.",
-    "Qué lindo caminar contigo. Me hace feliz.",
-    "Sigue así — me da mucha alegría verte.",
-    "Estoy contigo en este camino — del primero al último paso.",
-    "Qué orgullo me das. Sigue así, paso a paso.",
+    "Brazos sueltos, que sigan el ritmo natural. Eso ayuda más que apretar.",
+    "Cada veinte minutos toma un sorbito de agua — el cuerpo lo agradece.",
+    "Activa el abdomen un momento. Protege la espalda al caminar.",
+    "Vas con buen ritmo. Si puedes hablar pero no cantar, estás perfecto.",
+    "Camina como si llevaras algo equilibrado en la cabeza. Postura natural.",
+    "Cada cuadra que sumas es salud para tu corazón. Literal.",
+    "Respira por la nariz si puedes — el cuerpo aprovecha mejor el oxígeno.",
+    "Mira al frente, no al suelo. Cuida cuello y respiración.",
+    "Si vas pisando muy fuerte, suaviza — protege rodillas y caderas.",
+    "Veinte minutos de caminar bajan el estrés más que casi cualquier otra cosa.",
+    "Vas regalándole salud a tu yo del futuro. Qué lindo eso.",
+    "Suelta los hombros otra vez. Siempre se vuelven a subir.",
+    "Caminar es el ejercicio más completo y barato que existe. Aprovéchalo.",
+    "Sigue así — me llena el corazón verte moverte hoy.",
+    "Si la respiración se acelera mucho, baja un poquito el ritmo. Sin parar.",
   ],
   mid: [
-    "¡Mitad del camino! Me llena el corazón verte ahí.",
-    "Qué hermoso llegar a la mitad juntos.",
-    "Estás a la mitad — me da tanta alegría.",
-    "La mitad ya es tuya. Qué bonito logro.",
-    "Sigue suave — qué linda la segunda mitad juntos.",
-    "Mira qué fuerte estás siendo. Me das orgullo.",
-    "Si necesitas pausa, tómala — yo aquí te espero con cariño.",
-    "Qué dicha verte a la mitad sin queja.",
-    "Hoy estás en un ritmo muy bonito. Mantenlo.",
-    "Mitad del camino — qué lindo se siente, ¿no?",
-    "Sigue con esa actitud. Me encanta caminar contigo.",
-    "Una sonrisa de mitad de camino — te la regalo desde aquí.",
-    "Llevas la mitad con tanto estilo. Qué bonito verte.",
-    "Qué orgullo me das. Sigue, paso a paso.",
-    "Estás cuidándote con tanto cariño hoy. Se nota.",
+    "¡Mitad del camino! Bebe un sorbito de agua si llevas.",
+    "Estás a la mitad — buen momento para revisar la postura.",
+    "Mitad lograda. Hombros sueltos, mandíbula suelta, sigue suave.",
+    "La segunda mitad la disfrutamos sin apurar — la constancia es la clave.",
+    "Mitad del camino, mitad de los beneficios ya están en el cuerpo.",
+    "Sigue con esa actitud — vas armando un hábito poderoso.",
+    "Si te cansas un poquito, baja velocidad antes que pararte.",
+    "Mitad ya es tuya. Tu corazón está más fuerte de lo que sabes.",
+    "Buen momento para una respiración profunda. Tres conscientes y sigues.",
+    "Vas en el medio — el cuerpo ya entró en su ritmo eficiente.",
+    "Qué orgullo me das — la mitad sin queja es nivel pro.",
+    "Si te duelen los pies, revisa los cordones. A veces es solo eso.",
+    "Mitad del camino, qué lindo se siente, ¿no?",
+    "Sigue suave — la constancia vale más que la intensidad. Siempre.",
+    "Halfway con cariño. Estás cuidándote bonito hoy.",
   ],
   late: [
-    "¡Ya casi llegas! Qué linda sensación, ¿no?",
-    "Falta tan poquito — termina con una sonrisa grande.",
-    "¡Lo estás logrando! Me llena el corazón verte tan cerca.",
-    "Un par de pasos más — tú puedes, te lo prometo.",
-    "¡Casi, casi! Estoy contigo en cada paso final.",
-    "Termina con la cabeza alta. Qué orgullo me das.",
-    "Qué dicha verte casi en la meta. ¡Sigue!",
-    "Los últimos pasos son los más bonitos. Aprovéchalos.",
-    "Estás súper cerca. Termina con todo el corazón.",
-    "Una respiración profunda, una sonrisa, ¡y dale!",
-    "Eres súper constante. Me das tanta alegría.",
-    "Falta tan poco que ya casi celebramos juntos.",
-    "Termina con el corazón contento — te lo mereces.",
-    "Llegaste casi sin darte cuenta. Qué fuerza la tuya.",
-    "Una respiración más y llegamos juntos. ¡Sigue!",
+    "¡Ya casi llegas! Termina con paso firme pero suave.",
+    "Falta poquito — los últimos pasos también construyen.",
+    "Cierre con la cabeza alta. Te lo ganaste.",
+    "Un par de pasos más — no aceleres, mantén el ritmo que ya tienes.",
+    "¡Casi! Estos últimos minutos son oro para el corazón.",
+    "Cierra con orgullo — eres más constante de lo que crees.",
+    "Qué dicha verte casi en la meta. Sigue así.",
+    "Los últimos pasos cuentan igual que los primeros. Termina bien.",
+    "Estás cerca. Ritmo cómodo hasta el final, sin acelerar.",
+    "Una respiración profunda, una sonrisa, ¡y sigue!",
+    "Eres súper constante. Eso es lo que cambia un cuerpo de verdad.",
+    "Falta tan poco que ya casi puedes celebrar.",
+    "Cuando termines, estírate un poquito — el cuerpo te lo pide.",
+    "Llegaste casi sin darte cuenta. ¡Qué fuerza la tuya!",
+    "Último tramo. Camina suave y disfruta el cierre.",
   ],
 };
 COACH_MILESTONE['puchi'] = {
   greeting: [
-    "¡Hola! Qué lindo verte hoy. Salimos a caminar juntos.",
+    "¡Hola! Calienta caminando suave los primeros cinco minutos.",
     "Me llena el corazón estar aquí contigo en este reto.",
-    "Una sonrisa primero, después el primer paso. ¡Vamos!",
-    "Qué dicha empezar el día contigo. ¡Te acompaño!",
-    "Buenos días — me alegra muchísimo verte aquí.",
+    "Empezamos suave. Hombros sueltos, cabeza alta, primer paso.",
+    "Qué dicha empezar el día contigo. Te acompaño.",
+    "Buenos días — un sorbito de agua antes de salir, ¿sí?",
   ],
   halfway: [
     "¡Mitad del camino! Me llena el corazón verte ahí.",
-    "Estás a la mitad — qué orgullo me das.",
-    "Mitad del camino, ya hiciste un montón. Qué lindo.",
-    "¡La mitad ya es tuya! Qué dicha verte así.",
-    "Halfway con tanto estilo. Me encanta verte caminar.",
+    "Estás a la mitad — un sorbito de agua si llevas.",
+    "Mitad del camino — la segunda parte la disfrutamos sin apurar.",
+    "¡La mitad ya es tuya! Qué orgullo me das.",
+    "Halfway con cariño. Sigue con ese ritmo cómodo.",
   ],
   almostThere: [
-    "¡Ya casi llegas! Una última sonrisa y vamos.",
-    "Falta poquito. Estoy contigo en cada paso.",
-    "Cerquita cerquita — termina con el corazón contento.",
-    "¡Lo estás logrando! Un par de pasitos más, te tengo.",
-    "Estoy contigo desde aquí, ya casi celebramos juntos.",
+    "¡Ya casi llegas! Mantén el ritmo, no aceleres ahora.",
+    "Falta poquito. Los últimos pasos cuentan igual que los primeros.",
+    "Cerquita cerquita — termina con la cabeza alta.",
+    "¡Lo estás logrando! Un par de pasitos más, tú puedes.",
+    "Estoy contigo desde aquí. Cierre suave y firme.",
   ],
   finish: [
-    "¡Lo lograste! Me llena el corazón este momento.",
-    "¡Completaste la ruta! Qué dicha haberte acompañado.",
-    "¡Meta cumplida! Te lo ganaste con tanto cariño.",
-    "¡Llegaste! Hoy te ganaste un mimo enorme.",
-    "¡Misión cumplida! Qué orgullo me das.",
+    "¡Lo lograste! Estírate un poquito — el cuerpo te lo pide.",
+    "¡Completaste la ruta! Tu corazón ya está más fuerte.",
+    "¡Meta cumplida! Te lo ganaste con cariño y constancia.",
+    "¡Llegaste! Hoy te ganaste un descanso bien merecido.",
+    "¡Misión cumplida! Sigue cuidándote así, paso a paso.",
   ],
 };
 COACH_LINES_POS['togo'] = {
