@@ -560,14 +560,20 @@
     z-index:4;
   }
   .rank-chev{color:var(--ink);font-size:14px;flex:none;font-family:var(--font-ui);font-weight:500;transition:color .15s,transform .2s}
-  /* Secret-achievement medals — rendered INSIDE .rank-label, so the bar
-     structure stays identical to Sudoku/Racimo. They sit in the spare space
-     after the rank word; emoji ignore the uppercase/tracking treatment. */
-  .rank-label .rl-medal{
-    display:inline-block;vertical-align:middle;
-    font-size:12px;line-height:1;letter-spacing:0;text-transform:none;
-    margin-left:4px;
+  /* Row that contains the rank-bar + the secret-achievement medals to its
+     right. The rank-bar itself stays exactly like Sudoku/Racimo; the medals
+     sit OUTSIDE it as a sibling, only visible when earned today. */
+  .rank-row{
+    display:flex;align-items:center;gap:8px;
+    width:100%;max-width:600px;margin:0 auto 8px;
+    box-sizing:border-box;
   }
+  .rank-row .rank-bar{flex:1;margin:0;max-width:none}
+  .rank-medals{
+    flex:none;display:inline-flex;align-items:center;gap:4px;
+    font-size:18px;line-height:1;
+  }
+  .rank-medals:empty{display:none}
 
   /* ============================================================== JOURNEY */
   .j-head{margin:10px 0 6px}
@@ -832,14 +838,17 @@
   <!-- ============================================================ JOURNEY -->
   <div id="journey" class="hide">
 
-    <!-- DAILY RANK BAR (today's steps → rank; Maestro = recommended).
-         Structure matches Sudoku/Racimo exactly: label, track, chev.
-         Secret-achievement medals (🥈/🥇) render INSIDE the label, in the
-         spare space after the rank word, without nudging the track. -->
-    <div class="rank-bar" id="rankbar" role="button" aria-label="Rangos del día">
-      <span class="rank-label" id="rank-label">Debutante</span>
-      <div class="rank-track" id="rank-track"></div>
-      <span class="rank-chev">▾</span>
+    <!-- DAILY RANK ROW — the rank-bar itself is byte-identical to Sudoku /
+         Racimo (label / track / chev). The secret-achievement medals (🥈/🥇)
+         live OUTSIDE the bar as a sibling, sitting to its right after the
+         chevron — only visible when earned today. -->
+    <div class="rank-row">
+      <div class="rank-bar" id="rankbar" role="button" aria-label="Rangos del día">
+        <span class="rank-label" id="rank-label">Debutante</span>
+        <div class="rank-track" id="rank-track"></div>
+        <span class="rank-chev">▾</span>
+      </div>
+      <span class="rank-medals" id="rank-medals" aria-label="Logros de hoy"></span>
     </div>
 
     <div class="j-head">
@@ -2713,15 +2722,17 @@ function render(){
   var walked=miles(current), done=walked>=j.total;
   var ts=todaySteps(current), ri=rankIndex(ts), atMaestro=ri>=RANKS.length-1;
 
-  // rank bar
+  // rank bar — stays byte-identical to Sudoku/Racimo (no extras inside)
   document.getElementById('rank-track').innerHTML=buildRankTrack(ts);
   var rl=document.getElementById('rank-label');
-  // Secret-achievement medals slot inside the label, tucked in its spare width.
-  var medals='';
-  if(ts>=SILVER)  medals += '<span class="rl-medal" title="Medalla de Plata · 10.000">🥈</span>';
-  if(ts>=LEYENDA) medals += '<span class="rl-medal" title="Día de Leyenda · 12.000">🥇</span>';
-  rl.innerHTML = RANKS[ri] + medals;
+  rl.textContent=RANKS[ri];
   rl.classList.toggle('at-maestro',atMaestro);
+  // Secret-achievement medals — outside the bar, to the right of the chevron.
+  // Only show when earned today; the sibling element hides via :empty otherwise.
+  var medals='';
+  if(ts>=SILVER)  medals += '<span title="Medalla de Plata · 10.000">🥈</span>';
+  if(ts>=LEYENDA) medals += '<span title="Día de Leyenda · 12.000">🥇</span>';
+  document.getElementById('rank-medals').innerHTML=medals;
 
   document.getElementById('jtitle').innerHTML=j.name+'<small>'+j.sub+'</small>';
   document.getElementById('trail').innerHTML=buildTrail(j,walked);
