@@ -560,6 +560,10 @@
     z-index:4;
   }
   .rank-chev{color:var(--ink);font-size:14px;flex:none;font-family:var(--font-ui);font-weight:500;transition:color .15s,transform .2s}
+  /* Secret-achievement medals — float past Maestro on today's bar. Empty
+     unless earned today. Subtle, just two emoji with a small left margin. */
+  .rank-medals{flex:none;display:inline-flex;gap:3px;font-size:14px;line-height:1;margin-left:2px}
+  .rank-medals:empty{display:none}
 
   /* ============================================================== JOURNEY */
   .j-head{margin:10px 0 6px}
@@ -824,10 +828,12 @@
   <!-- ============================================================ JOURNEY -->
   <div id="journey" class="hide">
 
-    <!-- DAILY RANK BAR (today's steps → rank; Maestro = recommended) -->
+    <!-- DAILY RANK BAR (today's steps → rank; Maestro = recommended).
+         rank-medals slot holds the 🥈🥇 emoji past Maestro when earned today. -->
     <div class="rank-bar" id="rankbar" role="button" aria-label="Rangos del día">
       <span class="rank-label" id="rank-label">Debutante</span>
       <div class="rank-track" id="rank-track"></div>
+      <span class="rank-medals" id="rank-medals" aria-label="Logros de hoy"></span>
       <span class="rank-chev">▾</span>
     </div>
 
@@ -1016,9 +1022,10 @@ var WALKER="cortadito-orange.png"; /* running cortadito (drawn facing left) */
 ============================================================================ */
 var GAME='pasos';
 var STEPS_PER_MILE = 2000;
-var RECOMMENDED    = 8000;   /* science-based daily target = Maestro/a */
+var RECOMMENDED    = 8000;   /* science-based daily target = Maestro/a (top rank) */
 var DEFAULT_GOAL   = 6000;   /* personal goal (editable) */
-var LEYENDA        = 12000;  /* surpass tier (the "bonus" achievement) */
+var SILVER         = 10000;  /* secret achievement #1 — 🥈 Medalla de Plata */
+var LEYENDA        = 12000;  /* secret achievement #2 — 🥇 Día de Leyenda */
 
 var STORE_KEY = GAME+'-state';
 var TWEAKS    = GAME+'-tweaks';
@@ -1135,10 +1142,14 @@ var state=(function(){
       Object.keys(p.j).forEach(function(id){
         var rec=p.j[id]; if(rec && !rec.days){ rec.days={}; if(rec.steps>0)rec.days[rec.started||todayISO()]=rec.steps; delete rec.steps; delete rec.log; }
       });
+      // Achievement state — secret tiers past Maestro
+      if(typeof p.maestroSeen !== 'boolean') p.maestroSeen = false;  // first-ever Maestro reveal
+      if(typeof p.silverDays   !== 'number')  p.silverDays   = 0;     // lifetime 🥈 unlocks
+      if(typeof p.goldDays     !== 'number')  p.goldDays     = 0;     // lifetime 🥇 unlocks
       return p;
     }}
   }catch(e){}
-  return {goal:DEFAULT_GOAL, j:{}};
+  return {goal:DEFAULT_GOAL, j:{}, maestroSeen:false, silverDays:0, goldDays:0};
 })();
 function save(){try{LS.setItem(STORE_KEY,JSON.stringify(state));}catch(e){}}
 
@@ -2702,6 +2713,11 @@ function render(){
   var rl=document.getElementById('rank-label');
   rl.textContent=RANKS[ri];
   rl.classList.toggle('at-maestro',atMaestro);
+  // Secret-achievement medals — only render if earned TODAY
+  var medals='';
+  if(ts>=SILVER)  medals += '<span title="Medalla de Plata · 10.000">🥈</span>';
+  if(ts>=LEYENDA) medals += '<span title="Día de Leyenda · 12.000">🥇</span>';
+  document.getElementById('rank-medals').innerHTML=medals;
 
   document.getElementById('jtitle').innerHTML=j.name+'<small>'+j.sub+'</small>';
   document.getElementById('trail').innerHTML=buildTrail(j,walked);
@@ -2738,11 +2754,13 @@ function render(){
   document.getElementById('day-fill').style.width=clamp(ts/RECOMMENDED,0,1)*100+'%';
   var pin=document.getElementById('pin-goal');
   pin.style.left=clamp(state.goal/RECOMMENDED,0,1)*100+'%';
-  var hitGoal=ts>=state.goal, hitRec=ts>=RECOMMENDED, hitLey=ts>=LEYENDA;
+  var hitGoal=ts>=state.goal, hitRec=ts>=RECOMMENDED;
+  // Day-tiers shows just Tu meta + Saludable. Tiers past Maestro (Plata 10k,
+  // Oro/Leyenda 12k) are SECRET achievements — they reveal as celebrations,
+  // not as visible thresholds on the bar.
   document.getElementById('day-tiers').innerHTML=
     '<span class="'+(hitGoal?'hit':'')+'">'+(hitGoal?'✓ ':'')+'Tu meta<b>'+nFmt(state.goal)+'</b></span>'+
-    '<span class="'+(hitRec?'hit':'')+'" style="text-align:center">'+(hitRec?'✓ ':'')+'Saludable<b>'+nFmt(RECOMMENDED)+'</b></span>'+
-    '<span class="'+(hitLey?'hit':'')+'" style="text-align:right">'+(hitLey?'✓ ':'')+'Leyenda<b>'+nFmt(LEYENDA)+'</b></span>';
+    '<span class="'+(hitRec?'hit':'')+'" style="text-align:right">'+(hitRec?'✓ ':'')+'Saludable<b>'+nFmt(RECOMMENDED)+'</b></span>';
 
   document.getElementById('goal-link').textContent=nFmt(state.goal)+' pasos';
   document.getElementById('undo-link').classList.toggle('hide',ts<=0);
@@ -2786,23 +2804,42 @@ function recordToday(newTotal){
   j.stops.forEach(function(st){if(st.mi>0 && beforeMi<st.mi-0.001 && afterMi>=st.mi-0.001)reached=st;});
 
   // 2) daily tiers (gate per date so they fire once a day)
-  var iso2=iso, gMeta='pasos-meta-'+iso2, gRec='pasos-rec-'+iso2, gLey='pasos-ley-'+iso2;
-  var newMeta = newTotal>=state.goal && prevToday<state.goal && !LS.getItem(gMeta);
-  var newRec  = newTotal>=RECOMMENDED && prevToday<RECOMMENDED && !LS.getItem(gRec);
-  var newLey  = newTotal>=LEYENDA && prevToday<LEYENDA && !LS.getItem(gLey);
-  if(newMeta)LS.setItem(gMeta,'1');
-  if(newRec)LS.setItem(gRec,'1');
-  if(newLey)LS.setItem(gLey,'1');
+  var iso2=iso, gMeta='pasos-meta-'+iso2, gRec='pasos-rec-'+iso2,
+      gSilver='pasos-silver-'+iso2, gLey='pasos-ley-'+iso2;
+  var newMeta   = newTotal>=state.goal   && prevToday<state.goal   && !LS.getItem(gMeta);
+  var newRec    = newTotal>=RECOMMENDED  && prevToday<RECOMMENDED  && !LS.getItem(gRec);
+  var newSilver = newTotal>=SILVER       && prevToday<SILVER       && !LS.getItem(gSilver);
+  var newLey    = newTotal>=LEYENDA      && prevToday<LEYENDA      && !LS.getItem(gLey);
+  // Capture first-ever-Maestro BEFORE we flip the flag, so the celebration copy
+  // can append the secret-achievements reveal exactly once in the player's life.
+  var firstEverMaestro = newRec && !state.maestroSeen;
+  if(newMeta)   LS.setItem(gMeta,'1');
+  if(newRec)    LS.setItem(gRec,'1');
+  if(newSilver){LS.setItem(gSilver,'1'); state.silverDays = (state.silverDays||0) + 1;}
+  if(newLey)   {LS.setItem(gLey,'1');    state.goldDays   = (state.goldDays  ||0) + 1;}
+  if(firstEverMaestro) state.maestroSeen = true;
+  save();
 
+  // Highest-tier-wins ordering so big moments don't get swallowed by smaller ones.
+  // Route stop / finish first, then the secret tiers (Oro > Plata), then Maestro,
+  // then personal goal.
   if(finished){
     var last=j.stops[j.stops.length-1];
     celebrate(true,'¡Llegaste a '+shortName(last.n)+'!','¡Ruta completada! Recorriste '+fmtMi(j.total)+'. '+last.f);
   } else if(reached){
     celebrate(false,'Sello: '+shortName(reached.n),reached.f);
-  } else if(newRec){
-    celebrate(true,'¡Maestro/a del día!','Alcanzaste los '+nFmt(RECOMMENDED)+' pasos que recomienda la ciencia. Hoy llegas a lo más alto del rango.'+(newLey?' Y de paso, ¡día de leyenda!':''));
   } else if(newLey){
-    celebrate(true,'¡Día de leyenda!','Superaste los '+nFmt(LEYENDA)+' pasos. Pocos caminan tanto en un día.');
+    celebrate(true,'🥇 Día de Leyenda','Logro desbloqueado. Superaste los '+nFmt(LEYENDA)+' pasos en un día. Pocos llegan tan lejos.');
+  } else if(newSilver){
+    celebrate(true,'🥈 Medalla de Plata','Logro desbloqueado. Cruzaste los '+nFmt(SILVER)+' pasos en un día. Sigue así.');
+  } else if(newRec){
+    // First-EVER Maestro reveals the existence of two secret achievements
+    // past this tier. Only fires once in the player's lifetime.
+    var msg = 'Alcanzaste los '+nFmt(RECOMMENDED)+' pasos que recomienda la ciencia. Hoy llegas a lo más alto del rango.';
+    if(firstEverMaestro){
+      msg += '\n\n✨ Hay dos logros secretos esperándote más allá. Sigue caminando.';
+    }
+    celebrate(true,'¡Maestro/a del día!', msg);
   } else if(newMeta){
     celebrate(false,'¡Buen trabajo!','Cumpliste tu meta de '+nFmt(state.goal)+' pasos. Vas por buen camino — la meta saludable está en '+nFmt(RECOMMENDED)+'.');
   }
@@ -3033,9 +3070,19 @@ function showStats(){
     statTile(recDays,'Días al nivel saludable')+
     statTile(fmtMi1(lifetimeMi),'Total recorrido')+
     statTile(finished,'Rutas completadas');
+  // Medals — lifetime counts of secret achievements (only show once
+  // the player has unlocked at least one, to keep them secret otherwise).
+  var sd = state.silverDays||0, gd = state.goldDays||0;
+  var medalsFoot = '';
+  if (sd > 0 || gd > 0) {
+    var parts = [];
+    if (sd > 0) parts.push('🥈 ×'+sd);
+    if (gd > 0) parts.push('🥇 ×'+gd);
+    medalsFoot = '  Medallas: '+parts.join(' · ')+'.';
+  }
   document.getElementById('stats-foot').textContent=
     daysPlayed+(daysPlayed===1?' día registrado en total.':' días registrados en total.')+
-    '  Tu meta: '+nFmt(state.goal)+' · Saludable: '+nFmt(RECOMMENDED)+' pasos.';
+    '  Tu meta: '+nFmt(state.goal)+' · Saludable: '+nFmt(RECOMMENDED)+' pasos.'+medalsFoot;
   openOverlay('ov-stats');
 }
 
