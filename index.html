@@ -2996,7 +2996,9 @@ function showInfo(title,html){document.getElementById('info-title').textContent=
 function showRangos(){
   var ts=current?todaySteps(current):0, ri=rankIndex(ts);
   var html='';
-  for(var i=0;i<RANKS.length;i++){
+  // Cortadito games STANDARD: rank list reads Maestro at the TOP, Debutante
+  // at the bottom — like a leaderboard. Matches Racimo's [...RANKS].reverse().
+  for(var i=RANKS.length-1;i>=0;i--){
     var isTop=i===RANKS.length-1, cur=i===ri;
     var label=i===0?'0+':( '≥ '+nFmt(RANK_STEPS[i])+' pasos');
     html+='<div class="rank-row'+(cur?' cur':'')+(isTop?' is-top':'')+'">'+
