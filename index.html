@@ -315,72 +315,72 @@
   .goal-item.rec .gi-desc{color:var(--accent-deep);opacity:.85}
   .goal-item.rec .gi-tag{background:var(--accent);color:#fff;padding:4px 9px;border-radius:999px;letter-spacing:.8px}
 
-  /* Coach picker — step 1: a 2-per-row scrollable grid so each card is large
-     enough to show the coach's full body. Container scrolls vertically; the
-     "Scroll para ver más" hint sits below if there are more rows. */
+  /* Coach picker — 2-per-row compact cards. Neutral frame background so
+     the character art stands on its own (no mint tint behind it). Active
+     state is a thicker mint border, not a fill, so the selection reads
+     without overwhelming the illustration. */
   .coach-grid{
-    display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;
-    margin:14px 0 4px;
-    max-height:62vh;overflow-y:auto;overflow-x:hidden;
-    padding:10px 8px 14px;box-sizing:border-box;
+    display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;
+    margin:12px 0 4px;
+    max-height:68vh;overflow-y:auto;overflow-x:hidden;
+    padding:8px;box-sizing:border-box;
     border:1px solid var(--ink-line);border-radius:14px;
     -webkit-overflow-scrolling:touch;overscroll-behavior:contain;
   }
   .coach-grid::-webkit-scrollbar{width:6px}
   .coach-grid::-webkit-scrollbar-thumb{background:var(--ink-line);border-radius:3px}
   .coach-grid-hint{
-    text-align:center;font-size:12px;color:var(--ink-soft);
-    margin:6px 0 2px;font-family:var(--font-ui);letter-spacing:.2px;
+    text-align:center;font-size:11.5px;color:var(--ink-soft);
+    margin:4px 0 2px;font-family:var(--font-ui);letter-spacing:.2px;
   }
   .coach-card{
     display:flex;flex-direction:column;align-items:center;
-    background:var(--bg);border:1px solid var(--ink-line);border-radius:14px;
-    padding:12px 10px 14px;cursor:pointer;color:var(--ink);font-family:inherit;
-    transition:border-color .15s,background .15s,transform .08s;
+    background:var(--bg);border:1.5px solid var(--ink-line);border-radius:13px;
+    padding:8px 8px 10px;cursor:pointer;color:var(--ink);font-family:inherit;
+    transition:border-color .15s,transform .08s;
     touch-action:manipulation;-webkit-tap-highlight-color:transparent;
     min-width:0;
   }
   .coach-card:active{transform:scale(.97)}
-  .coach-card.active{border-color:var(--accent);background:var(--accent-soft)}
+  /* Active = thick mint border, white card stays white. No mint fill. */
+  .coach-card.active{border-color:var(--accent);border-width:2.5px;padding:7px 7px 9px}
   @media (hover:hover){.coach-card:hover{border-color:var(--ink-soft)}}
   .coach-card .cc-frame{
-    width:100%;aspect-ratio:1/1.55;border-radius:12px;background:var(--accent-soft);
-    overflow:hidden;position:relative;margin-bottom:10px;
+    width:100%;aspect-ratio:1/1.25;border-radius:10px;background:var(--bg);
+    overflow:hidden;position:relative;margin-bottom:6px;
   }
-  /* Position the image absolutely so it fills the frame, object-fit:contain
-     guarantees the whole body is visible without cropping.
-     Per-coach --coach-scale is applied with transform from center-bottom so
-     Granito stays grounded but renders smaller (Toad-to-Mario proportion). */
   .coach-card .cc-img{
-    position:absolute;inset:6px 6px 4px 6px;width:calc(100% - 12px);height:calc(100% - 10px);
+    position:absolute;inset:4px 4px 2px 4px;width:calc(100% - 8px);height:calc(100% - 6px);
     object-fit:contain;object-position:center bottom;display:block;
     transform:scale(var(--coach-scale,1));
     transform-origin:center bottom;
   }
   .coach-card .coach-img-fallback{
     position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-    color:var(--accent-deep);font-size:42px;font-family:var(--font-display);font-weight:700;
+    color:var(--accent-deep);font-size:36px;font-family:var(--font-display);font-weight:700;
   }
   .coach-card .cc-name{
-    font-family:var(--font-display);font-size:18px;font-weight:700;line-height:1.1;text-align:center;
+    font-family:var(--font-display);font-size:16px;font-weight:700;line-height:1.1;text-align:center;
   }
   .coach-card.active .cc-name{color:var(--accent-deep)}
   .coach-card .cc-tag{
-    font-family:var(--font-display);font-size:13px;font-style:italic;font-weight:500;
-    color:var(--accent-deep);text-align:center;margin-top:3px;line-height:1.25;
+    font-family:var(--font-display);font-size:11.5px;font-style:italic;font-weight:500;
+    color:var(--accent-deep);text-align:center;margin-top:2px;line-height:1.2;
     padding:0 2px;
   }
   @media (max-width:380px){
-    .coach-grid{gap:10px;padding:8px}
-    .coach-card{padding:10px 8px 12px}
-    .coach-card .cc-name{font-size:16px}
-    .coach-card .cc-tag{font-size:12px}
+    .coach-grid{gap:8px;padding:6px}
+    .coach-card{padding:6px 6px 8px}
+    .coach-card.active{padding:5px 5px 7px}
+    .coach-card .cc-name{font-size:15px}
+    .coach-card .cc-tag{font-size:11px}
   }
 
   /* Coach picker — step 2: detail view (portrait + name + personality + sample line + confirm) */
   .coach-detail{display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:6px}
   .coach-detail .cd-frame{
-    width:220px;height:300px;border-radius:18px;background:var(--accent-soft);
+    width:220px;height:280px;border-radius:18px;background:var(--bg);
+    border:1.5px solid var(--ink-line);
     overflow:hidden;position:relative;
   }
   .coach-detail .cd-img{
