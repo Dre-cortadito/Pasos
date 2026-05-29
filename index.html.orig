@@ -2367,37 +2367,32 @@ var _panoWired=false, _panoAutoScrolled=false;
 function panoRidge(pts,W,H,fill,op){var d='M0 '+H+' L0 '+pts[0][1];for(var i=0;i<pts.length;i++)d+=' L'+pts[i][0]+' '+pts[i][1];d+=' L'+W+' '+H+' Z';return '<path d="'+d+'" fill="'+fill+'"'+(op!=null?' opacity="'+op+'"':'')+'/>';}
 
 function panoLandmark(b,x,y,c){var I=c.ink,P=c.paper;
-  if(b==='pass'){// Warmiwañusca — reclining-woman profile: head peak, shoulder/body line, smaller feet rise.
-    return '<path d="M'+(x-112)+' '+y
-      +' C'+(x-88)+' '+(y-18)+' '+(x-74)+' '+(y-46)+' '+(x-58)+' '+(y-50)
-      +' C'+(x-42)+' '+(y-52)+' '+(x-34)+' '+(y-28)+' '+(x-18)+' '+(y-26)
-      +' C'+(x+4)+' '+(y-24)+' '+(x+20)+' '+(y-42)+' '+(x+38)+' '+(y-35)
-      +' C'+(x+55)+' '+(y-29)+' '+(x+69)+' '+(y-18)+' '+(x+112)+' '+y+' Z" fill="'+I+'"/>';}
+  if(b==='pass'){// Warmiwañusca — modest saddle on top of the already-high ground (the ground does the climbing)
+    return '<path d="M'+(x-110)+' '+y+' L'+(x-58)+' '+(y-44)+' L'+(x-28)+' '+(y-22)+' L'+x+' '+(y-12)+' L'+(x+28)+' '+(y-26)+' L'+(x+62)+' '+(y-40)+' L'+(x+110)+' '+y+' Z" fill="'+I+'"/>';}
   if(b==='snow')return '<path d="M'+(x-100)+' '+y+' L'+(x-40)+' '+(y-100)+' L'+(x-15)+' '+(y-65)+' L'+(x+10)+' '+(y-120)+' L'+(x+50)+' '+(y-70)+' L'+(x+100)+' '+y+' Z" fill="'+I+'"/><path d="M'+(x+10)+' '+(y-120)+' l-14 22 l28 0 z" fill="'+P+'" opacity=".92"/><path d="M'+(x-40)+' '+(y-100)+' l-10 16 l20 0 z" fill="'+P+'" opacity=".85"/>';
   if(b==='machu'){
     // Faithful Machu Picchu, kept compact so it doesn't overlap Inti Punku one mile to the left.
     // Narrow receding back ridge + Huayna Picchu as a rounded dome + the citadel in the foreground.
-    var back='<path d="M'+(x-38)+' '+y+' C'+(x-30)+' '+(y-30)+' '+(x-18)+' '+(y-48)+' '+(x-8)+' '+(y-42)+' C'+(x+2)+' '+(y-60)+' '+(x+18)+' '+(y-42)+' '+(x+36)+' '+y+' Z" fill="'+I+'" opacity="0.5"/>';
+    var back='<path d="M'+(x-32)+' '+y+' L'+(x-15)+' '+(y-50)+' L'+(x-5)+' '+(y-32)+' L'+(x+6)+' '+(y-55)+' L'+(x+18)+' '+(y-30)+' L'+(x+32)+' '+y+' Z" fill="'+I+'" opacity="0.5"/>';
     // Huayna Picchu — rounded sugarloaf dome (cubic curves give the bulged top, not a sharp pyramid)
-    var hp='<path d="M'+(x-5)+' '+y
-      +' C'+(x-10)+' '+(y-66)+' '+(x-1)+' '+(y-122)+' '+(x+15)+' '+(y-147)
-      +' C'+(x+26)+' '+(y-162)+' '+(x+39)+' '+(y-151)+' '+(x+43)+' '+(y-126)
-      +' C'+(x+50)+' '+(y-82)+' '+(x+43)+' '+(y-34)+' '+(x+34)+' '+y+' Z" fill="'+I+'"/>';
-    // The citadel — two stepped tiers with a small main-square gap.
+    var hp='<path d="M'+(x-2)+' '+y
+      +' C'+(x-8)+' '+(y-95)+' '+(x+8)+' '+(y-150)+' '+(x+18)+' '+(y-156)
+      +' C'+(x+28)+' '+(y-150)+' '+(x+42)+' '+(y-95)+' '+(x+38)+' '+y+' Z" fill="'+I+'"/>';
+    // The citadel — stepped ruins clustered in the foreground (horseshoe)
     var cit='';
-    [[-34,0,9,8],[-24,-1,9,10],[-14,-2,9,12],[-1,-1,8,9],[10,0,9,8],[21,-1,8,10]].forEach(function(o){cit+='<rect x="'+(x+o[0])+'" y="'+(y+o[1]-o[3])+'" width="'+o[2]+'" height="'+o[3]+'" fill="'+I+'"/>';});
-    [[-28,-15,8,7],[-18,-17,8,9],[-7,-18,8,8],[11,-16,8,7],[21,-14,7,6]].forEach(function(o){cit+='<rect x="'+(x+o[0])+'" y="'+(y+o[1]-o[3])+'" width="'+o[2]+'" height="'+o[3]+'" fill="'+I+'"/>';});
-    var ter='';for(var k=0;k<4;k++)ter+='<path d="M'+(x-36+k*3)+' '+(y-2-k*4)+' H'+(x+34-k*5)+'" stroke="'+P+'" stroke-width="1.3" opacity="0.28"/>';
+    [[-30,0,10,8],[-19,-2,11,10],[-7,-3,12,11],[5,-2,10,9]].forEach(function(o){cit+='<rect x="'+(x+o[0])+'" y="'+(y+o[1]-o[3])+'" width="'+o[2]+'" height="'+o[3]+'" fill="'+I+'"/>';});
+    [[-24,-14,8,6],[-13,-15,10,7],[-2,-14,9,6]].forEach(function(o){cit+='<rect x="'+(x+o[0])+'" y="'+(y+o[1]-o[3])+'" width="'+o[2]+'" height="'+o[3]+'" fill="'+I+'"/>';});
+    var ter='';for(var k=0;k<3;k++)ter+='<rect x="'+(x-30)+'" y="'+(y-2-k*4)+'" width="48" height="1.4" fill="'+P+'" opacity="0.22"/>';
     return back+hp+cit+ter;
   }
   if(b==='winaywayna'){
     // Wiñay Wayna — slope with sweeping curved terraces + cluster of stone buildings at the top
-    var slope='<path d="M'+(x-96)+' '+y+' C'+(x-70)+' '+(y-12)+' '+(x-46)+' '+(y-38)+' '+(x-22)+' '+(y-54)+' C'+(x+10)+' '+(y-76)+' '+(x+48)+' '+(y-84)+' '+(x+82)+' '+(y-54)+' L'+(x+96)+' '+y+' Z" fill="'+I+'"/>';
+    var slope='<path d="M'+(x-95)+' '+y+' L'+(x-65)+' '+(y-12)+' L'+(x-25)+' '+(y-45)+' L'+(x+30)+' '+(y-72)+' L'+(x+70)+' '+(y-55)+' L'+(x+95)+' '+y+' Z" fill="'+I+'"/>';
     var ter='';
-    for(var k=0;k<9;k++){var ky=y-10-k*6.3,xl=x-70+k*7,xr=x+73-k*4;
-      ter+='<path d="M'+xl+' '+ky+' C'+(x-38+k*3)+' '+(ky-7)+' '+(x+18+k*2)+' '+(ky-9)+' '+xr+' '+(ky-1)+'" fill="none" stroke="'+P+'" stroke-width="1.35" opacity="0.38"/>';}
+    for(var k=0;k<7;k++){var ky=y-12-k*7,xl=x-58+k*7,xr=x+62-k*4;
+      ter+='<path d="M'+xl+' '+ky+' Q'+(x-5+k*2)+' '+(ky-4)+' '+xr+' '+ky+'" fill="none" stroke="'+P+'" stroke-width="1.4" opacity="0.36"/>';}
     var bld='';
-    [[40,-68,9,10],[51,-70,8,9],[43,-78,9,7],[55,-80,7,7],[63,-74,7,6]].forEach(function(o){bld+='<rect x="'+(x+o[0])+'" y="'+(y+o[1]-o[3])+'" width="'+o[2]+'" height="'+o[3]+'" fill="'+I+'"/>';});
+    [[40,-64,9,9],[50,-66,8,8],[42,-72,9,7],[55,-74,7,6]].forEach(function(o){bld+='<rect x="'+(x+o[0])+'" y="'+(y+o[1]-o[3])+'" width="'+o[2]+'" height="'+o[3]+'" fill="'+I+'"/>';});
     return slope+ter+bld;
   }
   if(b==='intipunku'){
@@ -2407,15 +2402,10 @@ function panoLandmark(b,x,y,c){var I=c.ink,P=c.paper;
     var snow='<path d="M'+(x+6)+' '+(y-92)+' l-10 16 l20 0 z" fill="'+P+'" opacity="0.88"/>'
             +'<path d="M'+(x-25)+' '+(y-72)+' l-8 12 l16 0 z" fill="'+P+'" opacity="0.82"/>';
     var crest='<path d="M'+(x-38)+' '+y+' Q'+(x-15)+' '+(y-14)+' '+x+' '+(y-18)+' Q'+(x+15)+' '+(y-14)+' '+(x+38)+' '+y+' Z" fill="'+I+'"/>';
-    var bx=x-18, by=y-60;
-    var gate='<rect x="'+(bx-17)+'" y="'+(by+14)+'" width="16" height="22" fill="'+I+'"/>'
-           +'<rect x="'+bx+'" y="'+by+'" width="36" height="44" fill="'+I+'"/>'
-           +'<rect x="'+(bx+37)+'" y="'+(by+14)+'" width="16" height="22" fill="'+I+'"/>'
-           +'<rect x="'+(bx+13)+'" y="'+(by+12)+'" width="10" height="29" fill="'+P+'" opacity="0.9"/>'
-           +'<path d="M'+(bx-18)+' '+(by+14)+' H'+(bx+54)+'" stroke="'+P+'" stroke-width="1.1" opacity="0.24"/>'
-           +'<path d="M'+(bx+1)+' '+(by+10)+' H'+(bx+35)+'" stroke="'+P+'" stroke-width="1.1" opacity="0.24"/>'
-           +'<path d="M'+(bx-12)+' '+(by+25)+' H'+(bx+48)+'" stroke="'+P+'" stroke-width="1.1" opacity="0.18"/>';
-    var steps='';for(var k=0;k<4;k++)steps+='<rect x="'+(x-9-k*2)+'" y="'+(y-18-k*2)+'" width="'+(18+k*4)+'" height="2" fill="'+I+'"/>';
+    var bx=x-13, by=y-56;
+    var gate='<rect x="'+bx+'" y="'+by+'" width="26" height="38" fill="'+I+'"/>'
+           +'<rect x="'+(bx+9)+'" y="'+(by+9)+'" width="8" height="24" fill="'+P+'" opacity="0.88"/>';
+    var steps='';for(var k=0;k<4;k++)steps+='<rect x="'+(x-3)+'" y="'+(y-18-k*2)+'" width="6" height="2" fill="'+I+'"/>';
     return peaks+snow+crest+gate+steps;
   }
   if(b==='forest'){var tr='';[-50,-15,20,55].forEach(function(dx){tr+='<path d="M'+(x+dx)+' '+(y-5)+' l-9 0 l9 -32 l9 32 z" fill="'+I+'"/><rect x="'+(x+dx-1.6)+'" y="'+(y-5)+'" width="3.2" height="8" fill="'+I+'"/>';});return tr;}
@@ -2449,58 +2439,22 @@ function panoHiker(x,y,fill,filterId){
   var pair = colorByFilter[fId] || colorByFilter.hkMint;
   var ACC = pair[0], ACCD = pair[1];
   return '<g>'
-    +'<ellipse cx="'+x+'" cy="'+(y-46)+'" rx="10" ry="2.6" fill="'+ACCD+'"/>'
-    +'<circle cx="'+x+'" cy="'+(y-40)+'" r="6.2" fill="'+ACC+'"/>'
-    +'<rect x="'+(x-3.4)+'" y="'+(y-34)+'" width="7" height="20" rx="2.8" fill="'+ACC+'"/>'
-    +'<path d="M'+(x-7)+' '+(y-31)+' Q'+(x-15)+' '+(y-26)+' '+(x-10)+' '+(y-13)+' L'+(x-4)+' '+(y-15)+' Q'+(x-8)+' '+(y-25)+' '+(x-3)+' '+(y-30)+' Z" fill="'+ACCD+'"/>'
-    +'<path d="M'+(x+4)+' '+(y-31)+' Q'+(x+13)+' '+(y-24)+' '+(x+11)+' '+(y-14)+'" fill="none" stroke="'+ACC+'" stroke-width="3.2" stroke-linecap="round"/>'
-    +'<path d="M'+(x-4)+' '+(y-29)+' Q'+(x-12)+' '+(y-24)+' '+(x-14)+' '+(y-17)+'" fill="none" stroke="'+ACC+'" stroke-width="3.2" stroke-linecap="round"/>'
-    +'<path d="M'+(x-1)+' '+(y-15)+' L'+(x-9)+' '+(y+1)+'" stroke="'+ACC+'" stroke-width="4" stroke-linecap="round"/>'
-    +'<path d="M'+(x+2)+' '+(y-15)+' L'+(x+10)+' '+(y-1)+'" stroke="'+ACC+'" stroke-width="4" stroke-linecap="round"/>'
-    +'<line x1="'+(x+14)+'" y1="'+(y-30)+'" x2="'+(x+8)+'" y2="'+(y+2)+'" stroke="'+ACCD+'" stroke-width="2.3" stroke-linecap="round"/>'
+    +'<circle cx="'+x+'" cy="'+(y-40)+'" r="6.5" fill="'+ACC+'"/>'
+    +'<rect x="'+(x-3.5)+'" y="'+(y-33)+'" width="7" height="21" rx="2.6" fill="'+ACC+'"/>'
+    +'<path d="M'+(x-5.5)+' '+(y-29)+' Q'+(x-13)+' '+(y-21)+' '+(x-5.5)+' '+(y-11)+' Z" fill="'+ACCD+'"/>'
+    +'<rect x="'+(x-3.2)+'" y="'+(y-13)+'" width="3.8" height="15" rx="1.4" transform="rotate(20 '+(x-1.3)+' '+(y-13)+')" fill="'+ACC+'"/>'
+    +'<rect x="'+(x-0.6)+'" y="'+(y-13)+'" width="3.8" height="15" rx="1.4" transform="rotate(-20 '+(x+1.3)+' '+(y-13)+')" fill="'+ACC+'"/>'
+    +'<line x1="'+(x+11)+'" y1="'+(y-32)+'" x2="'+(x+7)+'" y2="'+(y+2)+'" stroke="'+ACCD+'" stroke-width="2.4" stroke-linecap="round"/>'
   +'</g>';
 }
-function panoLlama(x,y,fill){return '<g fill="'+fill+'">'
-  +'<path d="M'+(x-11)+' '+(y-9)+' Q'+(x-4)+' '+(y-15)+' '+(x+7)+' '+(y-10)+' Q'+(x+12)+' '+(y-8)+' '+(x+10)+' '+(y-3)+' Q'+x+' '+(y+1)+' '+(x-10)+' '+(y-3)+' Q'+(x-13)+' '+(y-6)+' '+(x-11)+' '+(y-9)+' Z"/>'
-  +'<path d="M'+(x+6)+' '+(y-10)+' C'+(x+8)+' '+(y-18)+' '+(x+13)+' '+(y-22)+' '+(x+16)+' '+(y-19)+' L'+(x+18)+' '+(y-16)+' Q'+(x+14)+' '+(y-15)+' '+(x+11)+' '+(y-11)+' Z"/>'
-  +'<path d="M'+(x+15)+' '+(y-20)+' l-1 -5 l3 4 l2 -4 l1 5 z"/>'
-  +'<rect x="'+(x-8)+'" y="'+(y-3)+'" width="2.2" height="8" rx="1"/><rect x="'+(x-1)+'" y="'+(y-2)+'" width="2.2" height="8" rx="1"/><rect x="'+(x+6)+'" y="'+(y-2)+'" width="2.2" height="8" rx="1"/>'
-  +'<path d="M'+(x-11)+' '+(y-7)+' q-5 2 -5 6" fill="none" stroke="'+fill+'" stroke-width="1.8" stroke-linecap="round"/>'
-  +'</g>';}
-function panoCondor(x,y,fill){return '<g fill="none" stroke="'+fill+'" stroke-linecap="round" stroke-linejoin="round" opacity="0.78">'
-  +'<path d="M'+(x-22)+' '+(y+3)+' C'+(x-13)+' '+(y-9)+' '+(x-5)+' '+(y-7)+' '+x+' '+(y-1)+' C'+(x+5)+' '+(y-7)+' '+(x+13)+' '+(y-9)+' '+(x+22)+' '+(y+3)+'" stroke-width="2"/>'
-  +'<path d="M'+(x-3)+' '+(y-1)+' q3 3 6 0" stroke-width="2.6"/>'
-  +'</g>';}
-function panoBridge(x,y,fill){return '<g fill="none" stroke="'+fill+'" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'
-  +'<path d="M'+(x-20)+' '+(y-5)+' C'+(x-9)+' '+(y-1)+' '+(x+9)+' '+(y-1)+' '+(x+20)+' '+(y-5)+'"/>'
-  +'<path d="M'+(x-20)+' '+(y-17)+' C'+(x-9)+' '+(y-9)+' '+(x+9)+' '+(y-9)+' '+(x+20)+' '+(y-17)+'"/>'
-  +'<line x1="'+(x-20)+'" y1="'+(y-17)+'" x2="'+(x-20)+'" y2="'+(y-5)+'"/><line x1="'+(x+20)+'" y1="'+(y-17)+'" x2="'+(x+20)+'" y2="'+(y-5)+'"/>'
-  +'<line x1="'+(x-10)+'" y1="'+(y-12)+'" x2="'+(x-10)+'" y2="'+(y-3)+'"/><line x1="'+x+'" y1="'+(y-10)+'" x2="'+x+'" y2="'+(y-2)+'"/><line x1="'+(x+10)+'" y1="'+(y-12)+'" x2="'+(x+10)+'" y2="'+(y-3)+'"/>'
-  +'</g>';}
-function panoTent(x,y,c){return '<g>'
-  +'<path d="M'+(x-17)+' '+y+' L'+x+' '+(y-23)+' L'+(x+17)+' '+y+' Z" fill="'+c.ink+'"/>'
-  +'<path d="M'+x+' '+(y-23)+' L'+(x+6)+' '+y+' L'+(x-1)+' '+y+' Z" fill="'+c.paper+'" opacity="0.24"/>'
-  +'<path d="M'+(x-4)+' '+y+' L'+x+' '+(y-12)+' L'+(x+5)+' '+y+' Z" fill="'+c.paper+'" opacity="0.58"/>'
-  +'<line x1="'+(x-20)+'" y1="'+y+'" x2="'+(x+20)+'" y2="'+y+'" stroke="'+c.ink+'" stroke-width="1.6" stroke-linecap="round"/>'
-  +'</g>';}
-function panoRuins(x,y,fill){return '<g fill="'+fill+'">'
-  +'<path d="M'+(x-18)+' '+(y-1)+' Q'+x+' '+(y-7)+' '+(x+18)+' '+(y-1)+'" fill="none" stroke="'+fill+'" stroke-width="2" stroke-linecap="round"/>'
-  +'<rect x="'+(x-17)+'" y="'+(y-10)+'" width="5" height="9"/><rect x="'+(x-9)+'" y="'+(y-14)+'" width="6" height="13"/><rect x="'+(x+1)+'" y="'+(y-12)+'" width="6" height="11"/><rect x="'+(x+11)+'" y="'+(y-9)+'" width="5" height="8"/>'
-  +'<rect x="'+(x-14)+'" y="'+(y-17)+'" width="5" height="5"/><rect x="'+(x-3)+'" y="'+(y-18)+'" width="5" height="6"/><rect x="'+(x+8)+'" y="'+(y-15)+'" width="5" height="5"/>'
-  +'</g>';}
-function panoBird(x,y,fill){return '<path d="M'+(x-10)+' '+(y+1)+' C'+(x-6)+' '+(y-4)+' '+(x-2)+' '+(y-4)+' '+x+' '+y+' C'+(x+2)+' '+(y-4)+' '+(x+6)+' '+(y-4)+' '+(x+10)+' '+(y+1)+'" fill="none" stroke="'+fill+'" stroke-width="1.45" stroke-linecap="round" opacity="0.84"/>';}
-function panoViscacha(x,y,fill){return '<g fill="'+fill+'">'
-  +'<path d="M'+(x-8)+' '+(y-4)+' Q'+(x-2)+' '+(y-10)+' '+(x+6)+' '+(y-6)+' Q'+(x+12)+' '+(y-3)+' '+(x+7)+' '+(y+1)+' Q'+(x-1)+' '+(y+4)+' '+(x-8)+' '+(y-1)+' Z"/>'
-  +'<circle cx="'+(x+9)+'" cy="'+(y-8)+'" r="2.7"/>'
-  +'<path d="M'+(x+8)+' '+(y-11)+' l-2 -5 l4 3 l2 -4 l1 5 z"/>'
-  +'<path d="M'+(x-9)+' '+(y-2)+' q-8 -1 -9 -7" fill="none" stroke="'+fill+'" stroke-width="1.8" stroke-linecap="round"/>'
-  +'<rect x="'+(x-5)+'" y="'+y+'" width="2" height="4" rx="0.8"/><rect x="'+(x+5)+'" y="'+(y-1)+'" width="2" height="5" rx="0.8"/>'
-  +'</g>';}
-function panoSpring(x,y,fill){return '<g fill="none" stroke="'+fill+'" stroke-linecap="round" stroke-linejoin="round">'
-  +'<path d="M'+x+' '+(y-18)+' C'+(x-7)+' '+(y-10)+' '+(x-5)+' '+(y-4)+' '+x+' '+(y-1)+' C'+(x+5)+' '+(y-4)+' '+(x+7)+' '+(y-10)+' '+x+' '+(y-18)+' Z" fill="'+fill+'" stroke="none" opacity="0.92"/>'
-  +'<path d="M'+(x-11)+' '+(y+1)+' C'+(x-5)+' '+(y-4)+' '+(x+4)+' '+(y-4)+' '+(x+11)+' '+(y+1)+'" stroke-width="1.5"/>'
-  +'<path d="M'+(x-8)+' '+(y+5)+' C'+(x-2)+' '+(y+2)+' '+(x+3)+' '+(y+2)+' '+(x+8)+' '+(y+5)+'" stroke-width="1.3" opacity="0.82"/>'
-  +'</g>';}
+function panoLlama(x,y,fill){return '<g fill="'+fill+'"><ellipse cx="'+x+'" cy="'+(y-7)+'" rx="6" ry="3.3"/><rect x="'+(x+3)+'" y="'+(y-15)+'" width="2.2" height="9" rx="0.6"/><circle cx="'+(x+4.4)+'" cy="'+(y-16)+'" r="1.6"/><rect x="'+(x+5.4)+'" y="'+(y-17)+'" width="0.9" height="2"/><rect x="'+(x-5)+'" y="'+(y-4)+'" width="1.4" height="5"/><rect x="'+(x-2)+'" y="'+(y-4)+'" width="1.4" height="5"/><rect x="'+(x+1.4)+'" y="'+(y-4)+'" width="1.4" height="5"/><rect x="'+(x+4)+'" y="'+(y-4)+'" width="1.4" height="5"/></g>';}
+function panoCondor(x,y,fill){return '<path d="M'+(x-13)+' '+y+' Q'+(x-6)+' '+(y-4)+' '+x+' '+y+' Q'+(x+6)+' '+(y-4)+' '+(x+13)+' '+y+'" fill="none" stroke="'+fill+'" stroke-width="1.6" stroke-linecap="round" opacity="0.7"/>';}
+function panoBridge(x,y,fill){return '<g fill="'+fill+'" stroke="'+fill+'" stroke-width="1.4" stroke-linecap="round"><rect x="'+(x-18)+'" y="'+(y-5)+'" width="36" height="3"/><line x1="'+(x-18)+'" y1="'+(y-5)+'" x2="'+(x-18)+'" y2="'+(y-16)+'"/><line x1="'+(x+18)+'" y1="'+(y-5)+'" x2="'+(x+18)+'" y2="'+(y-16)+'"/><path d="M'+(x-18)+' '+(y-16)+' Q'+x+' '+(y-7)+' '+(x+18)+' '+(y-16)+'" fill="none"/></g>';}
+function panoTent(x,y,c){return '<g><path d="M'+(x-13)+' '+y+' L'+x+' '+(y-20)+' L'+(x+13)+' '+y+' Z" fill="'+c.ink+'"/><path d="M'+(x-3)+' '+y+' L'+x+' '+(y-13)+' L'+(x+3)+' '+y+' Z" fill="'+c.paper+'" opacity="0.55"/></g>';}
+function panoRuins(x,y,fill){return '<g fill="'+fill+'"><ellipse cx="'+x+'" cy="'+(y-2)+'" rx="16" ry="3.2" fill="none" stroke="'+fill+'" stroke-width="2"/><rect x="'+(x-15)+'" y="'+(y-9)+'" width="3" height="7"/><rect x="'+(x-8)+'" y="'+(y-11)+'" width="3" height="9"/><rect x="'+(x-1)+'" y="'+(y-10)+'" width="3" height="8"/><rect x="'+(x+8)+'" y="'+(y-9)+'" width="3" height="7"/></g>';}
+function panoBird(x,y,fill){return '<path d="M'+(x-8)+' '+y+' Q'+(x-3)+' '+(y-4)+' '+x+' '+y+' Q'+(x+3)+' '+(y-4)+' '+(x+8)+' '+y+'" fill="none" stroke="'+fill+'" stroke-width="1.4" stroke-linecap="round" opacity="0.85"/>';}
+function panoViscacha(x,y,fill){return '<g fill="'+fill+'"><ellipse cx="'+x+'" cy="'+(y-3.5)+'" rx="5.5" ry="3"/><circle cx="'+(x+5)+'" cy="'+(y-6)+'" r="2.4"/><rect x="'+(x+4.4)+'" y="'+(y-11)+'" width="1.6" height="4" rx="0.6"/><rect x="'+(x-5)+'" y="'+(y-2)+'" width="1.3" height="3"/><rect x="'+(x+3)+'" y="'+(y-2)+'" width="1.3" height="3"/></g>';}
+function panoSpring(x,y,fill){return '<g><path d="M'+(x-3.5)+' '+(y-10)+' Q'+x+' '+(y-17)+' '+(x+3.5)+' '+(y-10)+' L'+x+' '+(y-2)+' Z" fill="#3a78a0"/><path d="M'+(x-6)+' '+(y-1)+' Q'+x+' '+(y-4)+' '+(x+6)+' '+(y-1)+'" fill="none" stroke="#3a78a0" stroke-width="1.2"/></g>';}
 function drawMomentIcon(token,x,y,c){
   if(token==='bridge')  return panoBridge(x,y,c.ink);
   if(token==='llama')   return panoLlama(x,y,c.ink);
