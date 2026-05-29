@@ -577,36 +577,57 @@
   .stat .l{font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:var(--ink-soft);margin-top:6px;font-weight:600}
 
   /* Steps-of-the-day card — sync-first (design demo), manual fallback */
-  /* COACH CARD on the journey page — pose + current voice line */
+  /* COACH HERO at the top of the journey page — big pose + speech bubble.
+     The card stays put (no auto-hide); content swaps on game entry and on
+     sync/log, with a brief mint flash to signal "new". */
   .coach-card-game{
-    display:flex;align-items:center;gap:12px;
-    background:var(--accent-soft);border:1px solid var(--ink-line);border-radius:16px;
-    padding:12px 14px;margin-bottom:12px;
-    transition:border-color .25s,box-shadow .25s,background .25s;
+    display:flex;align-items:stretch;gap:12px;
+    background:var(--paper);border:1px solid var(--ink-line);border-radius:18px;
+    padding:14px;margin-bottom:14px;
+    transition:box-shadow .25s,border-color .25s;
+    position:relative;
   }
   .coach-card-game.flash{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
   .coach-card-game .ccg-pose{
-    flex:none;width:78px;height:78px;border-radius:14px;background:var(--bg);
+    flex:none;width:42%;max-width:180px;
+    aspect-ratio:25/27;
+    border-radius:14px;background:var(--bg);border:1px solid var(--ink-line);
     position:relative;overflow:hidden;
   }
   .coach-card-game .ccg-pose img{
-    position:absolute;inset:4px 4px 2px 4px;width:calc(100% - 8px);height:calc(100% - 6px);
+    position:absolute;inset:0;width:100%;height:100%;
     object-fit:contain;object-position:center bottom;display:block;
     transform:scale(var(--coach-scale,1));transform-origin:center bottom;
   }
-  .coach-card-game .ccg-body{flex:1;min-width:0}
-  .coach-card-game .ccg-head{display:flex;align-items:baseline;gap:6px;margin-bottom:3px}
+  .coach-card-game .ccg-body{
+    flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:7px;
+  }
+  .coach-card-game .ccg-head{display:flex;flex-direction:column;gap:2px}
   .coach-card-game .ccg-label{
-    font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--accent-deep);
+    font-size:10.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;
+    color:var(--accent-deep);
   }
   .coach-card-game .ccg-name{
-    font-family:var(--font-display);font-weight:700;font-style:italic;font-size:15px;color:var(--ink);
+    font-family:var(--font-display);font-weight:700;font-style:italic;
+    font-size:22px;line-height:1.05;color:var(--ink);
   }
-  .coach-card-game .ccg-line{font-size:13.5px;color:var(--ink);line-height:1.4}
+  .coach-card-game .ccg-line{
+    font-size:14.5px;color:var(--ink);line-height:1.45;
+    position:relative;background:var(--accent-soft);border-radius:14px;padding:11px 14px;
+  }
+  /* Speech-bubble tail pointing at the pose */
+  .coach-card-game .ccg-line::before{
+    content:'';position:absolute;left:-7px;top:16px;
+    width:0;height:0;
+    border-top:6px solid transparent;border-bottom:7px solid transparent;
+    border-right:8px solid var(--accent-soft);
+  }
   @media (max-width:380px){
-    .coach-card-game{padding:10px 12px;gap:10px}
-    .coach-card-game .ccg-pose{width:66px;height:66px;border-radius:12px}
-    .coach-card-game .ccg-line{font-size:13px}
+    .coach-card-game{padding:12px;gap:10px;border-radius:16px}
+    .coach-card-game .ccg-pose{width:40%;max-width:140px}
+    .coach-card-game .ccg-name{font-size:19px}
+    .coach-card-game .ccg-line{font-size:13.5px;padding:10px 12px}
+    .coach-card-game .ccg-line::before{top:14px}
   }
 
   .day{background:var(--paper);border:1px solid var(--ink-line);border-radius:16px;padding:16px;margin-bottom:14px}
@@ -820,18 +841,9 @@
       </div>
     </div>
 
-    <div class="trail" id="trail"></div>
-    <div class="loc" id="loc"></div>
-
-    <div class="eta-card">
-      <div class="eta" id="eta-mine"><div class="v" id="eta-mine-v">—</div><div class="l" id="eta-mine-l">a tu ritmo</div></div>
-      <div class="eta healthy" id="eta-health"><div class="v" id="eta-health-v">—</div><div class="l" id="eta-health-l">al ritmo saludable</div></div>
-    </div>
-
-    <div class="stats" id="stats"></div>
-
-    <!-- COACH CARD — persistent voice-of-your-coach panel. Pose + current line.
-         Hidden until a coach is chosen. Updates on game-entry and on sync/log. -->
+    <!-- COACH HERO — persistent voice-of-your-coach panel sitting at the top
+         of the journey. Big pose + speech bubble. Hidden until a coach is
+         chosen. Updates on game-entry and on sync/log. -->
     <div class="coach-card-game hide" id="coach-card-game">
       <div class="ccg-pose"><img id="ccg-pose-img" alt=""></div>
       <div class="ccg-body">
@@ -842,6 +854,16 @@
         <div class="ccg-line" id="ccg-line">—</div>
       </div>
     </div>
+
+    <div class="trail" id="trail"></div>
+    <div class="loc" id="loc"></div>
+
+    <div class="eta-card">
+      <div class="eta" id="eta-mine"><div class="v" id="eta-mine-v">—</div><div class="l" id="eta-mine-l">a tu ritmo</div></div>
+      <div class="eta healthy" id="eta-health"><div class="v" id="eta-health-v">—</div><div class="l" id="eta-health-l">al ritmo saludable</div></div>
+    </div>
+
+    <div class="stats" id="stats"></div>
 
     <!-- STEPS OF THE DAY -->
     <div class="day">
