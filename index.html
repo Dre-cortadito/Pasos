@@ -518,36 +518,48 @@
   /* ============================================================== RANK BAR
      The DAILY rank: today's steps drive a 10-rung ladder whose top rung
      (Maestro/a) is the science-recommended 8.000 steps. (Design system §3.2) */
+  /* Rank bar — Cortadito games STANDARD (matches Sudoku + Racimo exactly):
+     pill-shaped hover background, 11px uppercase font-ui label with 1.8px
+     tracking, 3px gray track line, accent fill behind current bubble, current
+     rank is a fixed 24px accent circle.                                     */
   .rank-bar{
     display:flex;align-items:center;gap:10px;
-    width:100%;max-width:560px;margin:0 auto 4px;
+    width:100%;max-width:560px;margin:0 auto 8px;
+    padding:8px 16px;background:transparent;border-radius:999px;
     cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;
-    padding:2px 0;
+    box-sizing:border-box;
+    transition:background .15s,color .15s;
+  }
+  @media (hover:hover){
+    .rank-bar:hover{background:var(--paper);}
+    .rank-bar:hover .rank-label,.rank-bar:hover .rank-chev{color:var(--accent);}
   }
   .rank-label{
-    font-family:var(--font-display);font-size:14px;font-weight:700;
-    color:var(--ink);white-space:nowrap;flex:none;min-width:78px;
+    font-family:var(--font-ui);font-size:11px;font-weight:700;
+    color:var(--ink);white-space:nowrap;flex:none;min-width:88px;
+    text-transform:uppercase;letter-spacing:1.8px;
+    transition:color .15s;
   }
   .rank-label.at-maestro{color:var(--accent)}
   .rank-track{
-    position:relative;flex:1;height:26px;
+    position:relative;flex:1;height:22px;
     display:flex;align-items:center;
   }
-  .rank-line{position:absolute;left:12px;right:12px;top:50%;height:2px;background:var(--ink-line);transform:translateY(-50%);border-radius:2px}
-  .rank-line-fill{position:absolute;left:12px;top:50%;height:2px;background:var(--accent);transform:translateY(-50%);border-radius:2px}
-  .rank-dot{position:absolute;top:50%;width:6px;height:6px;border-radius:50%;transform:translate(-50%,-50%);background:var(--ink-soft)}
+  .rank-line{position:absolute;left:12px;right:12px;top:50%;height:3px;background:var(--ink-line);transform:translateY(-50%);border-radius:2px;z-index:0}
+  .rank-line-fill{position:absolute;left:12px;top:50%;height:3px;background:var(--accent);transform:translateY(-50%);border-radius:2px;z-index:1;transition:width .3s ease}
+  .rank-dot{position:absolute;top:50%;width:6px;height:6px;border-radius:50%;transform:translate(-50%,-50%);background:var(--ink-soft);z-index:3}
   .rank-dot.passed{background:var(--ink)}
-  .rank-marker{position:absolute;top:50%;width:3px;height:26px;border-radius:2px;transform:translate(-50%,-50%);background:var(--accent);opacity:.95}
+  .rank-marker{position:absolute;top:50%;width:3px;height:26px;border-radius:2px;transform:translate(-50%,-50%);background:var(--accent);opacity:.95;z-index:2}
   .rank-marker.done{background:var(--success)}
   .rank-bubble{
     position:absolute;top:50%;width:24px;height:24px;border-radius:50%;
     transform:translate(-50%,-50%);
     background:var(--accent);color:#fff;
     display:flex;align-items:center;justify-content:center;
-    font-family:var(--font-ui);font-size:9px;font-weight:800;letter-spacing:-.3px;
-    box-shadow:0 1px 4px rgba(0,0,0,.18);z-index:2;
+    font-family:var(--font-ui);font-size:11px;font-weight:700;letter-spacing:-.2px;
+    z-index:4;
   }
-  .rank-chev{color:var(--ink-soft);font-size:13px;flex:none}
+  .rank-chev{color:var(--ink);font-size:14px;flex:none;font-family:var(--font-ui);font-weight:500;transition:color .15s,transform .2s}
 
   /* ============================================================== JOURNEY */
   .j-head{margin:10px 0 6px}
@@ -790,7 +802,7 @@
         <span class="row-chev" aria-hidden="true">›</span>
       </button>
       <button class="landing-row" id="sel-character" type="button">
-        <span class="row-label">Personaje</span>
+        <span class="row-label">Avatar</span>
         <span class="sel-value" id="sel-character-val">Elegir</span>
         <span class="row-chev" aria-hidden="true">›</span>
       </button>
@@ -1199,46 +1211,20 @@ function renderLanding(){
   play.onclick = function(){ openJourney(state.selected); };
 }
 
-/* Character + coach selection — 25 inclusive silhouettes (Character Selection
-   trimmed v10.png sliced into characters/char-01.png … char-25.png). Names
-   roughly describe each silhouette for accessibility / tooltips; the user
-   just sees the mint silhouette and picks one. */
-var CHARACTERS = [
-  // Row 1
-  {id:'c01', label:'Caminante con mochila'},
-  {id:'c02', label:'Corredora con coleta'},
-  {id:'c03', label:'Caminante de talla grande'},
-  {id:'c04', label:'Caminante con afro'},
-  {id:'c05', label:'Caminante con túnica'},
-  // Row 2
-  {id:'c06', label:'Caminante embarazada'},
-  {id:'c07', label:'Caminante con curvas'},
-  {id:'c08', label:'Excursionista con bastones'},
-  {id:'c09', label:'Caminante con gorra y mochila'},
-  {id:'c10', label:'Caminante con trenzas'},
-  // Row 3
-  {id:'c11', label:'Corredora con moño'},
-  {id:'c12', label:'Caminante con capucha'},
-  {id:'c13', label:'Caminante con cresta'},
-  {id:'c14', label:'Astronauta'},
-  {id:'c15', label:'Caminante con bufanda'},
-  // Row 4
-  {id:'c16', label:'Corredora de pelo largo'},
-  {id:'c17', label:'Corredor'},
-  {id:'c18', label:'Caminante de marcha rápida'},
-  {id:'c19', label:'Corredor con prótesis'},
-  {id:'c20', label:'En silla de ruedas'},
-  // Row 5
-  {id:'c21', label:'Corredora con rastas'},
-  {id:'c22', label:'Caminante con turbante'},
-  {id:'c23', label:'Caminante con gorra'},
-  {id:'c24', label:'Buzo'},
-  {id:'c25', label:'En silla de ruedas con coleta'}
-];
+/* Avatar selection — 25 inclusive silhouettes (sliced into
+   characters/char-01.png … char-25.png). Labels are intentionally just
+   numbers so no user feels described by their pick — every body, age,
+   and accessory is represented but the UI just calls them "Avatar 01"
+   through "Avatar 25". */
+var CHARACTERS = [];
+for (var _i = 1; _i <= 25; _i++) {
+  var _n = String(_i).padStart(2,'0');
+  CHARACTERS.push({id:'c'+_n, label:'Avatar '+_n});
+}
 var CHARACTER_NAMES = {};
 CHARACTERS.forEach(function(ch){CHARACTER_NAMES[ch.id]=ch.label;});
 function charFile(id){
-  // id is 'c01' .. 'c36' — file is characters/char-NN.png
+  // id is 'c01' .. 'c25' — file is characters/char-NN.png
   var n = id.replace(/^c/,'').padStart(2,'0');
   return 'characters/char-'+n+'.png';
 }
@@ -1974,7 +1960,7 @@ var COACH_NAMES = {};
 COACHES.forEach(function(c){COACH_NAMES[c.id] = c.name;});
 function showCharacterPicker(){
   var html =
-    '<p class="muted" style="margin-top:4px">Elige una silueta. Es la que te acompañará por la ruta.</p>'+
+    '<p class="muted" style="margin-top:4px">Elige tu avatar — el que te acompañará por la ruta.</p>'+
     '<div class="char-grid" id="char-grid">'+
       CHARACTERS.map(function(ch){
         var active = (state.character===ch.id) ? ' active' : '';
@@ -1984,7 +1970,7 @@ function showCharacterPicker(){
                '</button>';
       }).join('')+
     '</div>';
-  showInfo('Tu personaje', html);
+  showInfo('Tu avatar', html);
   // Wire clicks: pick character, save, close overlay, refresh landing.
   // closeAll() matches what the route/goal pickers use.
   document.querySelectorAll('#char-grid .char-tile').forEach(function(t){
