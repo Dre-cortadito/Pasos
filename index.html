@@ -752,6 +752,31 @@
   .pano-scroll::-webkit-scrollbar{display:none}
   .pano-art{height:100%;display:inline-block;line-height:0}
   .pano-art svg{display:block;height:100%;width:auto}
+
+  /* Image-layer parallax renderer (used by the Inca route). Spacer creates the
+     scrollable width; each .pano-pl layer is absolute-positioned and translates
+     via JS on every scroll event at its own speed multiplier (Fantasy-Hike depth). */
+  .pano-parallax{position:relative;height:100%;display:none}
+  .pano-parallax:not(.hide){display:block}
+  .pano-pl-spacer{height:1px;float:left}
+  .pano-pl-layers{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+  .pano-pl{position:absolute;top:0;left:0;height:100%;width:auto;will-change:transform;pointer-events:none}
+  .pano-pl img{position:absolute;top:0;height:100%;width:auto;display:block;user-select:none;-webkit-user-drag:none}
+  /* Stack order: sky behind everything, foreground in front of the player */
+  .pl-sky       {z-index:1}
+  .pl-far       {z-index:2}
+  .pl-mid       {z-index:3}
+  .pl-trail     {z-index:4}
+  .pano-pl-hiker{position:absolute;top:0;left:0;height:100%;width:0;z-index:5;will-change:transform;pointer-events:none;display:flex;align-items:flex-end;justify-content:center}
+  .pl-foreground{z-index:6}
+  .pano-pl-hiker .hiker-sil{
+    width:36px;height:54px;background:#ee6d20;display:block;
+    -webkit-mask-position:center bottom;mask-position:center bottom;
+    -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
+    -webkit-mask-size:contain;mask-size:contain;
+    -webkit-mask-mode:alpha;mask-mode:alpha;
+    margin-bottom:8px;
+  }
   .pano-top{position:absolute;left:0;right:0;top:0;padding:12px 16px 34px;background:linear-gradient(to bottom,rgba(12,9,6,.74),rgba(12,9,6,0));pointer-events:none}
   .pano-bottom{position:absolute;left:0;right:0;bottom:0;padding:34px 16px 14px;background:linear-gradient(to top,rgba(12,9,6,.78),rgba(12,9,6,0));pointer-events:none}
 </style>
@@ -855,10 +880,17 @@
       <div class="j-title" id="jtitle"></div>
     </div>
 
-    <!-- THE JOURNEY PANORAMA — one continuous landscape; scroll to "replay" the trip -->
+    <!-- THE JOURNEY PANORAMA — one continuous landscape; scroll to "replay" the trip.
+         Two renderers stacked here: the procedural SVG (#pano-art) used by 5 of
+         the 6 routes, and the image-layer parallax (#pano-parallax) used by Inca.
+         render() shows whichever one matches the current route and hides the other. -->
     <div class="panorama">
       <div class="pano-scroll" id="pano-scroll">
         <div class="pano-art" id="pano-art"></div>
+        <div class="pano-parallax hide" id="pano-parallax">
+          <div class="pano-pl-spacer" id="pano-pl-spacer"></div>
+          <div class="pano-pl-layers" id="pano-pl-layers"></div>
+        </div>
       </div>
       <div class="pano-top">
         <div class="scene-day" id="scene-day"></div>
@@ -2685,7 +2717,95 @@ function updatePanoOverlay(){
   // day = how many days the user has been on THIS trail (calendar)
   document.getElementById('scene-day').textContent='Día '+dayNum(current);
 }
-function setupPanoScroll(){var ps=document.getElementById('pano-scroll'); if(!ps||_panoWired)return; _panoWired=true; ps.addEventListener('scroll',updatePanoOverlay);}
+function setupPanoScroll(){var ps=document.getElementById('pano-scroll'); if(!ps||_panoWired)return; _panoWired=true; ps.addEventListener('scroll',updatePanoOverlay); ps.addEventListener('scroll',_onParallaxScroll);}
+
+/* ============================================================================
+   Inca-trail PARALLAX RENDERER — image layers, Fantasy-Hike style
+   ----------------------------------------------------------------------------
+   Layer files live at panoramas/inca/<segment>/<layer>.png
+   Layer order from back to front: sky, far, mid, trail, hiker, foreground.
+   Each layer translates at its own speed on every pano-scroll event.
+   Proof phase: only Wiñay Wayna exists, so we tile it across all 8 slots.
+   Once the other 7 segments are generated, just update INCA_PARALLAX_SEGMENTS.
+============================================================================ */
+var INCA_PARALLAX_SEGMENTS = ['winaywayna','winaywayna','winaywayna','winaywayna','winaywayna','winaywayna','winaywayna','winaywayna'];
+var PARALLAX_LAYERS = ['sky','far','mid','trail','foreground'];
+var PARALLAX_SPEEDS = {sky:0.15, far:0.35, mid:0.6, trail:1.0, foreground:1.4};
+var PARALLAX_SEG_W  = 3200;   // each layer PNG is 3200px wide
+var _parallaxTotalW = 0;
+var _parallaxSetupDone = false;
+
+function setupIncaParallax(j){
+  var totalW = INCA_PARALLAX_SEGMENTS.length * PARALLAX_SEG_W;
+  _parallaxTotalW = totalW;
+  document.getElementById('pano-pl-spacer').style.width = totalW + 'px';
+  var host = document.getElementById('pano-pl-layers');
+  // Only rebuild on first setup; subsequent renders just re-position the hiker.
+  if (_parallaxSetupDone && host.childElementCount > 0) {
+    _paintParallaxHiker();
+    return;
+  }
+  host.innerHTML = '';
+  PARALLAX_LAYERS.forEach(function(layerName){
+    var layerDiv = document.createElement('div');
+    layerDiv.className = 'pano-pl pl-' + layerName;
+    layerDiv.dataset.layer = layerName;
+    INCA_PARALLAX_SEGMENTS.forEach(function(seg, i){
+      var img = document.createElement('img');
+      img.src = 'panoramas/inca/' + seg + '/' + layerName + '.png';
+      img.style.left = (i * PARALLAX_SEG_W) + 'px';
+      img.alt = '';
+      layerDiv.appendChild(img);
+    });
+    host.appendChild(layerDiv);
+    // Hiker goes between the trail and foreground layers.
+    if (layerName === 'trail') {
+      var hk = document.createElement('div');
+      hk.id = 'pano-pl-hiker';
+      hk.className = 'pano-pl-hiker';
+      host.appendChild(hk);
+    }
+  });
+  _paintParallaxHiker();
+  _parallaxSetupDone = true;
+}
+
+function _paintParallaxHiker(){
+  var hk = document.getElementById('pano-pl-hiker');
+  if(!hk) return;
+  // Use the player's chosen avatar silhouette, tinted orange via CSS mask so
+  // it pops against the dark Fantasy-Hike landscape. Falls back to a small
+  // procedural blob if no avatar is picked yet.
+  if (state.character && CHARACTER_NAMES[state.character]) {
+    var f = charFile(state.character);
+    hk.innerHTML = '<span class="hiker-sil" style="-webkit-mask-image:url(\''+f+'\');mask-image:url(\''+f+'\')"></span>';
+  } else {
+    hk.innerHTML = '<span style="width:14px;height:30px;background:#ee6d20;border-radius:40% 40% 30% 30%;margin-bottom:8px;display:block"></span>';
+  }
+}
+
+function updateIncaParallax(walked, totalMiles){
+  var scroll = document.getElementById('pano-scroll').scrollLeft || 0;
+  var pls = document.querySelectorAll('.pano-pl');
+  for (var i=0; i<pls.length; i++) {
+    var layer = pls[i];
+    var speed = PARALLAX_SPEEDS[layer.dataset.layer] || 1.0;
+    layer.style.transform = 'translateX(' + (-scroll * speed) + 'px)';
+  }
+  // Hiker — at walked-miles position along the route, moves with the trail (1.0x)
+  var hk = document.getElementById('pano-pl-hiker');
+  if (hk && totalMiles > 0) {
+    var milesFrac = Math.max(0, Math.min(1, walked / totalMiles));
+    var hikerWorldX = milesFrac * _parallaxTotalW;
+    hk.style.transform = 'translateX(' + (hikerWorldX - scroll) + 'px)';
+  }
+}
+
+function _onParallaxScroll(){
+  if (current !== 'inca') return;
+  var j = J(current); if (!j) return;
+  updateIncaParallax(miles(current), j.total);
+}
 function autoScrollPanoIfNeeded(j,walked){
   if(_panoAutoScrolled)return;
   var ps=document.getElementById('pano-scroll'); if(!ps)return;
@@ -2740,9 +2860,20 @@ function render(){
   document.getElementById('jtitle').innerHTML=j.name+'<small>'+j.sub+'</small>';
   document.getElementById('trail').innerHTML=buildTrail(j,walked);
 
-  // journey panorama — the whole route as one continuous landscape
+  // journey panorama — switch renderer based on route. Inca uses the new
+  // image-layer parallax (Fantasy-Hike style); all other routes still use the
+  // procedural SVG until we generate parallax assets for them too.
   var SC=sceneCSS();
-  document.getElementById('pano-art').innerHTML=buildPanorama(j,walked,SC);
+  if (current === 'inca' && typeof INCA_PARALLAX_SEGMENTS !== 'undefined') {
+    document.getElementById('pano-art').classList.add('hide');
+    document.getElementById('pano-parallax').classList.remove('hide');
+    setupIncaParallax(j);
+    updateIncaParallax(walked, j.total);
+  } else {
+    document.getElementById('pano-art').classList.remove('hide');
+    document.getElementById('pano-parallax').classList.add('hide');
+    document.getElementById('pano-art').innerHTML=buildPanorama(j,walked,SC);
+  }
   setupPanoScroll();
   updatePanoOverlay();
   autoScrollPanoIfNeeded(j,walked);
