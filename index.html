@@ -747,7 +747,37 @@
   .scene-modal .scene-art{aspect-ratio:2/1;border-radius:12px;overflow:hidden;border:1px solid var(--ink-line)}
 
   /* ===== Journey panorama — one continuous scrollable landscape ===== */
-  .panorama{position:relative;border:1px solid var(--ink-line);border-radius:16px;overflow:hidden;margin:12px 0;background:var(--paper);height:240px}
+  /* Panorama height has two modes:
+     - SHORT (240px strip): stats mode. Coach/ETA/stats/day cards visible below.
+     - FULL (~70dvh): Fantasy-Hike mode. Panorama is the hero; cards hidden.
+     Default is FULL on first load; user toggles via the ⛶ button in the panorama corner.
+     Body class .pano-full controls which mode is active.                       */
+  .panorama{position:relative;border:1px solid var(--ink-line);border-radius:16px;overflow:hidden;margin:12px 0;background:var(--paper);height:240px;transition:height .35s ease}
+  body.pano-full .panorama{height:calc(100dvh - 200px);max-height:720px;min-height:380px}
+  /* Hide stats-side cards when in full panorama mode */
+  body.pano-full .trail,
+  body.pano-full .loc,
+  body.pano-full .eta-card,
+  body.pano-full .stats,
+  body.pano-full .coach-card-game,
+  body.pano-full .day{display:none}
+  /* Toggle button floats in the panorama's top-right corner */
+  .pano-toggle{
+    position:absolute;top:8px;right:8px;z-index:20;
+    width:34px;height:34px;border-radius:999px;
+    background:rgba(20,18,14,.55);color:#fff;border:0;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+    transition:background .15s,transform .08s;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .pano-toggle:active{transform:scale(.95)}
+  .pano-toggle:hover{background:rgba(20,18,14,.75)}
+  /* Show only the appropriate icon for the current mode */
+  .pano-toggle .pano-toggle-full,
+  .pano-toggle .pano-toggle-short{display:none}
+  body.pano-full .pano-toggle .pano-toggle-short{display:block}
+  body:not(.pano-full) .pano-toggle .pano-toggle-full{display:block}
   .pano-scroll{height:100%;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none}
   .pano-scroll::-webkit-scrollbar{display:none}
   .pano-art{height:100%;display:inline-block;line-height:0}
@@ -899,6 +929,11 @@
       <div class="pano-bottom">
         <div class="scene-line" id="scene-line"></div>
       </div>
+      <!-- Toggle: switch between full-screen panorama and short strip mode -->
+      <button class="pano-toggle" id="pano-toggle" type="button" aria-label="Cambiar tamaño de la panorama" title="Cambiar tamaño">
+        <svg class="pano-toggle-full" viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M2 9.5h2v2H6v1.5H2v-3.5zm12 0v3.5h-4v-1.5h2v-2h2zm-12-3V3h4v1.5H4v2H2zm12 0H12v-2h-2V3h4v3.5z"/></svg>
+        <svg class="pano-toggle-short" viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M4 8.5h2v-2H7.5V10.5h-3.5v-2zm6 0h2v-2H10.5V10.5H14v-2h-4zM6 5.5V3.5H7.5V0.5H4V2h2v3.5h0zm6 0V3.5H10.5V0.5H14V2h-2v3.5h0z"/></svg>
+      </button>
     </div>
 
     <!-- PROGRESS BAR — the route trail (between panorama and coach) -->
@@ -1192,10 +1227,12 @@ var state=(function(){
       if(typeof p.maestroSeen !== 'boolean') p.maestroSeen = false;  // first-ever Maestro reveal
       if(typeof p.silverDays   !== 'number')  p.silverDays   = 0;     // lifetime 🥈 unlocks
       if(typeof p.goldDays     !== 'number')  p.goldDays     = 0;     // lifetime 🥇 unlocks
+      // Panorama display mode — 'full' (default, Fantasy-Hike sized) or 'short' (strip + stats)
+      if(p.panoMode !== 'full' && p.panoMode !== 'short') p.panoMode = 'full';
       return p;
     }}
   }catch(e){}
-  return {goal:DEFAULT_GOAL, j:{}, maestroSeen:false, silverDays:0, goldDays:0};
+  return {goal:DEFAULT_GOAL, j:{}, maestroSeen:false, silverDays:0, goldDays:0, panoMode:'full'};
 })();
 function save(){try{LS.setItem(STORE_KEY,JSON.stringify(state));}catch(e){}}
 
@@ -2169,6 +2206,7 @@ function openJourney(id){
   state.selected=id;save();
   document.getElementById('journey').classList.remove('hide');
   document.body.classList.add('game-active');
+  applyPanoMode();                    // apply saved full/short panorama mode
   var m=document.querySelector('main'); if(m)m.scrollTop=0;
   _panoAutoScrolled=false;            // re-center the panorama on each new open
   render();
@@ -2178,6 +2216,7 @@ function goHome(){
   closeAll();
   document.getElementById('journey').classList.add('hide');
   document.body.classList.remove('game-active');
+  document.body.classList.remove('pano-full');   // landing never has panorama mode
   current=null;renderLanding();window.scrollTo(0,0);
 }
 document.getElementById('header-home').onclick=goHome;
@@ -2719,63 +2758,76 @@ function updatePanoOverlay(){
 }
 function setupPanoScroll(){var ps=document.getElementById('pano-scroll'); if(!ps||_panoWired)return; _panoWired=true; ps.addEventListener('scroll',updatePanoOverlay); ps.addEventListener('scroll',_onParallaxScroll);}
 
+/* Apply the panorama-mode class to <body> from state. Default is 'full'. */
+function applyPanoMode(){
+  var full = (state.panoMode !== 'short');
+  document.body.classList.toggle('pano-full', full);
+}
+function togglePanoMode(){
+  state.panoMode = (state.panoMode === 'short') ? 'full' : 'short';
+  save();
+  applyPanoMode();
+  // Re-trigger render so the parallax recalculates layer offsets at the new height
+  if (current) { try { render(); } catch(e) {} }
+}
+/* Wire toggle button once on first script run */
+(function wirePanoToggle(){
+  var btn = document.getElementById('pano-toggle');
+  if (btn) btn.onclick = togglePanoMode;
+})();
+
 /* ============================================================================
-   Inca-trail PARALLAX RENDERER — image layers, Fantasy-Hike style
+   Inca-trail COMPOSITE RENDERER — single image per segment, Fantasy-Hike feel
    ----------------------------------------------------------------------------
-   Layer files live at panoramas/inca/<segment>/<layer>.png
-   Layer order from back to front: sky, far, mid, trail, hiker, foreground.
-   Each layer translates at its own speed on every pano-scroll event.
-   Proof phase: only Wiñay Wayna exists, so we tile it across all 8 slots.
-   Once the other 7 segments are generated, just update INCA_PARALLAX_SEGMENTS.
+   Files live at panoramas/inca/composites/<NN>.png  (01.png … 08.png)
+   Each image is 2048×768, the natural DALL-E aspect that ChatGPT produces.
+   8 segments are placed side by side; the panorama scrolls through them.
+   The hiker overlay sits on top at the player's walked-miles position.
+   Proof phase: only Wiñay Wayna exists, so we tile it across all 8 slots
+   until the user generates the rest.
 ============================================================================ */
-var INCA_PARALLAX_SEGMENTS = ['winaywayna','winaywayna','winaywayna','winaywayna','winaywayna','winaywayna','winaywayna','winaywayna'];
-var PARALLAX_LAYERS = ['sky','far','mid','trail','foreground'];
-var PARALLAX_SPEEDS = {sky:0.15, far:0.35, mid:0.6, trail:1.0, foreground:1.4};
-var PARALLAX_SEG_W  = 3200;   // each layer PNG is 3200px wide
-var _parallaxTotalW = 0;
-var _parallaxSetupDone = false;
+var INCA_COMPOSITE_SEGMENTS = ['01','02','03','04','05','06','07','08']; // 8 landmarks live — connectors arrive in phase 2
+var COMPOSITE_SEG_W = 2048;   // each segment PNG is 2048px wide (DALL-E native)
+var COMPOSITE_SEG_H = 768;    // each segment PNG is 768px tall
+var _compositeTotalW = 0;
+var _compositeSetupDone = false;
 
 function setupIncaParallax(j){
-  var totalW = INCA_PARALLAX_SEGMENTS.length * PARALLAX_SEG_W;
-  _parallaxTotalW = totalW;
+  // Same function name kept for compatibility with render() — but now does
+  // the simpler composite-per-segment setup.
+  var totalW = INCA_COMPOSITE_SEGMENTS.length * COMPOSITE_SEG_W;
+  _compositeTotalW = totalW;
   document.getElementById('pano-pl-spacer').style.width = totalW + 'px';
   var host = document.getElementById('pano-pl-layers');
-  // Only rebuild on first setup; subsequent renders just re-position the hiker.
-  if (_parallaxSetupDone && host.childElementCount > 0) {
+  if (_compositeSetupDone && host.childElementCount > 0) {
     _paintParallaxHiker();
     return;
   }
   host.innerHTML = '';
-  PARALLAX_LAYERS.forEach(function(layerName){
-    var layerDiv = document.createElement('div');
-    layerDiv.className = 'pano-pl pl-' + layerName;
-    layerDiv.dataset.layer = layerName;
-    INCA_PARALLAX_SEGMENTS.forEach(function(seg, i){
-      var img = document.createElement('img');
-      img.src = 'panoramas/inca/' + seg + '/' + layerName + '.png';
-      img.style.left = (i * PARALLAX_SEG_W) + 'px';
-      img.alt = '';
-      layerDiv.appendChild(img);
-    });
-    host.appendChild(layerDiv);
-    // Hiker goes between the trail and foreground layers.
-    if (layerName === 'trail') {
-      var hk = document.createElement('div');
-      hk.id = 'pano-pl-hiker';
-      hk.className = 'pano-pl-hiker';
-      host.appendChild(hk);
-    }
+  // One single "composite" layer that holds all 8 segment images side-by-side.
+  var bandDiv = document.createElement('div');
+  bandDiv.className = 'pano-pl pl-composite';
+  bandDiv.dataset.layer = 'composite';
+  INCA_COMPOSITE_SEGMENTS.forEach(function(seg, i){
+    var img = document.createElement('img');
+    img.src = 'panoramas/inca/composites/' + seg + '.png';
+    img.style.left = (i * COMPOSITE_SEG_W) + 'px';
+    img.alt = '';
+    bandDiv.appendChild(img);
   });
+  host.appendChild(bandDiv);
+  // Hiker sits above the composite
+  var hk = document.createElement('div');
+  hk.id = 'pano-pl-hiker';
+  hk.className = 'pano-pl-hiker';
+  host.appendChild(hk);
   _paintParallaxHiker();
-  _parallaxSetupDone = true;
+  _compositeSetupDone = true;
 }
 
 function _paintParallaxHiker(){
   var hk = document.getElementById('pano-pl-hiker');
   if(!hk) return;
-  // Use the player's chosen avatar silhouette, tinted orange via CSS mask so
-  // it pops against the dark Fantasy-Hike landscape. Falls back to a small
-  // procedural blob if no avatar is picked yet.
   if (state.character && CHARACTER_NAMES[state.character]) {
     var f = charFile(state.character);
     hk.innerHTML = '<span class="hiker-sil" style="-webkit-mask-image:url(\''+f+'\');mask-image:url(\''+f+'\')"></span>';
@@ -2786,17 +2838,14 @@ function _paintParallaxHiker(){
 
 function updateIncaParallax(walked, totalMiles){
   var scroll = document.getElementById('pano-scroll').scrollLeft || 0;
-  var pls = document.querySelectorAll('.pano-pl');
-  for (var i=0; i<pls.length; i++) {
-    var layer = pls[i];
-    var speed = PARALLAX_SPEEDS[layer.dataset.layer] || 1.0;
-    layer.style.transform = 'translateX(' + (-scroll * speed) + 'px)';
-  }
-  // Hiker — at walked-miles position along the route, moves with the trail (1.0x)
+  // The composite band scrolls at 1.0x (matches natural scroll, no parallax).
+  var band = document.querySelector('.pl-composite');
+  if (band) band.style.transform = 'translateX(' + (-scroll) + 'px)';
+  // Hiker — at walked-miles position along the route, follows the scroll
   var hk = document.getElementById('pano-pl-hiker');
   if (hk && totalMiles > 0) {
     var milesFrac = Math.max(0, Math.min(1, walked / totalMiles));
-    var hikerWorldX = milesFrac * _parallaxTotalW;
+    var hikerWorldX = milesFrac * _compositeTotalW;
     hk.style.transform = 'translateX(' + (hikerWorldX - scroll) + 'px)';
   }
 }
@@ -2864,7 +2913,7 @@ function render(){
   // image-layer parallax (Fantasy-Hike style); all other routes still use the
   // procedural SVG until we generate parallax assets for them too.
   var SC=sceneCSS();
-  if (current === 'inca' && typeof INCA_PARALLAX_SEGMENTS !== 'undefined') {
+  if (current === 'inca' && typeof INCA_COMPOSITE_SEGMENTS !== 'undefined') {
     document.getElementById('pano-art').classList.add('hide');
     document.getElementById('pano-parallax').classList.remove('hide');
     setupIncaParallax(j);
