@@ -783,22 +783,18 @@
   .pano-art{height:100%;display:inline-block;line-height:0}
   .pano-art svg{display:block;height:100%;width:auto}
 
-  /* Image-layer parallax renderer (used by the Inca route). Spacer creates the
-     scrollable width; each .pano-pl layer is absolute-positioned and translates
-     via JS on every scroll event at its own speed multiplier (Fantasy-Hike depth). */
-  .pano-parallax{position:relative;height:100%;display:none}
-  .pano-parallax:not(.hide){display:block}
-  .pano-pl-spacer{height:1px;float:left}
-  .pano-pl-layers{position:absolute;inset:0;pointer-events:none;overflow:hidden}
-  .pano-pl{position:absolute;top:0;left:0;height:100%;width:auto;will-change:transform;pointer-events:none}
-  .pano-pl img{position:absolute;top:0;height:100%;width:auto;display:block;user-select:none;-webkit-user-drag:none}
-  /* Stack order: sky behind everything, foreground in front of the player */
-  .pl-sky       {z-index:1}
-  .pl-far       {z-index:2}
-  .pl-mid       {z-index:3}
-  .pl-trail     {z-index:4}
-  .pano-pl-hiker{position:absolute;top:0;left:0;height:100%;width:0;z-index:5;will-change:transform;pointer-events:none;display:flex;align-items:flex-end;justify-content:center}
-  .pl-foreground{z-index:6}
+  /* Composite-image renderer (used by the Inca route). One inline-block band
+     of image tiles laid side-by-side; native horizontal scroll moves through
+     the whole route. Same layout pattern as .pano-art so it just works. */
+  .pano-parallax{position:relative;height:100%;display:inline-block;line-height:0;font-size:0;white-space:nowrap;vertical-align:top}
+  .pano-parallax.hide{display:none}
+  .pano-parallax img{height:100%;width:auto;display:inline-block;vertical-align:top;user-select:none;-webkit-user-drag:none}
+  .pano-pl-hiker{
+    position:absolute;bottom:0;left:0;
+    transform:translateX(-50%);
+    pointer-events:none;z-index:10;
+    display:flex;align-items:flex-end;justify-content:center;
+  }
   .pano-pl-hiker .hiker-sil{
     width:36px;height:54px;background:#ee6d20;display:block;
     -webkit-mask-position:center bottom;mask-position:center bottom;
@@ -917,10 +913,7 @@
     <div class="panorama">
       <div class="pano-scroll" id="pano-scroll">
         <div class="pano-art" id="pano-art"></div>
-        <div class="pano-parallax hide" id="pano-parallax">
-          <div class="pano-pl-spacer" id="pano-pl-spacer"></div>
-          <div class="pano-pl-layers" id="pano-pl-layers"></div>
-        </div>
+        <div class="pano-parallax hide" id="pano-parallax"></div>
       </div>
       <div class="pano-top">
         <div class="scene-day" id="scene-day"></div>
@@ -2786,37 +2779,28 @@ function togglePanoMode(){
    Proof phase: only Wiñay Wayna exists, so we tile it across all 8 slots
    until the user generates the rest.
 ============================================================================ */
-var INCA_COMPOSITE_SEGMENTS = ['01','02','03','04','05','06','07','08']; // 8 landmarks live — connectors arrive in phase 2
+var INCA_COMPOSITE_SEGMENTS = ['01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27']; // full 27-segment Inca panorama
 var COMPOSITE_SEG_W = 2048;   // each segment PNG is 2048px wide (DALL-E native)
 var COMPOSITE_SEG_H = 768;    // each segment PNG is 768px tall
 var _compositeTotalW = 0;
 var _compositeSetupDone = false;
 
 function setupIncaParallax(j){
-  // Same function name kept for compatibility with render() — but now does
-  // the simpler composite-per-segment setup.
-  var totalW = INCA_COMPOSITE_SEGMENTS.length * COMPOSITE_SEG_W;
-  _compositeTotalW = totalW;
-  document.getElementById('pano-pl-spacer').style.width = totalW + 'px';
-  var host = document.getElementById('pano-pl-layers');
-  if (_compositeSetupDone && host.childElementCount > 0) {
-    _paintParallaxHiker();
-    return;
-  }
+  // Build the band as inline-block image tiles laid side-by-side INSIDE the
+  // pano-parallax host (which is itself inline-block, so it grows to fit the
+  // total tile width). pano-scroll then naturally allows horizontal scroll
+  // across the full route. The hiker is positioned absolutely INSIDE the
+  // host at a percentage, so it scrolls with the content.
+  var host = document.getElementById('pano-parallax');
+  if (!host) return;
   host.innerHTML = '';
-  // One single "composite" layer that holds all 8 segment images side-by-side.
-  var bandDiv = document.createElement('div');
-  bandDiv.className = 'pano-pl pl-composite';
-  bandDiv.dataset.layer = 'composite';
-  INCA_COMPOSITE_SEGMENTS.forEach(function(seg, i){
+  INCA_COMPOSITE_SEGMENTS.forEach(function(seg){
     var img = document.createElement('img');
     img.src = 'panoramas/inca/composites/' + seg + '.png';
-    img.style.left = (i * COMPOSITE_SEG_W) + 'px';
     img.alt = '';
-    bandDiv.appendChild(img);
+    host.appendChild(img);
   });
-  host.appendChild(bandDiv);
-  // Hiker sits above the composite
+  // Hiker overlay
   var hk = document.createElement('div');
   hk.id = 'pano-pl-hiker';
   hk.className = 'pano-pl-hiker';
@@ -2837,23 +2821,18 @@ function _paintParallaxHiker(){
 }
 
 function updateIncaParallax(walked, totalMiles){
-  var scroll = document.getElementById('pano-scroll').scrollLeft || 0;
-  // The composite band scrolls at 1.0x (matches natural scroll, no parallax).
-  var band = document.querySelector('.pl-composite');
-  if (band) band.style.transform = 'translateX(' + (-scroll) + 'px)';
-  // Hiker — at walked-miles position along the route, follows the scroll
+  // Hiker stays at walked-miles position along the route. With inline-block
+  // tiles, percentage-based left positioning scales correctly at any panorama
+  // height (short strip or full-screen).
   var hk = document.getElementById('pano-pl-hiker');
   if (hk && totalMiles > 0) {
     var milesFrac = Math.max(0, Math.min(1, walked / totalMiles));
-    var hikerWorldX = milesFrac * _compositeTotalW;
-    hk.style.transform = 'translateX(' + (hikerWorldX - scroll) + 'px)';
+    hk.style.left = (milesFrac * 100) + '%';
   }
 }
 
 function _onParallaxScroll(){
-  if (current !== 'inca') return;
-  var j = J(current); if (!j) return;
-  updateIncaParallax(miles(current), j.total);
+  // No-op now — the band scrolls natively with the host, no transform math.
 }
 function autoScrollPanoIfNeeded(j,walked){
   if(_panoAutoScrolled)return;
