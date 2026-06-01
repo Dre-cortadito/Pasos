@@ -813,6 +813,18 @@
     -webkit-mask-size:contain;mask-size:contain;
     -webkit-mask-mode:alpha;mask-mode:alpha;
   }
+  /* Foreground prop sprites: sit on the same ground line as the avatar
+     (bottom:13%), scale with band height (heightPct → height %), and live
+     behind the avatar (z-index 5 vs avatar 10) so the avatar walks IN
+     FRONT of props. The renderer hides any sprite whose PNG fails to load
+     so unmade sprites simply don't appear. */
+  .pano-pl-prop{
+    position:absolute;bottom:13%;
+    transform:translateX(-50%);
+    pointer-events:none;z-index:5;
+    line-height:0;
+  }
+  .pano-pl-prop img{display:block;width:auto;height:100%;user-select:none;-webkit-user-drag:none}
   .pano-top{position:absolute;left:0;right:0;top:0;padding:12px 16px 34px;background:linear-gradient(to bottom,rgba(12,9,6,.74),rgba(12,9,6,0));pointer-events:none}
   .pano-bottom{position:absolute;left:0;right:0;bottom:0;padding:34px 16px 14px;background:linear-gradient(to top,rgba(12,9,6,.78),rgba(12,9,6,0));pointer-events:none}
 </style>
@@ -2816,6 +2828,48 @@ function togglePanoMode(){
 var INCA_COMPOSITE_SEGMENTS = ['01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27']; // full 27-segment Inca panorama
 var COMPOSITE_SEG_W = 2048;   // each segment PNG is 2048px wide (DALL-E native)
 var COMPOSITE_SEG_H = 768;    // each segment PNG is 768px tall
+
+/* Foreground prop sprites layered on top of each segment background.
+   See _reference/sprite-prompts.md for generation specs.
+     sprite    — filename in /Pasos/sprites/ (sans extension)
+     xPct      — horizontal position within segment (0..1)
+     heightPct — display height as % of panorama band height
+     stepUp    — px the avatar climbs while passing through (0 = flat)
+     cap       — Spanish caption shown when avatar is near this sprite
+   Sprites that don't exist yet are silently skipped by the renderer. */
+var INCA_SEGMENT_PROPS = {
+  '01': { sprite:'01-quechua-greeter',      xPct:0.40, heightPct:20, stepUp:0,  cap:"Una mujer quechua te saluda al inicio del camino." },
+  '02': { sprite:'02-llama-train-front',    xPct:0.55, heightPct:17, stepUp:0,  cap:"Una caravana de llamas pasa por el sendero." },
+  '03': { sprite:'03-stone-steps-up',       xPct:0.50, heightPct:15, stepUp:18, cap:"Subes los primeros peldaños inca." },
+  '04': { sprite:'04-porter-setup',         xPct:0.45, heightPct:18, stepUp:0,  cap:"Llegada a Wayllabamba — un porteador arma el campamento." },
+  '05': { sprite:'05-alpaca-graze',         xPct:0.55, heightPct:13, stepUp:0,  cap:"Una alpaca pasta junto al sendero." },
+  '06': { sprite:'06-stream-stepping',      xPct:0.50, heightPct:10, stepUp:0,  cap:"Cruzas un arroyo de piedra en piedra." },
+  '07': { sprite:'07-apacheta-low',         xPct:0.60, heightPct:12, stepUp:0,  cap:"Pones tu piedra en una apacheta del camino." },
+  '08': { sprite:'08-porter-resting',       xPct:0.45, heightPct:17, stepUp:0,  cap:"Una porteadora descansa, hidratándose." },
+  '09': { sprite:'09-llama-train-back',     xPct:0.50, heightPct:17, stepUp:0,  cap:"La cola de una caravana de llamas se aleja." },
+  '10': { sprite:'10-porter-cooking',       xPct:0.45, heightPct:18, stepUp:0,  cap:"En Llulluchapampa, una cocinera prepara la cena." },
+  '11': { sprite:'11-chasqui-runner',       xPct:0.55, heightPct:17, stepUp:0,  cap:"Un chasqui corre con un mensaje." },
+  '12': { sprite:'12-stone-steps-diagonal', xPct:0.50, heightPct:18, stepUp:26, cap:"Subes el largo tramo de escalera inca." },
+  '13': { sprite:'13-trail-post',           xPct:0.55, heightPct:20, stepUp:0,  cap:"Un poste de camino con cintas marca tu paso." },
+  '14': { sprite:'14-apacheta-tall',        xPct:0.45, heightPct:23, stepUp:22, cap:"Llegaste al paso. Pones tu piedra en la cumbre." },
+  '15': { sprite:'15-tent-row',             xPct:0.50, heightPct:12, stepUp:0,  cap:"Tres carpas listas al anochecer." },
+  '16': { sprite:'16-stone-steps-down',     xPct:0.50, heightPct:15, stepUp:0,  cap:"Bajas los peldaños inca." },
+  '17': { sprite:'17-llama-resting',        xPct:0.55, heightPct:13, stepUp:0,  cap:"Una llama descansa con su carga." },
+  '18': { sprite:'18-waterfall-porter',     xPct:0.45, heightPct:22, stepUp:0,  cap:"Un porteador lava ollas junto a la cascada." },
+  '19': { sprite:'19-alpaca-family',        xPct:0.55, heightPct:13, stepUp:0,  cap:"Una madre alpaca y su cría te miran pasar." },
+  '20': { sprite:'20-hiker-arms-up',        xPct:0.50, heightPct:22, stepUp:0,  cap:"Una caminante celebra en el mirador." },
+  '21': { sprite:'21-ruins-doorway',        xPct:0.45, heightPct:23, stepUp:14, cap:"Atraviesas el portal de Runkurakay." },
+  '22': { sprite:'22-campfire-gear',        xPct:0.55, heightPct:18, stepUp:0,  cap:"Un porteador prepara el equipo junto al fuego." },
+  '23': { sprite:'23-quechua-children',     xPct:0.50, heightPct:12, stepUp:0,  cap:"Niños quechuas te saludan con la mano." },
+  '24': { sprite:'24-terrace-climb',        xPct:0.45, heightPct:22, stepUp:28, cap:"Subes las terrazas de Wiñay Wayna." },
+  '25': { sprite:'25-tent-single-night',    xPct:0.50, heightPct:13, stepUp:0,  cap:"Una sola carpa contra la noche estrellada." },
+  '26': { sprite:'26-stars-cairn',          xPct:0.55, heightPct:22, stepUp:0,  cap:"Una apacheta bajo el cielo estrellado." },
+  '27': { sprite:'27-sun-gate-guide',       xPct:0.40, heightPct:23, stepUp:18, cap:"Una guía te recibe al alba en el Inti Punku." },
+};
+// Width (as % of route) over which the avatar's step-up ramps in and out.
+// 1/27 = ~3.7% per segment. We ramp over ±2% centered on the sprite.
+var _PROP_STEP_HALFWIDTH = 0.02;
+
 var _compositeTotalW = 0;
 var _compositeSetupDone = false;
 
@@ -2834,13 +2888,55 @@ function setupIncaParallax(j){
     img.alt = '';
     host.appendChild(img);
   });
-  // Hiker overlay
+  // Foreground prop sprites — one per segment, positioned at the segment's
+  // xPct. Each is a separate absolutely-positioned element living INSIDE
+  // pano-parallax so it scrolls with the band. PNGs that don't exist yet
+  // get auto-hidden by the img.onerror handler so unmade sprites are
+  // invisible rather than broken-image icons.
+  var nSeg = INCA_COMPOSITE_SEGMENTS.length;
+  INCA_COMPOSITE_SEGMENTS.forEach(function(seg, i){
+    var p = INCA_SEGMENT_PROPS[seg];
+    if (!p) return;
+    // Route position of this sprite: (segIndex + xPct) / nSeg
+    var routeFrac = (i + p.xPct) / nSeg;
+    var prop = document.createElement('div');
+    prop.className = 'pano-pl-prop';
+    prop.style.left = (routeFrac * 100) + '%';
+    prop.style.height = p.heightPct + '%';
+    prop.setAttribute('data-seg', seg);
+    var pimg = document.createElement('img');
+    pimg.src = 'sprites/' + p.sprite + '.png';
+    pimg.alt = '';
+    pimg.onerror = function(){ prop.style.display = 'none'; };
+    prop.appendChild(pimg);
+    host.appendChild(prop);
+  });
+  // Hiker overlay — appended LAST so it z-stacks above props (also enforced
+  // by z-index in CSS, but DOM order is the safety net).
   var hk = document.createElement('div');
   hk.id = 'pano-pl-hiker';
   hk.className = 'pano-pl-hiker';
   host.appendChild(hk);
   _paintParallaxHiker();
   _compositeSetupDone = true;
+}
+
+// Returns the avatar's micro-step-up offset in px for a given milesFrac.
+// Each climbable prop (stepUp > 0) creates a smooth bump centered on the
+// prop's route position; the avatar's bottom rises into it and drops out.
+function _stepUpForFrac(milesFrac){
+  var nSeg = INCA_COMPOSITE_SEGMENTS.length;
+  for (var i = 0; i < nSeg; i++){
+    var p = INCA_SEGMENT_PROPS[INCA_COMPOSITE_SEGMENTS[i]];
+    if (!p || !p.stepUp) continue;
+    var center = (i + p.xPct) / nSeg;
+    var d = Math.abs(milesFrac - center);
+    if (d > _PROP_STEP_HALFWIDTH) continue;
+    // Triangular ramp: 1 at center, 0 at edges of the window.
+    var t = 1 - (d / _PROP_STEP_HALFWIDTH);
+    return p.stepUp * t;
+  }
+  return 0;
 }
 
 function _paintParallaxHiker(){
@@ -2862,6 +2958,11 @@ function updateIncaParallax(walked, totalMiles){
   if (hk && totalMiles > 0) {
     var milesFrac = Math.max(0, Math.min(1, walked / totalMiles));
     hk.style.left = (milesFrac * 100) + '%';
+    // Micro-step-up: avatar's bottom rises a few px as it crosses a
+    // staircase/cairn/ruins sprite. Returns 0 elsewhere so the avatar
+    // walks flat between climbable props.
+    var stepPx = _stepUpForFrac(milesFrac);
+    hk.style.bottom = stepPx > 0 ? ('calc(13% + ' + stepPx + 'px)') : '13%';
   }
 }
 
