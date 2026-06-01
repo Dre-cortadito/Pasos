@@ -761,23 +761,31 @@
   body.pano-full .stats,
   body.pano-full .coach-card-game,
   body.pano-full .day{display:none}
-  /* Toggle button floats in the panorama's top-right corner */
+  /* Toggle button floats in the panorama's top-right corner.
+     Pill with icon + label so it's obvious what tapping it does. */
   .pano-toggle{
     position:absolute;top:8px;right:8px;z-index:20;
-    width:34px;height:34px;border-radius:999px;
-    background:rgba(20,18,14,.55);color:#fff;border:0;
-    display:flex;align-items:center;justify-content:center;
+    height:32px;padding:0 12px 0 10px;border-radius:999px;
+    background:rgba(20,18,14,.6);color:#fff;border:0;
+    display:inline-flex;align-items:center;gap:6px;
+    font:600 12px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    letter-spacing:.01em;
     cursor:pointer;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
     transition:background .15s,transform .08s;
     -webkit-tap-highlight-color:transparent;
   }
-  .pano-toggle:active{transform:scale(.95)}
-  .pano-toggle:hover{background:rgba(20,18,14,.75)}
-  /* Show only the appropriate icon for the current mode */
+  .pano-toggle:active{transform:scale(.96)}
+  .pano-toggle:hover{background:rgba(20,18,14,.8)}
+  .pano-toggle svg{flex:0 0 auto}
+  /* Show only the icon+label pair for the current mode */
   .pano-toggle .pano-toggle-full,
-  .pano-toggle .pano-toggle-short{display:none}
-  body.pano-full .pano-toggle .pano-toggle-short{display:block}
-  body:not(.pano-full) .pano-toggle .pano-toggle-full{display:block}
+  .pano-toggle .pano-toggle-short,
+  .pano-toggle .pano-toggle-label-full,
+  .pano-toggle .pano-toggle-label-short{display:none}
+  body.pano-full .pano-toggle .pano-toggle-short,
+  body.pano-full .pano-toggle .pano-toggle-label-short{display:inline-block}
+  body:not(.pano-full) .pano-toggle .pano-toggle-full,
+  body:not(.pano-full) .pano-toggle .pano-toggle-label-full{display:inline-block}
   .pano-scroll{height:100%;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none}
   .pano-scroll::-webkit-scrollbar{display:none}
   .pano-art{height:100%;display:inline-block;line-height:0}
@@ -924,10 +932,13 @@
       <div class="pano-bottom">
         <div class="scene-line" id="scene-line"></div>
       </div>
-      <!-- Toggle: switch between full-screen panorama and short strip mode -->
-      <button class="pano-toggle" id="pano-toggle" type="button" aria-label="Cambiar tamaño de la panorama" title="Cambiar tamaño">
+      <!-- Toggle: switch between full-screen panorama and short strip mode.
+           Shows icon + label so it's obvious what tapping it will do. -->
+      <button class="pano-toggle" id="pano-toggle" type="button" aria-label="Cambiar tamaño de la panorama">
         <svg class="pano-toggle-full" viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M2 9.5h2v2H6v1.5H2v-3.5zm12 0v3.5h-4v-1.5h2v-2h2zm-12-3V3h4v1.5H4v2H2zm12 0H12v-2h-2V3h4v3.5z"/></svg>
         <svg class="pano-toggle-short" viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M4 8.5h2v-2H7.5V10.5h-3.5v-2zm6 0h2v-2H10.5V10.5H14v-2h-4zM6 5.5V3.5H7.5V0.5H4V2h2v3.5h0zm6 0V3.5H10.5V0.5H14V2h-2v3.5h0z"/></svg>
+        <span class="pano-toggle-label-full">Pantalla completa</span>
+        <span class="pano-toggle-label-short">Vista compacta</span>
       </button>
     </div>
 
