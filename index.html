@@ -1357,73 +1357,92 @@ var COACHES=[
 var COACH_LINES_POS = {};
 var COACH_MILESTONE = {};
 COACH_LINES_POS['ristretto'] = {
+  // 6-bucket structure (see _bucketFor):
+  //   start  0-10 %   warmup 10-25 %   early 25-45 %
+  //   half   45-65 %  push   65-85 %   final 85-100 %
   start: [
     "Primer paso es el más caro. Págalo ya y vámonos.",
     "Salimos a entrenar. Cinco minutos a ritmo cómodo y subimos.",
     "Cabeza arriba, mirada a cien metros al frente. Si miras los pies, te quedas en los pies.",
     "Calienta caminando suave hasta la próxima esquina. De ahí subimos.",
-    "Marca un punto al final de la cuadra. Esa es tu primera meta.",
     "Aprieta el abdomen, suelta los hombros, primer paso.",
-    "Primer kilómetro lo paga el cuerpo. Después negociamos con la cabeza.",
     "Atleta: dos respiraciones profundas y arrancamos. Sin pensarlo más.",
+    "Primer paso firme — el cuerpo necesita ver que vas en serio.",
+    "Postura derecha, hombros sueltos, vámonos.",
+    "Si lo pensaste, ya perdiste tres segundos. Camina.",
+    "Pisada del talón a la punta. Suave los primeros metros.",
+    "Antes de subir el ritmo, dos cuadras a paso natural.",
+    "Atleta a la calle: primer paso, ritmo cómodo, ya.",
+  ],
+  warmup: [
     "Salida limpia: ritmo cómodo cinco minutos, después aceleras.",
     "Cuenta cien pasos sin mirar nada. Cuando termines, ya estás dentro del ritmo.",
+    "Marca un punto al final de la cuadra. Esa es tu primera meta.",
+    "Primer kilómetro lo paga el cuerpo. Después negociamos con la cabeza.",
     "Cronómetro mental en cero. Hoy compites contra el tú de ayer.",
-    "Hoy mandas tú: ponle ritmo desde el primer paso.",
-    "Primer paso firme — el cuerpo necesita ver que vas en serio.",
-    "Calle limpia, hombros sueltos, vámonos.",
-    "Si lo pensaste, ya perdiste tres segundos. Camina.",
-  ],
-  early: [
     "Camina diez minutos sin mirar el contador. Entras solo en ritmo.",
-    "Aprieta una cuadra al frente, suelta en la siguiente. Intervalos.",
     "Pisada firme, brazos activos. Eso ya es técnica.",
+    "Suelta los hombros cada cinco minutos. La tensión cuesta energía.",
+    "Vas entrando al ritmo. Reconócelo y no lo pierdas.",
+    "Cinco minutos dentro. Ahora el cuerpo escucha mejor.",
     "Si pierdes el aire, baja la velocidad — pero no pares.",
     "Respira fuerte pero cómodo: entra por la nariz, sale por la boca.",
+  ],
+  early: [
+    "Aprieta una cuadra al frente, suelta en la siguiente. Intervalos.",
     "Marca un destino visible y ve directo. Sin desviarte.",
     "Diez pasos firmes después de cada semáforo. El ritmo no se regala.",
     "Una cuadra con paso largo, una con paso corto. Juega con el ritmo.",
-    "Suelta los hombros cada cinco minutos. La tensión cuesta energía.",
     "Aprieta el abdomen treinta segundos y vuelve a soltarlo.",
     "Activa los brazos como si empujaras aire. Suma velocidad.",
     "Esta esquina la pasas y la cuentas: una más en el bolsillo.",
     "Si traes agua, dos tragos ahora. El atleta hidratado dura más.",
     "Cuenta cincuenta pasos a ritmo fuerte y veinte a ritmo suave. Repite.",
     "Aguanta hasta el próximo semáforo sin bajar el ritmo. Después decides.",
+    "Aprieta veinte pasos a ritmo fuerte cuando sientas que te enfrías.",
+    "Brazos como si pidieras pista. Ayudan más de lo que crees.",
   ],
-  mid: [
+  half: [
     "Mitad de camino. Divídelo en dos: gana esta primero, después la otra.",
-    "Buen ritmo. Mantén la respiración fuerte pero cómoda.",
     "El cuerpo ya despertó. Ahora la cabeza decide cuánto das.",
     "Después de cada cruce, recupera el paso en cinco segundos.",
     "Una cuadra fuerte y otra suave. Así se entrena de verdad.",
     "Si pierdes ritmo, no te frustres — recupéralo en el siguiente bloque.",
     "Saca pecho, mete abdomen. Postura de atleta.",
     "Cuenta una respiración cada cuatro pasos. Encuentra el patrón.",
-    "Marca un edificio al fondo y camina derecho hacia allá.",
-    "Sube el ritmo durante una canción y vuelve al control.",
     "Cada cuadra ganada cuenta. No las regales.",
     "Si quieres parar, dame veinte pasos más y después decide.",
     "Mantén el foco: la mitad ya es tuya, no la sueltes.",
+    "Mitad ganada. Lo demás se construye desde aquí.",
+    "Estás en la mitad. Acelera una cuadra y vuelve al ritmo.",
+  ],
+  push: [
+    "Dos tercios hechos. Queda menos del que llevas.",
+    "Pasaste la mitad. Ahora no se afloja, se administra.",
     "Aguanta tres cuadras más al ritmo de ahora. Después ajustas.",
+    "Sube el ritmo durante una canción y vuelve al control.",
+    "Marca un edificio al fondo y camina derecho hacia allá.",
+    "Buen ritmo. Mantén la respiración fuerte pero cómoda.",
+    "Queda menos de un tercio. Aquí se gana la caminata.",
+    "Si la cabeza pide pausa, ofrécele cien pasos primero.",
+    "Tramo del medio terminado. El cuerpo ya sabe lo que tiene que hacer.",
+    "Camina como si te estuvieran cronometrando.",
+    "Cada cuadra ahora pesa el doble. Cóbrala toda.",
     "Mira el final del trayecto y camina hacia allá con decisión.",
   ],
-  late: [
+  final: [
     "Recta final: acorta el paso y muévelo más rápido. Cierra con piernas, no con ganas.",
     "Último tramo. Termina con la cabeza alta.",
     "Cierra limpio: ritmo controlado, sin desesperar.",
     "Aprieta los últimos diez minutos. Después celebramos.",
     "Cada cuadra que aceleres ahora se siente al final. Ataca.",
     "Atleta, no te confíes — termina con técnica hasta el último paso.",
-    "Camina como si te estuvieran cronometrando. Eso eres tú.",
     "Falta poco. Pisada firme, brazos activos.",
     "Cierra con veinte pasos extra al final. Que se note.",
-    "Cuenta cien pasos a este ritmo. Cuando termines, estás más cerca de lo que crees.",
-    "Termina con la sonrisa del que sabe.",
+    "Cuenta cien pasos a este ritmo. Cuando termines, ya casi llegas.",
     "Últimos cinco minutos: postura recta, brazos firmes. Lo que hagas aquí lo sientes mañana.",
     "Mantén la postura. Baja la velocidad solo cuando la sientas, no antes.",
     "Pisa fuerte los últimos pasos. Que el suelo recuerde tu paso.",
-    "Cierre con orgullo: terminamos como empezamos, con técnica.",
   ],
 };
 COACH_MILESTONE['ristretto'] = {
@@ -3086,10 +3105,13 @@ function coachPoseFile(cid, poseId){
 }
 
 function _bucketFor(frac){
-  if (frac < 0.15) return 'start';
-  if (frac < 0.50) return 'early';
-  if (frac < 0.80) return 'mid';
-  return 'late';
+  // 6 phases so a "halfway" line doesn't fire at 75%, etc.
+  if (frac < 0.10) return 'start';     //   0–10 %   body cold, first paces
+  if (frac < 0.25) return 'warmup';    //  10–25 %   settling into rhythm
+  if (frac < 0.45) return 'early';     //  25–45 %   in stride, pre-halfway
+  if (frac < 0.65) return 'half';      //  45–65 %   halfway window
+  if (frac < 0.85) return 'push';      //  65–85 %   the grind, pre-closing
+  return 'final';                       //  85–100 %  closing it out
 }
 function coachPickLine(cid, frac, milestoneKey){
   if (milestoneKey) {
@@ -3100,8 +3122,12 @@ function coachPickLine(cid, frac, milestoneKey){
   var b = _bucketFor(frac);
   var pool = pos[b];
   if (!pool || !pool.length) {
-    // Fallback: blend adjacent buckets, then everything
-    var fallback = (pos.early||[]).concat(pos.mid||[], pos.late||[], pos.start||[]);
+    // Fallback: blend every bucket we have so even partially-migrated
+    // coaches still produce a line.
+    var fallback = (pos.start||[]).concat(
+      pos.warmup||[], pos.early||[], pos.half||[],
+      pos.push||[],   pos.final||[], pos.mid||[], pos.late||[]
+    );
     pool = fallback;
   }
   if (!pool.length) return null;
