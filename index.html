@@ -151,7 +151,7 @@
     padding-bottom:48px;
     max-width:640px;
     margin:0 auto;
-    padding-left:18px;padding-right:18px;
+    padding-left:14px;padding-right:14px;   /* match Racimo's in-game gutter */
     height:100dvh;overflow-y:auto;overscroll-behavior:contain;
   }
 
@@ -565,9 +565,17 @@
      sit OUTSIDE it as a sibling, only visible when earned today. */
   .rank-row{
     display:flex;align-items:center;gap:8px;
-    width:100%;max-width:600px;margin:0 auto 8px;
+    width:100%;max-width:none;margin:0 auto 4px;
     box-sizing:border-box;
   }
+  /* Daily-goal caption under the rank bar */
+  .rank-goal-note{
+    font-family:var(--font-ui);font-size:11px;font-weight:700;
+    letter-spacing:.3px;color:var(--accent-deep);
+    margin:0 0 10px;padding:0 4px;
+  }
+  .rank-goal-note b{font-weight:800;color:var(--accent-deep)}
+  .rank-goal-note.done{color:var(--success)}
   .rank-row .rank-bar{flex:1;margin:0;max-width:none}
   .rank-medals{
     flex:none;display:inline-flex;align-items:center;gap:4px;
@@ -1132,6 +1140,7 @@
       </div>
       <span class="rank-medals" id="rank-medals" aria-label="Logros de hoy"></span>
     </div>
+    <div class="rank-goal-note" id="rank-goal-note"></div>
 
     <div class="j-head">
       <div class="j-title" id="jtitle"></div>
@@ -4166,6 +4175,12 @@ function render(){
   var rl=document.getElementById('rank-label');
   rl.textContent=RANKS[ri];
   rl.classList.toggle('at-maestro',atMaestro);
+  // Daily-goal caption under the rank bar
+  var gn=document.getElementById('rank-goal-note');
+  if(gn){ var goalDone=ts>=state.goal;
+    gn.innerHTML='Tu meta hoy · <b>'+nFmt(state.goal)+' pasos</b>'+(goalDone?' ✓':'');
+    gn.classList.toggle('done',goalDone);
+  }
   // Secret-achievement medals — outside the bar, to the right of the chevron.
   // Only show when earned today; the sibling element hides via :empty otherwise.
   var medals='';
