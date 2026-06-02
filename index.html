@@ -761,6 +761,89 @@
   body.pano-full .stats,
   body.pano-full .coach-card-game,
   body.pano-full .day{display:none}
+  /* =========================== TAB SYSTEM ============================
+     Bottom tab bar (Camina / Mapa / Logros / Ajustes) shown only on the
+     journey screen. Tab pages are siblings inside #journey; the active
+     class on the parent journey div controls which is visible. */
+  .tab-page{display:block}
+  .tab-page.hide{display:none}
+  /* Journey-tab-page padding so content doesn't hide behind the fixed
+     bottom tab bar. 64px nav + 12px breathing room. */
+  #journey .tab-page{padding-bottom:80px}
+  .tab-inner,.tab-mapa-inner{padding:4px 2px 0}
+  .tab-h{font-family:var(--font-display);font-size:22px;font-weight:700;margin:14px 0 12px}
+  .tab-h2{font-family:var(--font-display);font-size:15px;font-weight:600;margin:18px 0 8px;color:var(--ink-soft)}
+
+  /* Bottom tab bar — fixed at the bottom of the viewport, only visible
+     when the journey screen is active. Light shadow on top so it floats
+     over the scrolling content. Safe-area padding for iPhone notch. */
+  .tab-bar{
+    position:fixed;left:0;right:0;bottom:0;z-index:100;
+    display:none;align-items:stretch;justify-content:space-around;
+    height:64px;
+    padding-bottom:env(safe-area-inset-bottom,0);
+    background:rgba(20,18,14,.96);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    border-top:1px solid rgba(243,197,138,.12);
+    box-shadow:0 -8px 24px rgba(0,0,0,.18);
+  }
+  body.in-journey .tab-bar{display:flex}
+  .tab-btn{
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:3px;
+    background:transparent;border:0;padding:6px 4px;cursor:pointer;
+    color:rgba(243,230,210,.55);font-size:11px;font-weight:600;
+    transition:color .15s;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .tab-btn .tab-lbl{letter-spacing:.02em}
+  .tab-btn:active{transform:scale(.96)}
+  .tab-btn.active{color:#f3c58a}
+  .tab-btn.active svg{color:#f3c58a}
+
+  /* Map tab — bigger SVG (uses available vertical space) */
+  .tab-mapa-inner .rm-head{display:flex;align-items:flex-start;gap:10px;margin:8px 0 12px}
+  .tab-mapa-inner .rm-title{font-family:var(--font-display);font-size:22px;font-weight:700;line-height:1.1}
+  .tab-mapa-inner .rm-sub{font-size:13px;color:var(--accent-deep,#d4ad77);margin-top:3px}
+  .tab-mapa-inner .rm-svg{
+    width:100%;height:auto;display:block;border-radius:12px;
+    background:radial-gradient(ellipse at center,#241914 0%,#0c0905 90%);
+    border:1px solid rgba(243,197,138,.08);
+  }
+  .tab-mapa-inner .rm-svg .trail-bg{fill:none;stroke:rgba(243,197,138,.22);stroke-width:2.5;stroke-dasharray:4 5;stroke-linecap:round}
+  .tab-mapa-inner .rm-svg .trail-fg{fill:none;stroke:#f3c58a;stroke-width:3.5;stroke-linecap:round}
+  .tab-mapa-inner .rm-svg .wp-dot{fill:#1a1410;stroke:#f3c58a;stroke-width:2}
+  .tab-mapa-inner .rm-svg .wp-dot.passed{fill:#f3c58a}
+  .tab-mapa-inner .rm-svg .wp-label{fill:#e8d2a8;font-size:10px;text-anchor:middle;font-family:var(--font-ui);font-weight:600}
+  .tab-mapa-inner .rm-svg .wp-label.passed{fill:#f3c58a}
+  .tab-mapa-inner .rm-svg .pin-pulse{fill:none;stroke:#ee6d20;stroke-width:2;opacity:.6;animation:rm-pulse 1.8s ease-out infinite}
+  .tab-mapa-inner .rm-svg .pin-dot{fill:#ee6d20;stroke:#fff;stroke-width:2.5}
+  .tab-mapa-inner .rm-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px}
+
+  /* Logros tab */
+  .logros-summary{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px}
+  .logros-medals{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:24px;min-height:36px}
+  .logros-medals .logro-empty{font-size:13px;color:var(--ink-soft);font-style:italic}
+  .logros-ranks{display:flex;flex-direction:column;gap:6px;font-size:14px}
+  .logros-ranks .lr-row{display:flex;justify-content:space-between;padding:8px 12px;background:rgba(243,197,138,.06);border-radius:8px}
+  .logros-ranks .lr-row.achieved{background:rgba(243,197,138,.16);color:var(--accent-deep,#d4ad77);font-weight:600}
+
+  /* Ajustes tab */
+  .ajustes-list{display:flex;flex-direction:column;gap:8px}
+  .ajustes-row{
+    display:flex;align-items:center;gap:12px;
+    width:100%;padding:14px 16px;text-align:left;
+    background:rgba(243,197,138,.05);
+    border:1px solid rgba(243,197,138,.1);border-radius:10px;
+    color:inherit;cursor:pointer;font:inherit;
+    transition:background .15s;
+  }
+  .ajustes-row:hover{background:rgba(243,197,138,.1)}
+  .ajustes-row:active{transform:scale(.99)}
+  .ajustes-row .ajustes-icon{font-size:18px;flex:0 0 auto;width:24px;text-align:center}
+  .ajustes-row .ajustes-label{flex:1;font-weight:600}
+  .ajustes-row .ajustes-value{color:var(--accent-deep,#d4ad77);font-size:13px}
+
   /* Map button — mirrors pano-toggle on the LEFT side of the panorama.
      Tap opens the overview map modal. */
   .pano-map-btn{
@@ -984,6 +1067,13 @@
   <!-- ============================================================ JOURNEY -->
   <div id="journey" class="hide">
 
+  <!-- ====================== TAB: CAMINA (default home view) =================
+       Wraps the existing day-to-day walk view: panorama, coach card, ETA,
+       stats, passport. This is what's shown when the user opens the
+       journey screen by default. The bottom tab bar at the end of #journey
+       switches between this and the other tab pages (Mapa, Logros, Ajustes). -->
+  <section class="tab-page tab-camina">
+
     <!-- DAILY RANK ROW — the rank-bar itself is byte-identical to Sudoku /
          Racimo (label / track / chev). The secret-achievement medals (🥈/🥇)
          live OUTSIDE the bar as a sibling, sitting to its right after the
@@ -1125,6 +1215,112 @@
     <button class="btn block sm" id="reset-btn" style="margin-top:6px">Reiniciar esta ruta</button>
 
     <p class="credit"><small>2.000 pasos ≈ 1 milla · distancias reales aproximadas.</small></p>
+
+  </section>
+  <!-- ====================== /TAB: CAMINA ==================================== -->
+
+  <!-- ====================== TAB: MAPA (route overview) ====================== -->
+  <section class="tab-page tab-mapa hide">
+    <div class="tab-mapa-inner">
+      <div class="rm-head">
+        <div class="rm-titles">
+          <div class="rm-title">Tu camino</div>
+          <div class="rm-sub" id="rm-sub-tab">—</div>
+        </div>
+      </div>
+      <svg class="rm-svg" id="rm-svg-tab" viewBox="0 0 800 460" preserveAspectRatio="xMidYMid meet">
+        <path id="rm-trail-bg-tab" class="trail-bg"></path>
+        <path id="rm-trail-fg-tab" class="trail-fg"></path>
+        <g id="rm-waypoints-tab"></g>
+        <g id="rm-player-pin-tab"></g>
+      </svg>
+      <div class="rm-stats">
+        <div class="rm-stat"><div class="v" id="rm-stat-walked-tab">—</div><div class="l">recorrido</div></div>
+        <div class="rm-stat"><div class="v" id="rm-stat-left-tab">—</div><div class="l">restante</div></div>
+        <div class="rm-stat"><div class="v" id="rm-stat-pct-tab">—</div><div class="l">% completado</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== TAB: LOGROS (achievements) ====================== -->
+  <section class="tab-page tab-logros hide">
+    <div class="tab-inner">
+      <h2 class="tab-h">Logros</h2>
+      <div class="logros-summary">
+        <div class="rm-stat"><div class="v" id="logros-streak">—</div><div class="l">días seguidos</div></div>
+        <div class="rm-stat"><div class="v" id="logros-total-miles">—</div><div class="l">millas totales</div></div>
+        <div class="rm-stat"><div class="v" id="logros-routes-done">—</div><div class="l">rutas completadas</div></div>
+      </div>
+      <h3 class="tab-h2">Medallas de hoy</h3>
+      <div class="logros-medals" id="logros-medals-today"></div>
+      <h3 class="tab-h2">Rangos del día</h3>
+      <div class="logros-ranks" id="logros-ranks"></div>
+    </div>
+  </section>
+
+  <!-- ====================== TAB: AJUSTES (settings shortcuts) =============== -->
+  <section class="tab-page tab-ajustes hide">
+    <div class="tab-inner">
+      <h2 class="tab-h">Ajustes</h2>
+      <div class="ajustes-list">
+        <button class="ajustes-row" id="ajustes-coach" type="button">
+          <span class="ajustes-icon">👤</span>
+          <span class="ajustes-label">Tu coach</span>
+          <span class="ajustes-value" id="ajustes-coach-val">—</span>
+        </button>
+        <button class="ajustes-row" id="ajustes-character" type="button">
+          <span class="ajustes-icon">🚶</span>
+          <span class="ajustes-label">Tu avatar</span>
+          <span class="ajustes-value" id="ajustes-character-val">—</span>
+        </button>
+        <button class="ajustes-row" id="ajustes-route" type="button">
+          <span class="ajustes-icon">🗺</span>
+          <span class="ajustes-label">Tu ruta</span>
+          <span class="ajustes-value" id="ajustes-route-val">—</span>
+        </button>
+        <button class="ajustes-row" id="ajustes-mute" type="button">
+          <span class="ajustes-icon">🔔</span>
+          <span class="ajustes-label">Avisos del coach</span>
+          <span class="ajustes-value" id="ajustes-mute-val">—</span>
+        </button>
+        <button class="ajustes-row" id="ajustes-reset" type="button">
+          <span class="ajustes-icon">↺</span>
+          <span class="ajustes-label">Reiniciar esta ruta</span>
+          <span class="ajustes-value">→</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== BOTTOM TAB BAR ================================== -->
+  <nav class="tab-bar" id="tab-bar" aria-label="Navegación principal">
+    <button class="tab-btn active" type="button" data-tab="camina" aria-label="Camina">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true">
+        <path d="M13.5 2.5a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM11 7l-2 4 2 2v6h2v-7l-1.5-1.5L13 8l2 2 3-1-.5-1.5-2 .5L13 5h-2l-2 2z"/>
+      </svg>
+      <span class="tab-lbl">Camina</span>
+    </button>
+    <button class="tab-btn" type="button" data-tab="mapa" aria-label="Mapa">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M9 3 3 6v15l6-3 6 3 6-3V3l-6 3-6-3zM9 3v15M15 6v15"/>
+      </svg>
+      <span class="tab-lbl">Mapa</span>
+    </button>
+    <button class="tab-btn" type="button" data-tab="logros" aria-label="Logros">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M6 4h12v3a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V4zM6 4H4v3a3 3 0 0 0 3 3M18 4h2v3a3 3 0 0 1-3 3M10 11v4a2 2 0 0 1-2 2h-1v3h10v-3h-1a2 2 0 0 1-2-2v-4"/>
+      </svg>
+      <span class="tab-lbl">Logros</span>
+    </button>
+    <button class="tab-btn" type="button" data-tab="ajustes" aria-label="Ajustes">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3 1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8 1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>
+      </svg>
+      <span class="tab-lbl">Ajustes</span>
+    </button>
+  </nav>
+
   </div>
 </main>
 
@@ -2464,9 +2660,12 @@ function openJourney(id){
   state.selected=id;save();
   document.getElementById('journey').classList.remove('hide');
   document.body.classList.add('game-active');
+  document.body.classList.add('in-journey');  // show bottom tab bar
   applyPanoMode();                    // apply saved full/short panorama mode
   var m=document.querySelector('main'); if(m)m.scrollTop=0;
   _panoAutoScrolled=false;            // re-center the panorama on each new open
+  // Always land on the Camina tab when opening a journey
+  if (typeof switchTab === 'function') switchTab('camina');
   render();
   coachGreet();                       // fresh pose + greeting line in the card
 }
@@ -2474,6 +2673,7 @@ function goHome(){
   closeAll();
   document.getElementById('journey').classList.add('hide');
   document.body.classList.remove('game-active');
+  document.body.classList.remove('in-journey');   // hide bottom tab bar on landing
   document.body.classList.remove('pano-full');   // landing never has panorama mode
   current=null;renderLanding();window.scrollTo(0,0);
 }
@@ -3154,9 +3354,191 @@ function renderRouteMap(){
   var btn = document.getElementById('pano-map-btn');
   var close = document.getElementById('rm-close');
   var overlay = document.getElementById('rm-overlay');
-  if (btn) btn.onclick = openRouteMap;
+  // The "Mapa" button on the panorama now switches to the Mapa tab
+  // instead of opening the modal. Modal stays available as fallback.
+  if (btn) btn.onclick = function(){ switchTab('mapa'); };
   if (close) close.onclick = closeRouteMap;
   if (overlay) overlay.onclick = closeRouteMap;
+})();
+
+/* ============================================================================
+   BOTTOM TAB BAR — switches between Camina / Mapa / Logros / Ajustes
+============================================================================ */
+var _activeTab = 'camina';
+function switchTab(name){
+  var pages = document.querySelectorAll('#journey > .tab-page');
+  pages.forEach(function(p){
+    p.classList.toggle('hide', !p.classList.contains('tab-' + name));
+  });
+  var btns = document.querySelectorAll('.tab-bar .tab-btn');
+  btns.forEach(function(b){
+    b.classList.toggle('active', b.getAttribute('data-tab') === name);
+  });
+  _activeTab = name;
+  // Render the tab's content on entry
+  if (name === 'mapa')   renderMapaTab();
+  if (name === 'logros') renderLogrosTab();
+  if (name === 'ajustes') renderAjustesTab();
+  // Reset scroll to top when switching
+  try { window.scrollTo(0, 0); } catch(e){}
+}
+
+/* Render the Mapa tab — same logic as the modal renderer but targets
+   the tab-page SVG elements. Falls back to a message for non-Inca trails. */
+function renderMapaTab(){
+  if (!current) return;
+  var d = ROUTE_MAP_PATHS[current];
+  var bg = document.getElementById('rm-trail-bg-tab');
+  var fg = document.getElementById('rm-trail-fg-tab');
+  if (!bg || !fg) return;
+  if (!d) {
+    bg.setAttribute('d', '');
+    fg.setAttribute('d', '');
+    document.getElementById('rm-waypoints-tab').innerHTML = '';
+    document.getElementById('rm-player-pin-tab').innerHTML = '';
+    document.getElementById('rm-sub-tab').textContent = 'Mapa detallado de esta ruta en construcción.';
+    document.getElementById('rm-stat-walked-tab').textContent = '—';
+    document.getElementById('rm-stat-left-tab').textContent   = '—';
+    document.getElementById('rm-stat-pct-tab').textContent    = '—';
+    return;
+  }
+  var j = J(current); if (!j) return;
+  var wps = ROUTE_MAP_WAYPOINTS[current] || [];
+  bg.setAttribute('d', d);
+  fg.setAttribute('d', d);
+  var L = bg.getTotalLength();
+  var walked = cumSteps(current) / STEPS_PER_MILE;
+  var milesFrac = Math.max(0, Math.min(1, walked / j.total));
+  fg.style.strokeDasharray = (milesFrac * L) + ' ' + L;
+  var SVG_NS = 'http://www.w3.org/2000/svg';
+  var wpg = document.getElementById('rm-waypoints-tab');
+  wpg.innerHTML = '';
+  wps.forEach(function(wp, i){
+    var pt = bg.getPointAtLength(wp.frac * L);
+    var passed = milesFrac >= wp.frac;
+    var dot = document.createElementNS(SVG_NS, 'circle');
+    dot.setAttribute('cx', pt.x); dot.setAttribute('cy', pt.y); dot.setAttribute('r', 5);
+    dot.setAttribute('class', 'wp-dot' + (passed ? ' passed' : ''));
+    wpg.appendChild(dot);
+    var label = document.createElementNS(SVG_NS, 'text');
+    label.setAttribute('x', pt.x);
+    label.setAttribute('y', pt.y + (i % 2 === 0 ? -12 : 18));
+    label.setAttribute('class', 'wp-label' + (passed ? ' passed' : ''));
+    label.textContent = wp.name;
+    wpg.appendChild(label);
+  });
+  var pin = document.getElementById('rm-player-pin-tab');
+  pin.innerHTML = '';
+  var pp = bg.getPointAtLength(milesFrac * L);
+  var pulse = document.createElementNS(SVG_NS, 'circle');
+  pulse.setAttribute('cx', pp.x); pulse.setAttribute('cy', pp.y); pulse.setAttribute('r', 7);
+  pulse.setAttribute('class', 'pin-pulse');
+  pin.appendChild(pulse);
+  var dot2 = document.createElementNS(SVG_NS, 'circle');
+  dot2.setAttribute('cx', pp.x); dot2.setAttribute('cy', pp.y); dot2.setAttribute('r', 6);
+  dot2.setAttribute('class', 'pin-dot');
+  pin.appendChild(dot2);
+  var here = wps.slice().reverse().find(function(w){ return milesFrac >= w.frac - 0.02; }) || wps[0];
+  var nextWp = wps.find(function(w){ return w.frac > milesFrac + 0.02; });
+  var sub = 'Estás en ' + (here ? here.name : '—');
+  if (nextWp) sub += ' · próximo: ' + nextWp.name;
+  document.getElementById('rm-sub-tab').textContent = sub;
+  var left = Math.max(0, j.total - walked);
+  document.getElementById('rm-stat-walked-tab').textContent = walked.toFixed(1) + ' mi';
+  document.getElementById('rm-stat-left-tab').textContent   = left.toFixed(1) + ' mi';
+  document.getElementById('rm-stat-pct-tab').textContent    = Math.round(milesFrac * 100) + '%';
+}
+
+/* Render the Logros tab — pulls daily streak, totals, medals from state. */
+function renderLogrosTab(){
+  // Streak
+  var streak = (typeof currentStreak === 'function') ? currentStreak() : 0;
+  var streakEl = document.getElementById('logros-streak');
+  if (streakEl) streakEl.textContent = streak;
+  // Total miles across all routes
+  var totalMi = 0;
+  try {
+    Object.keys(state.routes || {}).forEach(function(r){
+      var s = (state.routes[r] && state.routes[r].totalSteps) || 0;
+      totalMi += s / STEPS_PER_MILE;
+    });
+  } catch(e){}
+  var totEl = document.getElementById('logros-total-miles');
+  if (totEl) totEl.textContent = totalMi.toFixed(0);
+  // Routes completed
+  var done = 0;
+  try {
+    Object.keys(state.routes || {}).forEach(function(r){
+      var j = J(r); if (!j) return;
+      var w = (state.routes[r].totalSteps || 0) / STEPS_PER_MILE;
+      if (w >= j.total) done++;
+    });
+  } catch(e){}
+  var doneEl = document.getElementById('logros-routes-done');
+  if (doneEl) doneEl.textContent = done;
+  // Today's medals — pull from the secret achievements row
+  var medals = document.getElementById('rank-medals');
+  var todayMedals = document.getElementById('logros-medals-today');
+  if (todayMedals) {
+    if (medals && medals.innerHTML.trim()) {
+      todayMedals.innerHTML = medals.innerHTML;
+    } else {
+      todayMedals.innerHTML = '<span class="logro-empty">Camina para ganar tus medallas de hoy.</span>';
+    }
+  }
+  // Ranks list — pull rank definitions
+  var ranksEl = document.getElementById('logros-ranks');
+  if (ranksEl && typeof RANKS !== 'undefined') {
+    var stepsToday = (typeof todaySteps === 'function') ? todaySteps() : 0;
+    ranksEl.innerHTML = RANKS.map(function(r){
+      var achieved = stepsToday >= r.steps;
+      return '<div class="lr-row' + (achieved ? ' achieved' : '') + '">' +
+               '<span>' + r.name + '</span>' +
+               '<span>' + r.steps.toLocaleString() + ' pasos</span>' +
+             '</div>';
+    }).join('');
+  }
+}
+
+/* Render the Ajustes tab — populates current values, wires button clicks
+   to existing pickers/handlers. */
+function renderAjustesTab(){
+  var c = state.coach && COACH_NAMES[state.coach] ? COACH_NAMES[state.coach] : 'Sin elegir';
+  var ch = state.character && CHARACTER_NAMES[state.character] ? CHARACTER_NAMES[state.character] : 'Sin elegir';
+  var r = current && J(current) ? (J(current).name || current) : 'Sin elegir';
+  var muted = state.coachMuted ? 'Silenciados' : 'Activos';
+  var setVal = function(id, v){ var el = document.getElementById(id); if (el) el.textContent = v; };
+  setVal('ajustes-coach-val', c);
+  setVal('ajustes-character-val', ch);
+  setVal('ajustes-route-val', r);
+  setVal('ajustes-mute-val', muted);
+}
+
+/* Wire tab buttons + settings rows once. */
+(function wireTabs(){
+  var bar = document.getElementById('tab-bar');
+  if (!bar) return;
+  bar.querySelectorAll('.tab-btn').forEach(function(b){
+    b.onclick = function(){ switchTab(b.getAttribute('data-tab')); };
+  });
+  var byId = function(id){ return document.getElementById(id); };
+  var coach = byId('ajustes-coach');
+  if (coach) coach.onclick = function(){ if (typeof showCoachPicker === 'function') showCoachPicker(); };
+  var ch = byId('ajustes-character');
+  if (ch) ch.onclick = function(){ if (typeof showCharacterPicker === 'function') showCharacterPicker(); };
+  var rt = byId('ajustes-route');
+  if (rt) rt.onclick = function(){ if (typeof showRoutePicker === 'function') showRoutePicker(); };
+  var mute = byId('ajustes-mute');
+  if (mute) mute.onclick = function(){
+    state.coachMuted = !state.coachMuted;
+    save();
+    renderAjustesTab();
+  };
+  var reset = byId('ajustes-reset');
+  if (reset) reset.onclick = function(){
+    var rbtn = byId('reset-btn');
+    if (rbtn) rbtn.click();
+  };
 })();
 
 /* ============================================================================
