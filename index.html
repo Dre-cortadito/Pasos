@@ -848,6 +848,22 @@
   .tab-mapa-inner .rm-svg .wp-label.passed{fill:#3FE3B2}
   .tab-mapa-inner .rm-svg .pin-pulse{fill:none;stroke:#3FE3B2;stroke-width:2;opacity:.6;animation:rm-pulse 1.8s ease-out infinite}
   .tab-mapa-inner .rm-svg .pin-dot{fill:#3FE3B2;stroke:#fff;stroke-width:2.5}
+  /* ----- Aerial (top-down) Inca map ----- */
+  .tab-mapa-inner .rm-svg .aer-blob{fill:rgba(63,227,178,.06)}
+  .tab-mapa-inner .rm-svg .aer-river{fill:none;stroke:rgba(120,200,255,.22);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+  .tab-mapa-inner .rm-svg .aer-mtn{fill:rgba(255,255,255,.10);stroke:rgba(63,227,178,.30);stroke-width:1.1;stroke-linejoin:round}
+  .tab-mapa-inner .rm-svg .aer-snow{fill:rgba(255,255,255,.85)}
+  .tab-mapa-inner .rm-svg .aer-bg{fill:none;stroke:rgba(255,255,255,.20);stroke-width:2.5;stroke-dasharray:2 7;stroke-linecap:round}
+  .tab-mapa-inner .rm-svg .aer-fg{fill:none;stroke:#3FE3B2;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+  .tab-mapa-inner .rm-svg .aer-dot{fill:#102019;stroke:rgba(255,255,255,.45);stroke-width:2}
+  .tab-mapa-inner .rm-svg .aer-dot.passed{fill:#3FE3B2;stroke:#0EA178}
+  .tab-mapa-inner .rm-svg .aer-pass{fill:#102019;stroke:#3FE3B2;stroke-width:2}
+  .tab-mapa-inner .rm-svg .aer-pass.passed{fill:#3FE3B2;stroke:#9fe9cf}
+  .tab-mapa-inner .rm-svg .aer-lbl{fill:#e8f7f0;font-family:var(--font-ui);font-size:12px;font-weight:700}
+  .tab-mapa-inner .rm-svg .aer-lbl.passed{fill:#3FE3B2}
+  .tab-mapa-inner .rm-svg .aer-el{fill:rgba(255,255,255,.5);font-family:var(--font-ui);font-size:9px;font-weight:600}
+  .tab-mapa-inner .rm-svg .aer-compass{fill:rgba(255,255,255,.6)}
+  .tab-mapa-inner .rm-svg .aer-legend-t{fill:rgba(255,255,255,.7);font-family:var(--font-ui);font-size:11px;font-weight:600}
   .tab-mapa-inner .rm-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px}
 
   /* Logros tab */
@@ -2709,28 +2725,11 @@ function goHome(){
 document.getElementById('header-home').onclick=goHome;
 
 /* ----- Trail SVG ----- */
-function buildTrail(j,walked){
-  var cs=getComputedStyle(document.body);
-  var ACC=(cs.getPropertyValue('--accent')||'#10C896').trim();
-  var DP =(cs.getPropertyValue('--accent-deep')||'#0EA178').trim();
-  var LN =(cs.getPropertyValue('--ink-line')||'#ece7df').trim();
-  var BG =(cs.getPropertyValue('--bg')||'#fff').trim();
-  var W=1000,H=80,padL=24,padR=24,y=50,iw=W-padL-padR;
-  var frac=clamp(walked/j.total,0,1), fx=padL+frac*iw;
-  // SVG: background bar + walked overlay + milestone dots + chevron at current
-  var s='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">';
-  s+='<line x1="'+padL+'" y1="'+y+'" x2="'+(W-padR)+'" y2="'+y+'" stroke="'+LN+'" stroke-width="8" stroke-linecap="round"/>';
-  s+='<line x1="'+padL+'" y1="'+y+'" x2="'+fx+'" y2="'+y+'" stroke="'+ACC+'" stroke-width="8" stroke-linecap="round"/>';
-  j.stops.forEach(function(st){
-    var sx=padL+(st.mi/j.total)*iw, on=walked>=st.mi-0.001;
-    s+='<circle cx="'+sx+'" cy="'+y+'" r="'+(on?8:6)+'" fill="'+(on?ACC:BG)+'" stroke="'+(on?DP:LN)+'" stroke-width="2.5"/>';
-  });
-  // chevron at current position — points down at the bar
-  var chevY=y-15;
-  s+='<path d="M'+(fx-7)+' '+(chevY-6)+' L'+(fx+7)+' '+(chevY-6)+' L'+fx+' '+(chevY+5)+' Z" fill="'+ACC+'"/>';
-  s+='</svg>';
+/* Day boundaries (cumulative miles) per route, for the elevation profile's
+   "Día 1..N" bands. Only routes with elevation data need these. */
+var DAY_BOUNDS={ inca:[{mi:8,d:'Día 1'},{mi:13.5,d:'Día 2'},{mi:22.5,d:'Día 3'},{mi:26,d:'Día 4'}] };
 
-  // next + final labels (miles remaining to each)
+function _trailMeta(j,walked){
   var done=walked>=j.total, next=null;
   for(var i=0;i<j.stops.length;i++){if(j.stops[i].mi>walked+0.001){next=j.stops[i];break;}}
   var fin=j.stops[j.stops.length-1];
@@ -2745,7 +2744,103 @@ function buildTrail(j,walked){
     leftHTML='<span>Listo para salir</span>';
     rightHTML='<span style="text-align:right">Destino: <b>'+shortName(fin.n)+'</b> · '+fmtMi(j.total)+'</span>';
   }
-  return '<div class="trail-label">Tu progreso en la ruta</div>'+s+'<div class="trail-meta">'+leftHTML+rightHTML+'</div>';
+  return '<div class="trail-meta">'+leftHTML+rightHTML+'</div>';
+}
+
+/* Choose the elevation profile when every stop has an `el`; otherwise the
+   simple progress bar. */
+function buildTrail(j,walked){
+  var hasEl=true; for(var k=0;k<j.stops.length;k++){ if(typeof j.stops[k].el!=='number'){hasEl=false;break;} }
+  return hasEl ? buildTrailProfile(j,walked) : buildTrailBar(j,walked);
+}
+
+/* ELEVATION PROFILE — side view of the whole route by altitude (like the
+   operator trail maps): climb to the high pass and back down, stops at their
+   real elevation, the three passes as diamonds, walked portion in mint, the
+   day bands along the bottom, and a marker riding the profile at your position. */
+function buildTrailProfile(j,walked){
+  var cs=getComputedStyle(document.body), V=function(n,f){return (cs.getPropertyValue(n)||f).trim();};
+  var ACC=V('--accent','#10C896'), DP=V('--accent-deep','#0EA178');
+  var LN=V('--ink-line','#ece7df'), LNS=V('--ink-line-strong','#c9c2b3');
+  var INK=V('--ink','#1a1614'), SOFT=V('--ink-soft','#8a847f'), BG=V('--bg','#fff');
+  var W=1000,H=232, padL=50,padR=18, top=36, baseY=190, iw=W-padL-padR, elevH=baseY-top;
+  var stops=j.stops, N=stops.length;
+  var minE=Infinity,maxE=-Infinity; stops.forEach(function(s){ if(s.el<minE)minE=s.el; if(s.el>maxE)maxE=s.el; });
+  var range=Math.max(1,maxE-minE);
+  function X(mi){return padL+(mi/j.total)*iw;}
+  function Y(el){return baseY-((el-minE)/range)*elevH;}
+  var pts=stops.map(function(s){return {x:X(s.mi),y:Y(s.el)};});
+  var frac=clamp(walked/j.total,0,1), px=X(Math.min(j.total,Math.max(0,walked)));
+  var reachedIdx=-1,i; for(i=0;i<N;i++){ if(stops[i].mi<=walked+1e-6) reachedIdx=i; }
+  var py;
+  if(reachedIdx<0) py=pts[0].y;
+  else if(reachedIdx>=N-1) py=pts[N-1].y;
+  else { var a=stops[reachedIdx].mi,b=stops[reachedIdx+1].mi,f=(b>a)?(walked-a)/(b-a):0; py=pts[reachedIdx].y+(pts[reachedIdx+1].y-pts[reachedIdx].y)*f; }
+  var wpts=[]; for(i=0;i<=reachedIdx;i++) wpts.push(pts[i]);
+  if(reachedIdx>=0 && reachedIdx<N-1 && walked>stops[reachedIdx].mi) wpts.push({x:px,y:py});
+  if(reachedIdx<0) wpts=[{x:pts[0].x,y:pts[0].y}];
+  var line=smoothMapPath(pts);
+  var passes=(typeof INCA_AERIAL!=='undefined' && j.id==='inca')?INCA_AERIAL.passes:[];
+  var labelIdx = (j.id==='inca') ? [0,5,7,9,12,N-1] : stops.map(function(_,ix){return ix;});
+
+  var s='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">';
+  // elevation gridlines (min + max) with left labels
+  [minE,maxE].forEach(function(e){ var gy=Y(e);
+    s+='<line x1="'+padL+'" y1="'+gy+'" x2="'+(W-padR)+'" y2="'+gy+'" stroke="'+LN+'" stroke-width="1" stroke-dasharray="2 5"/>';
+    s+='<text x="'+(padL-7)+'" y="'+(gy+3)+'" text-anchor="end" font-size="11" fill="'+SOFT+'">'+e.toLocaleString('es')+' m</text>';
+  });
+  // day bands
+  var days=DAY_BOUNDS[j.id];
+  if(days){ var prev=0; days.forEach(function(d,di){ var dx=X(d.mi);
+    if(di<days.length-1) s+='<line x1="'+dx+'" y1="'+top+'" x2="'+dx+'" y2="'+baseY+'" stroke="'+LN+'" stroke-width="1" stroke-dasharray="3 4"/>';
+    s+='<text x="'+X((prev+d.mi)/2)+'" y="'+(H-7)+'" text-anchor="middle" font-size="10" font-weight="700" fill="'+SOFT+'">'+d.d+'</text>'; prev=d.mi;
+  }); }
+  // areas
+  s+='<path d="'+line+' L '+pts[N-1].x+' '+baseY+' L '+pts[0].x+' '+baseY+' Z" fill="'+LNS+'" fill-opacity="0.16"/>';
+  if(wpts.length>1) s+='<path d="'+smoothMapPath(wpts)+' L '+px+' '+baseY+' L '+pts[0].x+' '+baseY+' Z" fill="'+ACC+'" fill-opacity="0.20"/>';
+  // lines
+  s+='<path d="'+line+'" fill="none" stroke="'+LNS+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+  if(wpts.length>1) s+='<path d="'+smoothMapPath(wpts)+'" fill="none" stroke="'+ACC+'" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>';
+  // stops
+  stops.forEach(function(st,idx){
+    var on=walked>=st.mi-1e-6, p=pts[idx], isPass=passes.indexOf(idx)>=0;
+    if(isPass){ var dd=5.5; s+='<rect x="'+(p.x-dd)+'" y="'+(p.y-dd)+'" width="'+(dd*2)+'" height="'+(dd*2)+'" rx="1.5" transform="rotate(45 '+p.x+' '+p.y+')" fill="'+(on?ACC:BG)+'" stroke="'+(on?DP:LNS)+'" stroke-width="2"/>'; }
+    else { s+='<circle cx="'+p.x+'" cy="'+p.y+'" r="'+(on?4:3.5)+'" fill="'+(on?ACC:BG)+'" stroke="'+(on?DP:LNS)+'" stroke-width="2"/>'; }
+    if(labelIdx.indexOf(idx)>=0){ var ty=p.y-12, anc='middle', lx=p.x;
+      if(p.x < padL+42){ anc='start'; lx=p.x-6; }
+      else if(p.x > W-padR-64){ anc='end'; lx=p.x+6; }
+      s+='<text x="'+lx+'" y="'+ty+'" text-anchor="'+anc+'" font-size="11" font-weight="700" fill="'+(on?DP:INK)+'">'+_esc(shortName(st.n))+'</text>';
+      s+='<text x="'+lx+'" y="'+(ty-11)+'" text-anchor="'+anc+'" font-size="9" font-weight="600" fill="'+SOFT+'">'+st.el.toLocaleString('es')+' m</text>';
+    }
+  });
+  // player marker riding the profile
+  s+='<line x1="'+px+'" y1="'+py+'" x2="'+px+'" y2="'+baseY+'" stroke="'+ACC+'" stroke-width="1.5" stroke-dasharray="2 3" opacity="0.7"/>';
+  s+='<circle cx="'+px+'" cy="'+py+'" r="8" fill="none" stroke="'+ACC+'" stroke-width="2" opacity="0.45"/>';
+  s+='<circle cx="'+px+'" cy="'+py+'" r="5.5" fill="'+ACC+'" stroke="'+BG+'" stroke-width="2"/>';
+  s+='</svg>';
+  return '<div class="trail-label">Perfil de elevación</div>'+s+_trailMeta(j,walked);
+}
+
+/* Simple flat progress bar — fallback for routes without elevation data. */
+function buildTrailBar(j,walked){
+  var cs=getComputedStyle(document.body);
+  var ACC=(cs.getPropertyValue('--accent')||'#10C896').trim();
+  var DP =(cs.getPropertyValue('--accent-deep')||'#0EA178').trim();
+  var LN =(cs.getPropertyValue('--ink-line')||'#ece7df').trim();
+  var BG =(cs.getPropertyValue('--bg')||'#fff').trim();
+  var W=1000,H=80,padL=24,padR=24,y=50,iw=W-padL-padR;
+  var frac=clamp(walked/j.total,0,1), fx=padL+frac*iw;
+  var s='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">';
+  s+='<line x1="'+padL+'" y1="'+y+'" x2="'+(W-padR)+'" y2="'+y+'" stroke="'+LN+'" stroke-width="8" stroke-linecap="round"/>';
+  s+='<line x1="'+padL+'" y1="'+y+'" x2="'+fx+'" y2="'+y+'" stroke="'+ACC+'" stroke-width="8" stroke-linecap="round"/>';
+  j.stops.forEach(function(st){
+    var sx=padL+(st.mi/j.total)*iw, on=walked>=st.mi-0.001;
+    s+='<circle cx="'+sx+'" cy="'+y+'" r="'+(on?8:6)+'" fill="'+(on?ACC:BG)+'" stroke="'+(on?DP:LN)+'" stroke-width="2.5"/>';
+  });
+  var chevY=y-15;
+  s+='<path d="M'+(fx-7)+' '+(chevY-6)+' L'+(fx+7)+' '+(chevY-6)+' L'+fx+' '+(chevY+5)+' Z" fill="'+ACC+'"/>';
+  s+='</svg>';
+  return '<div class="trail-label">Tu progreso en la ruta</div>'+s+_trailMeta(j,walked);
 }
 function currentLeg(j,walked){
   if(walked>=j.total)return{done:true};
@@ -3424,32 +3519,176 @@ function switchTab(name){
   try { window.scrollTo(0, 0); } catch(e){}
 }
 
-/* Render the Mapa tab — same logic as the modal renderer but targets
-   the tab-page SVG elements. Falls back to a message for non-Inca trails. */
+/* ============================================================================
+   AERIAL (top-down) INCA MAP — a stylised geographic map of the whole trail,
+   inspired by operator maps: a winding path over terrain, location pins with
+   elevations, the three mountain passes as diamonds, mountain glyphs, a
+   compass and a river. Coordinates are hand-placed; pts[i] aligns with the
+   i-th stop in the inca JOURNEY (so progress maps to the real stop miles).
+============================================================================ */
+var INCA_AERIAL = {
+  viewW:1000, viewH:600,
+  // one point per inca stop, in order (right = start, top-left = Machu Picchu)
+  pts:[
+    {x:860,y:360}, // 0 Km 82
+    {x:790,y:382}, // 1 Llaqtapata
+    {x:702,y:462}, // 2 Wayllabamba
+    {x:632,y:440}, // 3 Ayapata
+    {x:576,y:414}, // 4 Llulluchapampa
+    {x:520,y:390}, // 5 Warmiwañusca (1.er paso)
+    {x:476,y:344}, // 6 Pacaymayo
+    {x:410,y:366}, // 7 Runkurakay (2.º paso)
+    {x:350,y:350}, // 8 Sayacmarca
+    {x:360,y:304}, // 9 Chaquicocha (3.er paso)
+    {x:300,y:274}, //10 Phuyupatamarca
+    {x:240,y:234}, //11 Intipata
+    {x:316,y:220}, //12 Wiñay Wayna
+    {x:250,y:150}, //13 Inti Punku
+    {x:174,y:114}  //14 Machu Picchu
+  ],
+  // per-stop label placement {dx,dy,a} to avoid collisions (a=text-anchor)
+  labels:[
+    {dx:0,  dy:-15, a:'middle'}, // 0 Km 82
+    {dx:10, dy:16,  a:'start'},  // 1 Llaqtapata
+    {dx:0,  dy:22,  a:'middle'}, // 2 Wayllabamba
+    {dx:-2, dy:22,  a:'middle'}, // 3 Ayapata
+    {dx:34, dy:20,  a:'start'},  // 4 Llulluchapampa
+    {dx:0,  dy:-14, a:'middle'}, // 5 Warmiwañusca
+    {dx:12, dy:-13, a:'start'},  // 6 Pacaymayo
+    {dx:0,  dy:24,  a:'middle'}, // 7 Runkurakay
+    {dx:-12,dy:20,  a:'end'},    // 8 Sayacmarca
+    {dx:16, dy:-11, a:'start'},  // 9 Chaquicocha
+    {dx:-14,dy:18,  a:'end'},    //10 Phuyupatamarca
+    {dx:-14,dy:2,   a:'end'},    //11 Intipata
+    {dx:16, dy:-2,  a:'start'},  //12 Wiñay Wayna
+    {dx:16, dy:4,   a:'start'},  //13 Inti Punku
+    {dx:0,  dy:-14, a:'middle'}  //14 Machu Picchu
+  ],
+  passes:[5,7,9],
+  mountains:[
+    {x:560,y:520,s:84,snow:false},
+    {x:760,y:500,s:64,snow:false},
+    {x:432,y:474,s:62,snow:true},
+    {x:196,y:384,s:54,snow:true},
+    {x:664,y:300,s:72,snow:false}
+  ],
+  blobs:[
+    {x:320,y:250,rx:200,ry:130},
+    {x:720,y:430,rx:230,ry:140}
+  ],
+  river:'M 980 250 Q 830 232 728 286 T 520 252 Q 414 236 330 182 T 168 92'
+};
+function _round1(n){return Math.round(n*10)/10;}
+function smoothMapPath(p){
+  if(!p||!p.length) return '';
+  if(p.length===1) return 'M '+p[0].x+' '+p[0].y;
+  var d='M '+_round1(p[0].x)+' '+_round1(p[0].y);
+  for(var i=0;i<p.length-1;i++){
+    var p0=p[i-1]||p[i], p1=p[i], p2=p[i+1], p3=p[i+2]||p2;
+    var c1x=p1.x+(p2.x-p0.x)/6, c1y=p1.y+(p2.y-p0.y)/6;
+    var c2x=p2.x-(p3.x-p1.x)/6, c2y=p2.y-(p3.y-p1.y)/6;
+    d+=' C '+_round1(c1x)+' '+_round1(c1y)+' '+_round1(c2x)+' '+_round1(c2y)+' '+_round1(p2.x)+' '+_round1(p2.y);
+  }
+  return d;
+}
+function incaMountain(x,y,s,snow){
+  var h=s*0.78;
+  var t='<path class="aer-mtn" d="M '+(x-s/2)+' '+y+' L '+x+' '+(y-h)+' L '+(x+s/2)+' '+y+' Z"/>';
+  if(snow) t+='<path class="aer-snow" d="M '+(x-s*0.16)+' '+(y-h*0.7)+' L '+x+' '+(y-h)+' L '+(x+s*0.16)+' '+(y-h*0.7)+' Z"/>';
+  return t;
+}
+function _esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function renderIncaAerial(svg, walkedMi, totalMi){
+  var A=INCA_AERIAL, pts=A.pts, stops=J('inca').stops;
+  svg.setAttribute('viewBox','0 0 '+A.viewW+' '+A.viewH);
+  var wMi=Math.max(0,Math.min(totalMi,walkedMi));
+  var reachedIdx=-1, i;
+  for(i=0;i<stops.length;i++){ if(stops[i].mi<=wMi+1e-6) reachedIdx=i; }
+  var walkedPts=[];
+  for(i=0;i<=reachedIdx;i++) walkedPts.push(pts[i]);
+  var playerPt = reachedIdx>=0 ? pts[reachedIdx] : pts[0];
+  if(reachedIdx>=0 && reachedIdx<stops.length-1 && wMi>stops[reachedIdx].mi){
+    var a=stops[reachedIdx].mi, b=stops[reachedIdx+1].mi, f=(b>a)?(wMi-a)/(b-a):0;
+    var q0=pts[reachedIdx], q1=pts[reachedIdx+1];
+    playerPt={x:q0.x+(q1.x-q0.x)*f, y:q0.y+(q1.y-q0.y)*f};
+    walkedPts.push(playerPt);
+  }
+  if(reachedIdx<0){ playerPt=pts[0]; walkedPts=[pts[0]]; }
+  var s='';
+  (A.blobs||[]).forEach(function(b){ s+='<ellipse class="aer-blob" cx="'+b.x+'" cy="'+b.y+'" rx="'+b.rx+'" ry="'+b.ry+'"/>'; });
+  if(A.river) s+='<path class="aer-river" d="'+A.river+'"/>';
+  (A.mountains||[]).forEach(function(m){ s+=incaMountain(m.x,m.y,m.s,m.snow); });
+  s+='<path class="aer-bg" d="'+smoothMapPath(pts)+'"/>';
+  if(walkedPts.length>1) s+='<path class="aer-fg" d="'+smoothMapPath(walkedPts)+'"/>';
+  pts.forEach(function(p,idx){
+    var passed = stops[idx].mi<=wMi+1e-6;
+    var isPass = A.passes.indexOf(idx)>=0;
+    var isMP = idx===stops.length-1;
+    if(isMP) s+=incaMountain(p.x, p.y, 28, true);
+    if(isPass){
+      var dd=7;
+      s+='<rect class="aer-pass'+(passed?' passed':'')+'" x="'+(p.x-dd)+'" y="'+(p.y-dd)+'" width="'+(dd*2)+'" height="'+(dd*2)+'" rx="2" transform="rotate(45 '+p.x+' '+p.y+')"/>';
+    } else if(!isMP){
+      s+='<circle class="aer-dot'+(passed?' passed':'')+'" cx="'+p.x+'" cy="'+p.y+'" r="5"/>';
+    }
+    var L=(A.labels&&A.labels[idx])||{dx:0,dy:(idx%2===0?-12:16),a:'middle'};
+    var lx=p.x+L.dx, ly=p.y+L.dy, above=L.dy<0;
+    s+='<text class="aer-lbl'+(passed?' passed':'')+'" x="'+lx+'" y="'+ly+'" text-anchor="'+L.a+'">'+_esc(stops[idx].n)+'</text>';
+    if(stops[idx].el){ var ey=above ? ly-11 : ly+11; s+='<text class="aer-el" x="'+lx+'" y="'+ey+'" text-anchor="'+L.a+'">'+stops[idx].el.toLocaleString('es')+' m</text>'; }
+  });
+  s+='<circle class="pin-pulse" cx="'+_round1(playerPt.x)+'" cy="'+_round1(playerPt.y)+'" r="9"/>';
+  s+='<circle class="pin-dot" cx="'+_round1(playerPt.x)+'" cy="'+_round1(playerPt.y)+'" r="6"/>';
+  s+='<g transform="translate(42,52)"><path class="aer-snow" d="M0 -22 L6 0 L0 -6 L-6 0 Z"/><text class="aer-compass" x="0" y="-26" text-anchor="middle" font-size="12" font-weight="800">N</text></g>';
+  s+='<g transform="translate('+(A.viewW-250)+','+(A.viewH-24)+')">'
+    +'<line x1="0" y1="0" x2="24" y2="0" stroke="#3FE3B2" stroke-width="4" stroke-linecap="round"/>'
+    +'<text class="aer-legend-t" x="30" y="4">recorrido</text>'
+    +'<line x1="108" y1="0" x2="132" y2="0" stroke="rgba(255,255,255,.3)" stroke-width="3" stroke-dasharray="2 6" stroke-linecap="round"/>'
+    +'<text class="aer-legend-t" x="138" y="4">por recorrer</text></g>';
+  svg.innerHTML=s;
+}
+
+/* Render the Mapa tab. For the Inca route it draws the aerial map; other
+   routes use the simple stylised curve. */
 function renderMapaTab(){
   if (!current) return;
+  var j = J(current); if (!j) return;
+  var svg = document.getElementById('rm-svg-tab');
+  if (!svg) return;
+  var walked = cumSteps(current) / STEPS_PER_MILE;
+  var milesFrac = Math.max(0, Math.min(1, walked / j.total));
+  var left = Math.max(0, j.total - walked);
+  document.getElementById('rm-stat-walked-tab').textContent = walked.toFixed(1) + ' mi';
+  document.getElementById('rm-stat-left-tab').textContent   = left.toFixed(1) + ' mi';
+  document.getElementById('rm-stat-pct-tab').textContent    = Math.round(milesFrac * 100) + '%';
+
+  // INCA → aerial map
+  if (current === 'inca' && typeof INCA_AERIAL !== 'undefined'){
+    renderIncaAerial(svg, walked, j.total);
+    var hereI=-1, k;
+    for(k=0;k<j.stops.length;k++){ if(j.stops[k].mi<=walked+1e-6) hereI=k; }
+    var hereS=j.stops[Math.max(0,hereI)], nextS=j.stops[hereI+1];
+    var subI='Estás en ' + (hereS ? hereS.n : '—');
+    if(nextS) subI += ' · próximo: ' + nextS.n;
+    document.getElementById('rm-sub-tab').textContent = subI;
+    return;
+  }
+
+  // OTHER ROUTES → rebuild the simple curve structure, then position it
+  svg.setAttribute('viewBox','0 0 800 460');
+  svg.innerHTML = '<path id="rm-trail-bg-tab" class="trail-bg"></path>'
+    + '<path id="rm-trail-fg-tab" class="trail-fg"></path>'
+    + '<g id="rm-waypoints-tab"></g><g id="rm-player-pin-tab"></g>';
   var d = ROUTE_MAP_PATHS[current];
   var bg = document.getElementById('rm-trail-bg-tab');
   var fg = document.getElementById('rm-trail-fg-tab');
-  if (!bg || !fg) return;
   if (!d) {
-    bg.setAttribute('d', '');
-    fg.setAttribute('d', '');
-    document.getElementById('rm-waypoints-tab').innerHTML = '';
-    document.getElementById('rm-player-pin-tab').innerHTML = '';
     document.getElementById('rm-sub-tab').textContent = 'Mapa detallado de esta ruta en construcción.';
-    document.getElementById('rm-stat-walked-tab').textContent = '—';
-    document.getElementById('rm-stat-left-tab').textContent   = '—';
-    document.getElementById('rm-stat-pct-tab').textContent    = '—';
     return;
   }
-  var j = J(current); if (!j) return;
   var wps = ROUTE_MAP_WAYPOINTS[current] || [];
   bg.setAttribute('d', d);
   fg.setAttribute('d', d);
   var L = bg.getTotalLength();
-  var walked = cumSteps(current) / STEPS_PER_MILE;
-  var milesFrac = Math.max(0, Math.min(1, walked / j.total));
   fg.style.strokeDasharray = (milesFrac * L) + ' ' + L;
   var SVG_NS = 'http://www.w3.org/2000/svg';
   var wpg = document.getElementById('rm-waypoints-tab');
@@ -3484,10 +3723,6 @@ function renderMapaTab(){
   var sub = 'Estás en ' + (here ? here.name : '—');
   if (nextWp) sub += ' · próximo: ' + nextWp.name;
   document.getElementById('rm-sub-tab').textContent = sub;
-  var left = Math.max(0, j.total - walked);
-  document.getElementById('rm-stat-walked-tab').textContent = walked.toFixed(1) + ' mi';
-  document.getElementById('rm-stat-left-tab').textContent   = left.toFixed(1) + ' mi';
-  document.getElementById('rm-stat-pct-tab').textContent    = Math.round(milesFrac * 100) + '%';
 }
 
 /* Render the Logros tab — pulls daily streak, totals, medals from state. */
