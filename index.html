@@ -885,7 +885,24 @@
   .tab-mapa-inner .rm-svg .aer-el{fill:rgba(255,255,255,.5);font-family:var(--font-ui);font-size:9px;font-weight:600}
   .tab-mapa-inner .rm-svg .aer-compass{fill:rgba(255,255,255,.6)}
   .tab-mapa-inner .rm-svg .aer-legend-t{fill:rgba(255,255,255,.7);font-family:var(--font-ui);font-size:11px;font-weight:600}
-  .tab-mapa-inner .rm-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px}
+  .tab-mapa-inner .rm-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}
+  /* Compact progress data */
+  .tab-mapa-inner .rm-stat .v{font-family:var(--font-display);font-size:16px;font-weight:700;color:var(--ink);line-height:1}
+  .tab-mapa-inner .rm-stat .l{font-size:9.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--ink-soft);margin-top:3px;font-weight:600}
+  /* Section rhythm — breathing room between progress / aerial / elevation */
+  .tab-mapa-inner > .rm-head{margin:26px 0 10px}
+  .tab-mapa-inner > .rm-head:first-child{margin-top:6px}
+  /* Slider to pan a map (used instead of trapping touch on the map itself) */
+  .rm-slider{-webkit-appearance:none;appearance:none;width:100%;height:26px;margin:10px 0 0;background:transparent;cursor:pointer;touch-action:none}
+  .rm-slider::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:var(--ink-line)}
+  .rm-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;border-radius:50%;background:var(--accent);border:3px solid var(--bg);box-shadow:0 1px 5px rgba(0,0,0,.28);margin-top:-8px}
+  .rm-slider::-moz-range-track{height:6px;border-radius:3px;background:var(--ink-line)}
+  .rm-slider::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--accent);border:3px solid var(--bg)}
+  .rm-slider-hint{display:flex;justify-content:space-between;font-size:10px;color:var(--ink-soft);letter-spacing:.3px;margin:2px 4px 0}
+  /* Map legend */
+  .map-legend{display:flex;flex-wrap:wrap;gap:13px;margin:12px 4px 0;font-family:var(--font-ui);font-size:11.5px;color:var(--ink-soft)}
+  .map-legend span{display:inline-flex;align-items:center;gap:5px}
+  .map-legend svg{flex:none}
 
   /* Logros tab */
   .logros-summary{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px}
@@ -1263,16 +1280,21 @@
   <!-- ====================== TAB: MAPA (route overview) ====================== -->
   <section class="tab-page tab-mapa hide">
     <div class="tab-mapa-inner">
-      <!-- 1) PROGRESS BAR — the at-a-glance "how far am I", shown first -->
+      <!-- 1) PROGRESS — its own title; the "Vas entre…" line is the subtitle -->
+      <div class="rm-head">
+        <div class="rm-titles">
+          <div class="rm-title">Tu progreso en la ruta</div>
+          <div class="rm-sub" id="loc">—</div>
+        </div>
+      </div>
       <div class="trail" id="trail"></div>
-      <div class="loc" id="loc"></div>
       <div class="rm-stats">
         <div class="rm-stat"><div class="v" id="rm-stat-walked-tab">—</div><div class="l">recorrido</div></div>
         <div class="rm-stat"><div class="v" id="rm-stat-left-tab">—</div><div class="l">restante</div></div>
         <div class="rm-stat"><div class="v" id="rm-stat-pct-tab">—</div><div class="l">completado</div></div>
       </div>
 
-      <!-- 2) AERIAL MAP -->
+      <!-- 2) AERIAL MAP — pan with the slider below it (map doesn't trap touch) -->
       <div class="rm-head">
         <div class="rm-titles">
           <div class="rm-title">Vista aérea del sendero</div>
@@ -1286,8 +1308,9 @@
           <g id="rm-waypoints-tab"></g>
           <g id="rm-player-pin-tab"></g>
         </svg>
-        <div class="rm-scroller" id="rm-scroller"><div class="rm-spacer" id="rm-spacer"></div></div>
       </div>
+      <input type="range" class="rm-slider" id="aer-slider" min="0" max="1000" value="0" aria-label="Recorrer el sendero">
+      <div class="rm-slider-hint"><span>Inicio · Km 82</span><span>Machu Picchu</span></div>
 
       <!-- 3) ELEVATION PROFILE -->
       <div class="rm-head">
@@ -1297,13 +1320,15 @@
         </div>
       </div>
       <div class="trail" id="elevprofile"></div>
+      <input type="range" class="rm-slider" id="elev-slider" min="0" max="1000" value="0" aria-label="Recorrer el perfil">
+      <div class="map-legend" id="map-legend"></div>
 
       <!-- 4) ETAs + overview -->
       <div class="eta-card">
         <div class="eta" id="eta-mine"><div class="v" id="eta-mine-v">—</div><div class="l" id="eta-mine-l">a tu ritmo</div></div>
         <div class="eta healthy" id="eta-health"><div class="v" id="eta-health-v">—</div><div class="l" id="eta-health-l">al ritmo saludable</div></div>
       </div>
-      <button class="btn block sm" id="route-overview-btn" type="button" style="margin-top:12px;display:none">Ver resumen de la ruta</button>
+      <button class="btn block sm" id="route-overview-btn" type="button" style="margin-top:16px;display:none">Ver resumen de la ruta</button>
     </div>
   </section>
 
@@ -2901,7 +2926,7 @@ function buildTrailBar(j,walked){
   var chevY=y-15;
   s+='<path d="M'+(fx-7)+' '+(chevY-6)+' L'+(fx+7)+' '+(chevY-6)+' L'+fx+' '+(chevY+5)+' Z" fill="'+ACC+'"/>';
   s+='</svg>';
-  return '<div class="trail-label">Tu progreso en la ruta</div>'+s+_trailMeta(j,walked);
+  return s+_trailMeta(j,walked);
 }
 function currentLeg(j,walked){
   if(walked>=j.total)return{done:true};
@@ -3631,6 +3656,15 @@ function incaMountain(x,y,s,snow){
   return t;
 }
 function _esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+/* Small inline icons for the map legend. */
+function _lgIcon(t){
+  if(t==='diamond') return '<svg width="13" height="13" viewBox="0 0 13 13"><rect x="3" y="3" width="7" height="7" transform="rotate(45 6.5 6.5)" fill="#1a1614"/></svg>';
+  if(t==='tent')    return '<svg width="15" height="13" viewBox="0 0 15 13"><path d="M2 11 L7.5 3 L13 11 Z" fill="none" stroke="#1a1614" stroke-width="1.6" stroke-linejoin="round"/></svg>';
+  if(t==='dot')     return '<svg width="12" height="12" viewBox="0 0 12 12"><circle cx="6" cy="6" r="4" fill="#1a1614"/></svg>';
+  if(t==='walk')    return '<svg width="22" height="8" viewBox="0 0 22 8"><line x1="2" y1="4" x2="20" y2="4" stroke="#10C896" stroke-width="4" stroke-linecap="round"/></svg>';
+  if(t==='rest')    return '<svg width="22" height="8" viewBox="0 0 22 8"><line x1="2" y1="4" x2="20" y2="4" stroke="#1a1614" stroke-opacity="0.55" stroke-width="3" stroke-linecap="round"/></svg>';
+  return '';
+}
 /* Scroll a zoom wrapper so the given fraction of its content is centred. */
 function _centerScroll(wrap, fx, fy){
   if(!wrap) return;
@@ -3672,14 +3706,13 @@ function _aerCenter(){
   _aer.svg.style.transform='translate('+Math.round(tx)+'px,'+Math.round(ty)+'px)';
 }
 function _aerWire(){
-  if(_aer.wired || !_aer.scroller) return; _aer.wired=true;
-  _aer.scroller.addEventListener('scroll', function(){
+  var sl=document.getElementById('aer-slider');
+  if(!sl || _aer.wired) return; _aer.wired=true;
+  sl.addEventListener('input', function(){
     if(!_aer.active) return;
-    var max=_aer.scroller.scrollWidth-_aer.scroller.clientWidth;
-    // inverted: swipe right (scrollLeft↓) advances along the trail → natural drag
-    _aer.t = max>0 ? 1-_aer.scroller.scrollLeft/max : 0;
+    _aer.t = (parseFloat(sl.value)||0)/1000;
     _aerCenter();
-  }, {passive:true});
+  });
 }
 function renderIncaAerial(svg, walkedMi, totalMi){
   var A=INCA_AERIAL, stops=J('inca').stops, N=stops.length, VW=A.VW, VH=A.VH;
@@ -3749,7 +3782,6 @@ function renderIncaAerial(svg, walkedMi, totalMi){
       pf=(c0+ff*(c1-c0))/arc.total;
     }
     _aer.pts=pts; _aer.cum=arc.cum; _aer.total=arc.total; _aer.svg=svg; _aer.wrap=wrap; _aer.VW=VW; _aer.VH=VH; _aer.t=pf; _aer.active=true;
-    _aer.scroller=wrap.querySelector('.rm-scroller'); _aer.spacer=wrap.querySelector('.rm-spacer');
     svg.style.position='absolute'; svg.style.left='0'; svg.style.top='0'; svg.style.willChange='transform';
     requestAnimationFrame(function(){
       var ww=wrap.clientWidth||340, ZOOM=3;
@@ -3757,11 +3789,8 @@ function renderIncaAerial(svg, walkedMi, totalMi){
       wrap.style.height=winH+'px';
       _aer.svgW=Math.round(ww*ZOOM); _aer.svgH=Math.round(ww*ZOOM*(VH/VW));
       svg.style.width=_aer.svgW+'px'; svg.style.height=_aer.svgH+'px';
-      // scroll range: ~1.6 screen-widths of swipe traverses the whole trail
-      var trackW=Math.round(ww*2.6);
-      if(_aer.spacer) _aer.spacer.style.width=trackW+'px';
       _aerWire();
-      if(_aer.scroller){ var maxS=trackW-_aer.scroller.clientWidth; _aer.scroller.scrollLeft=Math.max(0, (1-_aer.t)*maxS); }
+      var sl=document.getElementById('aer-slider'); if(sl) sl.value=Math.round(_aer.t*1000);
       _aerCenter();
     });
   }
@@ -3788,9 +3817,29 @@ function renderMapaTab(){
     else ovBtn.style.display='none';
   }
 
-  // Centre the (zoomed) elevation profile scroll on the player's position
+  // Centre the (zoomed) elevation profile scroll on the player's position,
+  // wire its slider, and fill the legend.
   var tsc=document.querySelector('#elevprofile .trail-scroll');
   if(tsc){ _centerScroll(tsc, parseFloat(tsc.getAttribute('data-pfx'))||0, null); }
+  var esl=document.getElementById('elev-slider');
+  if(esl){
+    if(tsc) esl.value=Math.round((parseFloat(tsc.getAttribute('data-pfx'))||0)*1000);
+    if(!esl._wired){ esl._wired=true; esl.addEventListener('input', function(){
+      var sc=document.querySelector('#elevprofile .trail-scroll'); if(!sc) return;
+      var max=sc.scrollWidth-sc.clientWidth; sc.scrollLeft=(parseFloat(esl.value)||0)/1000*max;
+    }); }
+  }
+  var lg=document.getElementById('map-legend');
+  if(lg){
+    var hasEl=true; for(var _le=0;_le<j.stops.length;_le++){ if(typeof j.stops[_le].el!=='number'){hasEl=false;break;} }
+    lg.innerHTML = hasEl
+      ? '<span>'+_lgIcon('walk')+'recorrido</span>'
+       +'<span>'+_lgIcon('rest')+'por recorrer</span>'
+       +'<span>'+_lgIcon('dot')+'parada</span>'
+       +'<span>'+_lgIcon('diamond')+'paso de montaña</span>'
+       +'<span>'+_lgIcon('tent')+'campamento</span>'
+      : '';
+  }
 
   // INCA → aerial map
   if (current === 'inca' && typeof INCA_AERIAL !== 'undefined'){
@@ -3808,11 +3857,9 @@ function renderMapaTab(){
   var gwrap=svg.parentNode;
   if(gwrap && gwrap.classList && gwrap.classList.contains('rm-zoomwrap')){
     _aer.active=false;
-    gwrap.style.height=''; gwrap.scrollLeft=0; gwrap.scrollTop=0;
+    gwrap.style.height='';
     svg.style.width='100%'; svg.style.height='auto';
     svg.style.position='static'; svg.style.transform='none'; svg.style.left=''; svg.style.top='';
-    var gsp=gwrap.querySelector('.rm-spacer'); if(gsp) gsp.style.width='0';
-    var gsc=gwrap.querySelector('.rm-scroller'); if(gsc) gsc.scrollLeft=0;
   }
   svg.setAttribute('viewBox','0 0 800 460');
   svg.innerHTML = '<path id="rm-trail-bg-tab" class="trail-bg"></path>'
