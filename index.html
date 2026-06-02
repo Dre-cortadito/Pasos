@@ -2727,7 +2727,12 @@ document.getElementById('header-home').onclick=goHome;
 /* ----- Trail SVG ----- */
 /* Day boundaries (cumulative miles) per route, for the elevation profile's
    "Día 1..N" bands. Only routes with elevation data need these. */
-var DAY_BOUNDS={ inca:[{mi:8,d:'Día 1'},{mi:13.5,d:'Día 2'},{mi:22.5,d:'Día 3'},{mi:26,d:'Día 4'}] };
+var DAY_BOUNDS={ inca:[
+  {mi:8,   d:'Día 1', h:'5–6 h'},
+  {mi:13.5,d:'Día 2', h:'6–7 h'},
+  {mi:22.5,d:'Día 3', h:'6–8 h'},
+  {mi:26,  d:'Día 4', h:'2–3 h'}
+] };
 
 function _trailMeta(j,walked){
   var done=walked>=j.total, next=null;
@@ -2763,14 +2768,15 @@ function buildTrailProfile(j,walked){
   var ACC=V('--accent','#10C896'), DP=V('--accent-deep','#0EA178');
   var LN=V('--ink-line','#ece7df'), LNS=V('--ink-line-strong','#c9c2b3');
   var INK=V('--ink','#1a1614'), SOFT=V('--ink-soft','#8a847f'), BG=V('--bg','#fff');
-  var W=1000,H=232, padL=50,padR=18, top=36, baseY=190, iw=W-padL-padR, elevH=baseY-top;
+  var W=1180,H=320, padL=54,padR=30, top=128, baseY=250, iw=W-padL-padR, elevH=baseY-top;
   var stops=j.stops, N=stops.length;
   var minE=Infinity,maxE=-Infinity; stops.forEach(function(s){ if(s.el<minE)minE=s.el; if(s.el>maxE)maxE=s.el; });
   var range=Math.max(1,maxE-minE);
   function X(mi){return padL+(mi/j.total)*iw;}
   function Y(el){return baseY-((el-minE)/range)*elevH;}
+  var KM=function(mi){return Math.round(mi*1.60934);};
   var pts=stops.map(function(s){return {x:X(s.mi),y:Y(s.el)};});
-  var frac=clamp(walked/j.total,0,1), px=X(Math.min(j.total,Math.max(0,walked)));
+  var px=X(Math.min(j.total,Math.max(0,walked)));
   var reachedIdx=-1,i; for(i=0;i<N;i++){ if(stops[i].mi<=walked+1e-6) reachedIdx=i; }
   var py;
   if(reachedIdx<0) py=pts[0].y;
@@ -2780,20 +2786,28 @@ function buildTrailProfile(j,walked){
   if(reachedIdx>=0 && reachedIdx<N-1 && walked>stops[reachedIdx].mi) wpts.push({x:px,y:py});
   if(reachedIdx<0) wpts=[{x:pts[0].x,y:pts[0].y}];
   var line=smoothMapPath(pts);
-  var passes=(typeof INCA_AERIAL!=='undefined' && j.id==='inca')?INCA_AERIAL.passes:[];
-  var labelIdx = (j.id==='inca') ? [0,5,7,9,12,N-1] : stops.map(function(_,ix){return ix;});
+  var isInca=(j.id==='inca');
+  var passes=(typeof INCA_AERIAL!=='undefined' && isInca)?INCA_AERIAL.passes:[];
+  var passTag={5:'1.er paso',7:'2.º paso',9:'3.er paso'};
+  var days=DAY_BOUNDS[j.id];
+  var campMi={}; if(days){ for(i=0;i<days.length-1;i++) campMi[days[i].mi]=1; } // camp at each day's end (not the final)
 
   var s='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">';
   // elevation gridlines (min + max) with left labels
   [minE,maxE].forEach(function(e){ var gy=Y(e);
     s+='<line x1="'+padL+'" y1="'+gy+'" x2="'+(W-padR)+'" y2="'+gy+'" stroke="'+LN+'" stroke-width="1" stroke-dasharray="2 5"/>';
-    s+='<text x="'+(padL-7)+'" y="'+(gy+3)+'" text-anchor="end" font-size="11" fill="'+SOFT+'">'+e.toLocaleString('es')+' m</text>';
+    s+='<text x="'+(padL-8)+'" y="'+(gy+3)+'" text-anchor="end" font-size="11" fill="'+SOFT+'">'+e.toLocaleString('es')+' m</text>';
   });
-  // day bands
-  var days=DAY_BOUNDS[j.id];
+  // day bands: separators + cumulative distance markers + per-day distance & hours
   if(days){ var prev=0; days.forEach(function(d,di){ var dx=X(d.mi);
-    if(di<days.length-1) s+='<line x1="'+dx+'" y1="'+top+'" x2="'+dx+'" y2="'+baseY+'" stroke="'+LN+'" stroke-width="1" stroke-dasharray="3 4"/>';
-    s+='<text x="'+X((prev+d.mi)/2)+'" y="'+(H-7)+'" text-anchor="middle" font-size="10" font-weight="700" fill="'+SOFT+'">'+d.d+'</text>'; prev=d.mi;
+    if(di<days.length-1){
+      s+='<line x1="'+dx+'" y1="'+top+'" x2="'+dx+'" y2="'+(baseY+6)+'" stroke="'+LN+'" stroke-width="1" stroke-dasharray="3 4"/>';
+      s+='<text x="'+dx+'" y="'+(baseY+18)+'" text-anchor="middle" font-size="9.5" font-weight="600" fill="'+SOFT+'">'+KM(d.mi)+' km</text>';
+    }
+    var midx=X((prev+d.mi)/2);
+    s+='<text x="'+midx+'" y="'+(H-18)+'" text-anchor="middle" font-size="11" font-weight="800" fill="'+SOFT+'">'+d.d+'</text>';
+    s+='<text x="'+midx+'" y="'+(H-5)+'" text-anchor="middle" font-size="10" font-weight="600" fill="'+SOFT+'">'+KM(d.mi-prev)+' km · '+(d.h||'')+'</text>';
+    prev=d.mi;
   }); }
   // areas
   s+='<path d="'+line+' L '+pts[N-1].x+' '+baseY+' L '+pts[0].x+' '+baseY+' Z" fill="'+LNS+'" fill-opacity="0.16"/>';
@@ -2801,17 +2815,18 @@ function buildTrailProfile(j,walked){
   // lines
   s+='<path d="'+line+'" fill="none" stroke="'+LNS+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
   if(wpts.length>1) s+='<path d="'+smoothMapPath(wpts)+'" fill="none" stroke="'+ACC+'" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>';
-  // stops
+  // stops — every stop labelled (angled), passes as diamonds, camps with a tent
   stops.forEach(function(st,idx){
     var on=walked>=st.mi-1e-6, p=pts[idx], isPass=passes.indexOf(idx)>=0;
-    if(isPass){ var dd=5.5; s+='<rect x="'+(p.x-dd)+'" y="'+(p.y-dd)+'" width="'+(dd*2)+'" height="'+(dd*2)+'" rx="1.5" transform="rotate(45 '+p.x+' '+p.y+')" fill="'+(on?ACC:BG)+'" stroke="'+(on?DP:LNS)+'" stroke-width="2"/>'; }
+    // tent for day-camp stops (drawn below the dot)
+    if(campMi[st.mi]){ var tx=p.x, tyc=p.y+12; s+='<path d="M '+(tx-6)+' '+(tyc+6)+' L '+tx+' '+(tyc-5)+' L '+(tx+6)+' '+(tyc+6)+' Z" fill="none" stroke="'+(on?DP:SOFT)+'" stroke-width="1.6" stroke-linejoin="round"/><line x1="'+tx+'" y1="'+(tyc-5)+'" x2="'+tx+'" y2="'+(tyc+6)+'" stroke="'+(on?DP:SOFT)+'" stroke-width="1.2"/>'; }
+    if(isPass){ var dd=5.5; s+='<rect x="'+(p.x-dd)+'" y="'+(p.y-dd)+'" width="'+(dd*2)+'" height="'+(dd*2)+'" rx="1.5" transform="rotate(45 '+p.x+' '+p.y+')" fill="'+(on?ACC:BG)+'" stroke="'+(on?DP:LNS)+'" stroke-width="2"/>';
+      s+='<text x="'+p.x+'" y="'+(p.y+(campMi[st.mi]?30:14))+'" text-anchor="middle" font-size="8.5" font-weight="700" fill="'+(on?DP:SOFT)+'">'+passTag[idx]+'</text>'; }
     else { s+='<circle cx="'+p.x+'" cy="'+p.y+'" r="'+(on?4:3.5)+'" fill="'+(on?ACC:BG)+'" stroke="'+(on?DP:LNS)+'" stroke-width="2"/>'; }
-    if(labelIdx.indexOf(idx)>=0){ var ty=p.y-12, anc='middle', lx=p.x;
-      if(p.x < padL+42){ anc='start'; lx=p.x-6; }
-      else if(p.x > W-padR-64){ anc='end'; lx=p.x+6; }
-      s+='<text x="'+lx+'" y="'+ty+'" text-anchor="'+anc+'" font-size="11" font-weight="700" fill="'+(on?DP:INK)+'">'+_esc(shortName(st.n))+'</text>';
-      s+='<text x="'+lx+'" y="'+(ty-11)+'" text-anchor="'+anc+'" font-size="9" font-weight="600" fill="'+SOFT+'">'+st.el.toLocaleString('es')+' m</text>';
-    }
+    // angled name + elevation, anchored to keep within bounds
+    var anc = (p.x > padL+iw*0.60) ? 'end' : 'start';
+    var lx=p.x+(anc==='end'?-7:7), ly=p.y-9;
+    s+='<text transform="rotate(-42 '+lx+' '+ly+')" x="'+lx+'" y="'+ly+'" text-anchor="'+anc+'" font-size="10" font-weight="700" fill="'+(on?DP:INK)+'">'+_esc(shortName(st.n))+'  <tspan font-size="8.5" font-weight="600" fill="'+SOFT+'">'+st.el.toLocaleString('es')+' m</tspan></text>';
   });
   // player marker riding the profile
   s+='<line x1="'+px+'" y1="'+py+'" x2="'+px+'" y2="'+baseY+'" stroke="'+ACC+'" stroke-width="1.5" stroke-dasharray="2 3" opacity="0.7"/>';
