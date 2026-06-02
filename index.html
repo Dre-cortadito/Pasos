@@ -846,10 +846,11 @@
   /* Zoom/pan wrapper for the aerial map — the SVG is rendered larger than the
      wrapper and the wrapper scrolls (pan to follow the route). */
   .rm-zoomwrap{
-    overflow:auto;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;
+    position:relative;overflow:hidden;touch-action:pan-y;cursor:grab;
     border-radius:12px;border:1px solid rgba(63,227,178,.12);
     background:radial-gradient(ellipse at center,#102019 0%,#0c0905 90%);
   }
+  .rm-zoomwrap:active{cursor:grabbing}
   .tab-mapa-inner .rm-svg{
     width:100%;height:auto;display:block;border:0;border-radius:0;background:none;
   }
@@ -1260,7 +1261,7 @@
     <div class="tab-mapa-inner">
       <div class="rm-head">
         <div class="rm-titles">
-          <div class="rm-title">Tu camino</div>
+          <div class="rm-title">Vista aérea del sendero</div>
           <div class="rm-sub" id="rm-sub-tab">—</div>
         </div>
       </div>
@@ -2789,7 +2790,7 @@ function buildTrailProfile(j,walked){
   var cs=getComputedStyle(document.body), V=function(n,f){return (cs.getPropertyValue(n)||f).trim();};
   var ACC=V('--accent','#10C896'), DP=V('--accent-deep','#0EA178');
   var LN=V('--ink-line','#ece7df'), LNS=V('--ink-line-strong','#c9c2b3');
-  var INK=V('--ink','#1a1614'), SOFT=V('--ink-soft','#8a847f'), BG=V('--bg','#fff');
+  var INK=V('--ink','#1a1614'), SOFT=V('--ink-soft','#8a847f'), BG=V('--bg','#fff'), PAPER=V('--paper','#fbfaf6');
   var W=1180,H=320, padL=54,padR=30, top=128, baseY=250, iw=W-padL-padR, elevH=baseY-top;
   var stops=j.stops, N=stops.length;
   var minE=Infinity,maxE=-Infinity; stops.forEach(function(s){ if(s.el<minE)minE=s.el; if(s.el>maxE)maxE=s.el; });
@@ -2845,10 +2846,15 @@ function buildTrailProfile(j,walked){
     if(isPass){ var dd=5.5; s+='<rect x="'+(p.x-dd)+'" y="'+(p.y-dd)+'" width="'+(dd*2)+'" height="'+(dd*2)+'" rx="1.5" transform="rotate(45 '+p.x+' '+p.y+')" fill="'+(on?INK:BG)+'" stroke="'+(on?'#fbfaf6':INK)+'" stroke-width="2"/>';
       s+='<text x="'+p.x+'" y="'+(p.y+(campMi[st.mi]?30:14))+'" text-anchor="middle" font-size="8.5" font-weight="700" fill="'+(on?DP:SOFT)+'">'+passTag[idx]+'</text>'; }
     else { s+='<circle cx="'+p.x+'" cy="'+p.y+'" r="'+(on?4:3.5)+'" fill="'+(on?INK:BG)+'" stroke="'+(on?'#fbfaf6':INK)+'" stroke-width="2"/>'; }
-    // angled name + elevation, anchored to keep within bounds
-    var anc = (p.x > padL+iw*0.60) ? 'end' : 'start';
-    var lx=p.x+(anc==='end'?-7:7), ly=p.y-9;
-    s+='<text transform="rotate(-42 '+lx+' '+ly+')" x="'+lx+'" y="'+ly+'" text-anchor="'+anc+'" font-size="10" font-weight="700" fill="'+INK+'">'+_esc(shortName(st.n))+'  <tspan font-size="8.5" font-weight="600" fill="'+SOFT+'">'+st.el.toLocaleString('es')+' m</tspan></text>';
+    // name + elevation: always angled UP and above the curve (never into the
+    // mountain fill); paper halo (drawn behind) so it reads over the line.
+    var lastIdx=idx===N-1;
+    var anc=lastIdx?'end':'start';
+    var lx=p.x+(lastIdx?-6:6), ly=p.y-11;
+    var common='transform="rotate(-38 '+lx+' '+ly+')" x="'+lx+'" y="'+ly+'" text-anchor="'+anc+'" font-size="10" font-weight="700"';
+    var full=_esc(shortName(st.n))+'  '+st.el.toLocaleString('es')+' m';
+    s+='<text '+common+' fill="none" stroke="'+PAPER+'" stroke-width="3.5" stroke-linejoin="round">'+full+'</text>';
+    s+='<text '+common+' fill="'+INK+'">'+_esc(shortName(st.n))+'  <tspan font-size="8.5" font-weight="600" fill="'+SOFT+'">'+st.el.toLocaleString('es')+' m</tspan></text>';
   });
   // player marker riding the profile
   s+='<line x1="'+px+'" y1="'+py+'" x2="'+px+'" y2="'+baseY+'" stroke="'+ACC+'" stroke-width="1.5" stroke-dasharray="2 3" opacity="0.7"/>';
@@ -3620,6 +3626,48 @@ function _centerScroll(wrap, fx, fy){
     }catch(e){}
   });
 }
+
+/* ============================================================================
+   AERIAL PATH-LOCK PAN — a horizontal swipe scrubs ALONG the trail (param t),
+   and the camera follows the trail's real 2D shape (it dips/rises with the
+   path) instead of free 2D panning. Vertical follows the trail automatically.
+============================================================================ */
+var _aer={t:0, cum:null, total:0, pts:null, svg:null, wrap:null, svgW:0, svgH:0, VW:0, VH:0, wired:false, active:false};
+function _aerArc(pts){
+  var cum=[0]; for(var i=1;i<pts.length;i++){ var dx=pts[i].x-pts[i-1].x, dy=pts[i].y-pts[i-1].y; cum.push(cum[i-1]+Math.sqrt(dx*dx+dy*dy)); }
+  return {cum:cum, total:cum[cum.length-1]||1};
+}
+function _aerAt(frac){
+  var pts=_aer.pts, cum=_aer.cum; if(!pts) return {x:0,y:0};
+  var target=Math.max(0,Math.min(1,frac))*_aer.total;
+  for(var i=1;i<pts.length;i++){
+    if(cum[i]>=target){ var r=(target-cum[i-1])/Math.max(1e-6,cum[i]-cum[i-1]);
+      return {x:pts[i-1].x+(pts[i].x-pts[i-1].x)*r, y:pts[i-1].y+(pts[i].y-pts[i-1].y)*r}; }
+  }
+  return pts[pts.length-1];
+}
+function _aerCenter(){
+  if(!_aer.svg||!_aer.wrap) return;
+  var P=_aerAt(_aer.t);
+  var px=P.x/_aer.VW*_aer.svgW, py=P.y/_aer.VH*_aer.svgH;
+  var vpW=_aer.wrap.clientWidth, vpH=_aer.wrap.clientHeight;
+  var tx=vpW/2-px, ty=vpH/2-py;
+  tx=Math.min(0,Math.max(vpW-_aer.svgW,tx));
+  ty=Math.min(0,Math.max(vpH-_aer.svgH,ty));
+  _aer.svg.style.transform='translate('+Math.round(tx)+'px,'+Math.round(ty)+'px)';
+}
+function _aerWire(){
+  if(_aer.wired) return; _aer.wired=true;
+  var w=_aer.wrap, sx=0, st=0, drag=false;
+  function down(x,id,el){ drag=true; sx=x; st=_aer.t; try{el&&el.setPointerCapture&&el.setPointerCapture(id);}catch(e){} }
+  function move(x){ if(!drag||!_aer.active) return; var sens=(_aer.wrap.clientWidth||340)*3.2; _aer.t=Math.max(0,Math.min(1, st-(x-sx)/sens)); _aerCenter(); }
+  function up(){ drag=false; }
+  w.addEventListener('pointerdown',function(e){ down(e.clientX,e.pointerId,w); });
+  w.addEventListener('pointermove', function(e){ move(e.clientX); });
+  w.addEventListener('pointerup', up);
+  w.addEventListener('pointercancel', up);
+  w.addEventListener('pointerleave', up);
+}
 function renderIncaAerial(svg, walkedMi, totalMi){
   var A=INCA_AERIAL, stops=J('inca').stops, N=stops.length, VW=A.VW, VH=A.VH;
   svg.setAttribute('viewBox','0 0 '+VW+' '+VH);
@@ -3675,17 +3723,27 @@ function renderIncaAerial(svg, walkedMi, totalMi){
   s+='<circle cx="'+hx+'" cy="'+headY+'" r="'+R+'" fill="#1a1614" stroke="#fbfaf6" stroke-width="3"/>';
   s+='<circle cx="'+hx+'" cy="'+headY+'" r="6.5" fill="#3FE3B2"/>';
   svg.innerHTML=s;
-  // Zoom (~3×) + pan to centre on the player
+  // Zoom (~3×) + PATH-LOCK pan: a horizontal swipe scrubs along the trail and
+  // the camera follows its real shape (set t to the player's position on open).
   var wrap=svg.parentNode;
   if(wrap && wrap.classList && wrap.classList.contains('rm-zoomwrap')){
-    var fx=playerPt.x/VW, fy=playerPt.y/VH;
+    var arc=_aerArc(pts);
+    // player's fraction along the (polyline) trail
+    var pf=0;
+    if(reachedIdx>=0){
+      var c0=arc.cum[reachedIdx], c1=arc.cum[Math.min(reachedIdx+1,pts.length-1)];
+      var ff=(reachedIdx<N-1 && stops[reachedIdx+1].mi>stops[reachedIdx].mi)?((wMi-stops[reachedIdx].mi)/(stops[reachedIdx+1].mi-stops[reachedIdx].mi)):0;
+      pf=(c0+ff*(c1-c0))/arc.total;
+    }
+    _aer.pts=pts; _aer.cum=arc.cum; _aer.total=arc.total; _aer.svg=svg; _aer.wrap=wrap; _aer.VW=VW; _aer.VH=VH; _aer.t=pf; _aer.active=true;
+    svg.style.position='absolute'; svg.style.left='0'; svg.style.top='0'; svg.style.willChange='transform';
     requestAnimationFrame(function(){
       var ww=wrap.clientWidth||340, ZOOM=3;
-      var winH=Math.min(Math.round(ww*0.8), Math.round((window.innerHeight||700)*0.52));
+      var winH=Math.min(Math.round(ww*0.9), Math.round((window.innerHeight||700)*0.5));
       wrap.style.height=winH+'px';
-      svg.style.width=Math.round(ww*ZOOM)+'px';
-      svg.style.height=Math.round(ww*ZOOM*(VH/VW))+'px';
-      _centerScroll(wrap, fx, fy);
+      _aer.svgW=Math.round(ww*ZOOM); _aer.svgH=Math.round(ww*ZOOM*(VH/VW));
+      svg.style.width=_aer.svgW+'px'; svg.style.height=_aer.svgH+'px';
+      _aerWire(); _aerCenter();
     });
   }
 }
@@ -3730,8 +3788,10 @@ function renderMapaTab(){
   // OTHER ROUTES → reset any aerial zoom, rebuild the simple curve, position it
   var gwrap=svg.parentNode;
   if(gwrap && gwrap.classList && gwrap.classList.contains('rm-zoomwrap')){
+    _aer.active=false;
     gwrap.style.height=''; gwrap.scrollLeft=0; gwrap.scrollTop=0;
     svg.style.width='100%'; svg.style.height='auto';
+    svg.style.position='static'; svg.style.transform='none'; svg.style.left=''; svg.style.top='';
   }
   svg.setAttribute('viewBox','0 0 800 460');
   svg.innerHTML = '<path id="rm-trail-bg-tab" class="trail-bg"></path>'
