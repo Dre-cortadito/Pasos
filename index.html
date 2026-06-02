@@ -1268,6 +1268,9 @@
         <div class="eta" id="eta-mine"><div class="v" id="eta-mine-v">—</div><div class="l" id="eta-mine-l">a tu ritmo</div></div>
         <div class="eta healthy" id="eta-health"><div class="v" id="eta-health-v">—</div><div class="l" id="eta-health-l">al ritmo saludable</div></div>
       </div>
+
+      <!-- Static trail-overview infographic (Inca only) — shown on demand -->
+      <button class="btn block sm" id="route-overview-btn" type="button" style="margin-top:12px;display:none">Ver resumen de la ruta</button>
     </div>
   </section>
 
@@ -3600,33 +3603,45 @@ function renderIncaAerial(svg, walkedMi, totalMi){
   var wpts=[]; for(i=0;i<=reachedIdx;i++) wpts.push(pts[i]);
   if(reachedIdx>=0 && reachedIdx<N-1 && wMi>stops[reachedIdx].mi) wpts.push(playerPt);
   if(reachedIdx<0){ playerPt=pts[0]; wpts=[pts[0]]; }
-  // painted terrain background
+  // painted terrain background, with a soft paper scrim so the busy/blurry
+  // art recedes and the crisp overlay reads clearly
   var s='<image href="'+A.img+'" x="0" y="0" width="'+VW+'" height="'+VH+'" preserveAspectRatio="xMidYMid slice"/>';
-  // walked highlight over the baked trail (glow + bright mint)
+  s+='<rect x="0" y="0" width="'+VW+'" height="'+VH+'" fill="#fbfaf6" opacity="0.30"/>';
+  // FULL route, crisp: white casing + dark dotted line so the whole path reads
+  var full=smoothMapPath(pts);
+  s+='<path d="'+full+'" fill="none" stroke="#fbfaf6" stroke-opacity="0.85" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>';
+  s+='<path d="'+full+'" fill="none" stroke="#1a1614" stroke-opacity="0.55" stroke-width="3" stroke-dasharray="1 10" stroke-linecap="round"/>';
+  // WALKED portion: white casing + bold mint so progress pops off the painting
   if(wpts.length>1){ var wl=smoothMapPath(wpts);
-    s+='<path d="'+wl+'" fill="none" stroke="#0EA178" stroke-opacity="0.30" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>';
-    s+='<path d="'+wl+'" fill="none" stroke="#10C896" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>';
+    s+='<path d="'+wl+'" fill="none" stroke="#fbfaf6" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>';
+    s+='<path d="'+wl+'" fill="none" stroke="#10C896" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>';
   }
-  // stops
+  // stops — white halo ring under each marker for separation from the art
   pts.forEach(function(p,idx){
     var passed=stops[idx].mi<=wMi+1e-6, isPass=A.passes.indexOf(idx)>=0, isMP=idx===N-1;
-    var fill=passed?'#10C896':'#fbfaf6', strk=passed?'#0a5c44':'#6f6a63';
-    if(isPass){ var dd=11; s+='<rect x="'+(p.x-dd)+'" y="'+(p.y-dd)+'" width="'+(2*dd)+'" height="'+(2*dd)+'" rx="2" transform="rotate(45 '+p.x+' '+p.y+')" fill="'+fill+'" stroke="'+strk+'" stroke-width="3.5"/>'; }
-    else { s+='<circle cx="'+p.x+'" cy="'+p.y+'" r="'+(isMP?10:8)+'" fill="'+fill+'" stroke="'+strk+'" stroke-width="3.5"/>'; }
+    var fill=passed?'#10C896':'#fbfaf6', strk='#1a1614';
+    var r=isMP?10:8;
+    s+='<circle cx="'+p.x+'" cy="'+p.y+'" r="'+(r+3)+'" fill="#fbfaf6" opacity="0.9"/>'; // halo
+    if(isPass){ var dd=10; s+='<rect x="'+(p.x-dd)+'" y="'+(p.y-dd)+'" width="'+(2*dd)+'" height="'+(2*dd)+'" rx="2" transform="rotate(45 '+p.x+' '+p.y+')" fill="'+fill+'" stroke="'+strk+'" stroke-width="3"/>'; }
+    else { s+='<circle cx="'+p.x+'" cy="'+p.y+'" r="'+r+'" fill="'+fill+'" stroke="'+strk+'" stroke-width="3"/>'; }
     if(A.labelIdx.indexOf(idx)>=0 || idx===reachedIdx){
       var anc='middle', lx=p.x, ly=p.y-22;
-      if(p.y<90) ly=p.y+36;
+      if(p.y<90) ly=p.y+38;
       if(p.x<170){ anc='start'; lx=p.x+14; }
       else if(p.x>VW-230){ anc='end'; lx=p.x-14; }
       s+='<text x="'+lx+'" y="'+ly+'" text-anchor="'+anc+'" paint-order="stroke" stroke="#fbfaf6" stroke-width="5" stroke-linejoin="round" fill="#1a1614" font-size="23" font-weight="800">'+_esc(shortName(stops[idx].n))+'</text>';
       if(stops[idx].el) s+='<text x="'+lx+'" y="'+(ly+22)+'" text-anchor="'+anc+'" paint-order="stroke" stroke="#fbfaf6" stroke-width="4" stroke-linejoin="round" fill="#5a544e" font-size="16" font-weight="600">'+stops[idx].el.toLocaleString('es')+' m</text>';
     }
   });
-  // player marker (animated pulse, self-contained)
-  s+='<circle cx="'+_round1(playerPt.x)+'" cy="'+_round1(playerPt.y)+'" r="13" fill="none" stroke="#10C896" stroke-width="3">'
-    +'<animate attributeName="r" values="13;30;13" dur="1.9s" repeatCount="indefinite"/>'
-    +'<animate attributeName="opacity" values="0.75;0;0.75" dur="1.9s" repeatCount="indefinite"/></circle>';
-  s+='<circle cx="'+_round1(playerPt.x)+'" cy="'+_round1(playerPt.y)+'" r="10" fill="#10C896" stroke="#fff" stroke-width="3.5"/>';
+  // BOLD "you are here" pin — dark head + mint core + white outline, tip on the trail
+  var hx=_round1(playerPt.x), hy=_round1(playerPt.y), R=15, headY=_round1(playerPt.y-30);
+  s+='<circle cx="'+hx+'" cy="'+hy+'" r="9" fill="none" stroke="#10C896" stroke-width="4">'
+    +'<animate attributeName="r" values="9;30;9" dur="1.9s" repeatCount="indefinite"/>'
+    +'<animate attributeName="opacity" values="0.8;0;0.8" dur="1.9s" repeatCount="indefinite"/></circle>';
+  s+='<circle cx="'+hx+'" cy="'+hy+'" r="4" fill="#1a1614"/>'; // ground dot at exact position
+  s+='<path d="M '+(hx-8)+' '+(headY+9)+' L '+hx+' '+hy+' L '+(hx+8)+' '+(headY+9)+' Z" fill="#1a1614" stroke="#fbfaf6" stroke-width="2.5" stroke-linejoin="round"/>';
+  s+='<circle cx="'+hx+'" cy="'+headY+'" r="'+R+'" fill="#1a1614" stroke="#fbfaf6" stroke-width="3"/>';
+  s+='<circle cx="'+hx+'" cy="'+headY+'" r="6.5" fill="#3FE3B2"/>';
   svg.innerHTML=s;
 }
 
@@ -3643,6 +3658,13 @@ function renderMapaTab(){
   document.getElementById('rm-stat-walked-tab').textContent = walked.toFixed(1) + ' mi';
   document.getElementById('rm-stat-left-tab').textContent   = left.toFixed(1) + ' mi';
   document.getElementById('rm-stat-pct-tab').textContent    = Math.round(milesFrac * 100) + '%';
+
+  // Trail-overview button — only for routes that have an overview image
+  var ovBtn=document.getElementById('route-overview-btn');
+  if(ovBtn){
+    if(ROUTE_OVERVIEW[current]){ ovBtn.style.display='block'; ovBtn.onclick=function(){ showRouteOverview(current); }; }
+    else ovBtn.style.display='none';
+  }
 
   // INCA → aerial map
   if (current === 'inca' && typeof INCA_AERIAL !== 'undefined'){
@@ -4518,6 +4540,13 @@ function celebrate(accentTitle,t,b){
   openOverlay('ov-cel');
 }
 function showInfo(title,html){document.getElementById('info-title').textContent=title;document.getElementById('info-body').innerHTML=html;openOverlay('ov-info');}
+/* Static trail-overview infographics (one full-look image per route). */
+var ROUTE_OVERVIEW={ inca:'panoramas/maps/inca-overview.png' };
+function showRouteOverview(routeId){
+  var img=ROUTE_OVERVIEW[routeId]; if(!img) return;
+  var j=(typeof J==='function')?J(routeId):null; var title=j&&j.name?('Resumen · '+j.name):'Resumen de la ruta';
+  showInfo(title,'<img src="'+img+'" alt="Resumen de la ruta" style="width:100%;height:auto;border-radius:12px;display:block;margin-top:4px">');
+}
 
 function showRangos(){
   var ts=current?todaySteps(current):0, ri=rankIndex(ts);
