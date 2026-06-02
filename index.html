@@ -1467,15 +1467,21 @@ var JOURNEYS=[
     id:'inca', name:'Sendero Inca', sub:'Km 82 → Machu Picchu · Camino Inca clásico',
     place:'Perú', total:26, tag:'free', tagtxt:'Gratis',
     stops:[
-      {n:'Km 82 (Piscacucho)', mi:0,  el:2600, f:'El control oficial junto al río Urubamba, a 2.600 m. Sellan tu permiso y empieza el camino empedrado por los incas.'},
-      {n:'Llaqtapata',         mi:3,  el:2750, f:'Primer mirador de ruinas: andenes incas asomados sobre el valle. Buen sitio para el primer respiro.'},
-      {n:'Wayllabamba',        mi:9,  el:3000, f:'Último caserío con familias quechuas a 3.000 m. Aquí se acampa antes de la gran subida.'},
-      {n:'Warmiwañusca',       mi:13, el:4215, f:'El "Paso de la Mujer Muerta", 4.215 m: el punto más alto del Camino Inca. Respira hondo y disfruta la vista.'},
-      {n:'Pacaymayo',          mi:15, el:3600, f:'Campamento en el valle a 3.600 m, entre cascadas y neblina. El cuerpo agradece el descenso.'},
-      {n:'Phuyupatamarca',     mi:19, el:3650, f:'"Pueblo sobre las nubes" a 3.650 m: fuentes ceremoniales incas que aún corren con agua.'},
-      {n:'Wiñay Wayna',        mi:23, el:2680, f:'"Para siempre joven" en quechua, 2.680 m. Andenes curvos colgados sobre el Urubamba, junto a un grupo de casas de piedra inca.'},
-      {n:'Inti Punku',         mi:25, el:2730, f:'La Puerta del Sol: portada de piedra incaica en la cresta, a 2.730 m. Primera vista de Machu Picchu allá abajo.'},
-      {n:'Machu Picchu',       mi:26, el:2430, f:'La ciudadela perdida, 2.430 m. Andenes, templos y el Huayna Picchu al fondo. ¡Lo lograste!'}
+      {n:'Km 82 (Piscacucho)', mi:0,    el:2720, f:'El control oficial junto al río Urubamba, a 2.720 m. Sellan tu permiso y empieza el camino empedrado por los incas.'},
+      {n:'Llaqtapata',         mi:3,    el:2750, f:'Primer mirador de ruinas: andenes incas asomados sobre el valle. Buen sitio para el primer respiro.'},
+      {n:'Wayllabamba',        mi:6,    el:3000, f:'Último caserío con familias quechuas a 3.000 m. Aquí se acampa antes de la gran subida.'},
+      {n:'Ayapata',            mi:8,    el:3300, f:'Campamento entre cejas de selva a 3.300 m. Muchos grupos pasan aquí la primera noche, con la cordillera asomando entre la neblina.'},
+      {n:'Llulluchapampa',     mi:10,   el:3800, f:'El último llano antes del gran paso, a 3.800 m. Desde aquí ya se ve la muesca de Warmiwañusca recortada contra el cielo.'},
+      {n:'Warmiwañusca',       mi:12,   el:4200, f:'El "Paso de la Mujer Muerta", 4.200 m: el punto más alto del Camino Inca. Respira hondo y disfruta la vista.'},
+      {n:'Pacaymayo',          mi:13.5, el:3580, f:'Campamento en el valle a 3.580 m, entre cascadas y neblina. El cuerpo agradece el descenso.'},
+      {n:'Runkurakay',         mi:15,   el:3950, f:'Ruinas circulares de un puesto de vigilancia inca en la curva del segundo paso, cerca de los 3.950 m. Un alto para mirar atrás todo lo que subiste.'},
+      {n:'Sayacmarca',         mi:16.5, el:3600, f:'"Pueblo inaccesible" a 3.600 m: un laberinto de piedra colgado sobre el precipicio, al que se sube por una escalera tallada en la roca.'},
+      {n:'Chaquicocha',        mi:17.5, el:3600, f:'"Laguna seca" a 3.600 m. Terreno llano y abierto; uno de los miradores más amplios del camino sobre el valle del Urubamba.'},
+      {n:'Phuyupatamarca',     mi:19,   el:3680, f:'"Pueblo sobre las nubes" a 3.680 m: fuentes ceremoniales incas que aún corren con agua.'},
+      {n:'Intipata',           mi:21,   el:2720, f:'Andenes agrícolas en abanico sobre el cañón, a 2.720 m. Los incas cultivaban aquí, suspendidos entre el cielo y el río.'},
+      {n:'Wiñay Wayna',        mi:22.5, el:2680, f:'"Para siempre joven" en quechua, 2.680 m. Andenes curvos colgados sobre el Urubamba, junto a un grupo de casas de piedra inca.'},
+      {n:'Inti Punku',         mi:25,   el:2730, f:'La Puerta del Sol: portada de piedra incaica en la cresta, a 2.730 m. Primera vista de Machu Picchu allá abajo.'},
+      {n:'Machu Picchu',       mi:26,   el:2400, f:'La ciudadela perdida, 2.400 m. Andenes, templos y el Huayna Picchu al fondo. ¡Lo lograste!'}
     ]
   },
   {
@@ -2754,7 +2760,7 @@ function statTile(v,l){return '<div class="stat"><div class="v">'+v+'</div><div 
    Colors are read live from the theme tokens, so scenes adapt to dark mode.
 ============================================================================ */
 var SCENE_BIOMES={
-  inca:    ['forest','terraces','forest','pass','forest','terraces','winaywayna','intipunku','machu'],
+  inca:    ['forest','terraces','forest','forest','pass','pass','forest','pass','terraces','forest','terraces','terraces','winaywayna','intipunku','machu'],
   everest: ['forest','forest','peak','peak','snow','snow','snow','snow'],
   cafe:    ['city','palms','city','forest','city','forest','forest','palms'],
   santiago:['pass','plains','plains','cathedral','plains','peak','forest','cathedral'],
@@ -2765,9 +2771,15 @@ var INCA_CAPS=[
   'Sellas el permiso junto al río Urubamba y el camino empedrado se abre ante ti.',
   'Los primeros andenes incas asoman entre la bruma; el valle queda muy abajo, verde y húmedo.',
   'Última aldea quechua antes de la gran subida. Esta noche se acampa entre los cerros.',
-  'El Paso de la Mujer Muerta, 4.215 m. En el techo del Camino Inca, el aire ya casi no alcanza.',
+  'Cejas de selva y campamento alto: la cordillera asoma entre la neblina.',
+  'El último llano antes del paso; allá arriba se ve la muesca de la Mujer Muerta.',
+  'El Paso de la Mujer Muerta, 4.200 m. En el techo del Camino Inca, el aire ya casi no alcanza.',
   'Bajas entre cascadas y neblina al campamento del valle; el cuerpo respira de nuevo.',
+  'Las ruinas circulares de Runkurakay vigilan el segundo paso; miras atrás todo lo subido.',
+  'Sayacmarca, el pueblo inaccesible, colgado de piedra sobre el precipicio.',
+  'La pampa de la laguna seca se abre llana; el valle entero queda a la vista.',
   'Phuyupatamarca, el pueblo sobre las nubes. Las fuentes incas todavía cantan piedra abajo.',
+  'Los andenes de Intipata se despliegan en abanico sobre el cañón.',
   'Andenes que se curvan por la ladera "para siempre jóvenes", junto a casas de piedra inca.',
   'La Puerta del Sol al amanecer: una portada de piedra mira a Machu Picchu en el valle.',
   'La ciudadela aparece entre la bruma. Andenes, templos y el Huayna Picchu al fondo. Lo lograste.'
@@ -2818,10 +2830,16 @@ var SECTIONS={
   inca:[
     'En el bosque junto al río',
     'Entre andenes incas',
-    'Subiendo al paso',
+    'Subiendo junto al río',
+    'Cejas de selva hacia el paso',
+    'Subiendo al gran paso',
     'Bajando entre cascadas',
+    'Subiendo al segundo paso',
+    'Entre ruinas colgadas',
+    'Por la pampa de altura',
     'Subiendo entre nubes',
-    'Bajando hacia el Urubamba',
+    'Bajando por los andenes',
+    'Hacia los andenes de Wiñay Wayna',
     'Última subida al Sol',
     'Descenso a la ciudadela'
   ]
