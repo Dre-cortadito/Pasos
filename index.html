@@ -692,6 +692,27 @@
   .stop .ft{font-size:13.5px;color:var(--ink);margin-top:6px;line-height:1.5}
   .stop.locked .nm,.stop.locked .ft{color:var(--ink-soft)}
 
+  /* ===== Pasaporte feed (tab) — banner cards in mint + black ===== */
+  .pp-intro{color:var(--ink-soft);font-size:13px;margin:0 2px 14px;line-height:1.55}
+  .pasaporte-feed{display:flex;flex-direction:column;gap:16px;margin:2px 0 8px}
+  .pp-card{position:relative;border:1px solid var(--ink-line);border-radius:14px;overflow:hidden;background:var(--paper);cursor:pointer;transition:border-color .15s,transform .1s}
+  @media (hover:hover){.pp-card:hover{border-color:var(--accent)}}
+  .pp-card:active{transform:scale(.99)}
+  .pp-banner{height:150px;line-height:0;overflow:hidden}
+  .pp-banner svg{width:100%;height:100%;display:block}
+  .pp-chip{position:absolute;top:12px;left:12px;font-family:var(--font-display);font-weight:700;font-size:16px;color:#fff;background:rgba(12,11,9,.80);border:1px solid rgba(63,227,178,.55);padding:5px 12px;border-radius:9px;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+  .pp-cap{padding:11px 14px 13px}
+  .pp-meta{font-family:var(--font-ui);font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--accent-deep)}
+  .pp-line{font-size:14px;color:var(--ink);margin-top:4px;line-height:1.5}
+  .pp-locked{display:flex;align-items:center;gap:12px;padding:11px 14px;border:1px dashed var(--ink-line-strong);border-radius:12px;opacity:.7}
+  .pp-locked.next{border-style:solid;border-color:var(--accent-soft);opacity:1}
+  .pp-lock-ico{font-size:17px;flex:none;width:22px;text-align:center;color:var(--ink-soft)}
+  .pp-locked.next .pp-lock-ico{color:var(--accent)}
+  .pp-lock-body{flex:1;min-width:0}
+  .pp-lock-nm{font-family:var(--font-display);font-weight:700;font-size:15px;color:var(--ink)}
+  .pp-lock-ft{font-size:12.5px;color:var(--ink-soft);margin-top:1px}
+  .pp-lock-mi{margin-left:auto;font-size:12px;color:var(--ink-soft);font-variant-numeric:tabular-nums;flex:none}
+
   .credit{text-align:center;color:var(--ink-soft);font-size:12px;margin:18px 0 8px;line-height:1.5}
 
   /* ============================================================== MODALS */
@@ -752,8 +773,7 @@
      - FULL (~70dvh): Fantasy-Hike mode. Panorama is the hero; cards hidden.
      Default is FULL on first load; user toggles via the ⛶ button in the panorama corner.
      Body class .pano-full controls which mode is active.                       */
-  .panorama{position:relative;border:1px solid var(--ink-line);border-radius:16px;overflow:hidden;margin:12px 0;background:var(--paper);height:240px;transition:height .35s ease}
-  body.pano-full .panorama{height:calc(100dvh - 200px);max-height:720px;min-height:380px}
+  .panorama{position:relative;border:1px solid var(--ink-line);border-radius:16px;overflow:hidden;margin:12px 0;background:var(--paper);height:clamp(300px,46vh,540px)}
   /* Hide stats-side cards when in full panorama mode */
   body.pano-full .trail,
   body.pano-full .loc,
@@ -777,47 +797,56 @@
   /* Bottom tab bar — fixed at the bottom of the viewport, only visible
      when the journey screen is active. Light shadow on top so it floats
      over the scrolling content. Safe-area padding for iPhone notch. */
+  /* Brand bar: near-black surface + mint accent in both themes. The bar is
+     a fixed dark "shelf" (same role as the brand black) regardless of page
+     theme; mint (#3FE3B2) is the single active color, matching the logo. */
   .tab-bar{
     position:fixed;left:0;right:0;bottom:0;z-index:100;
     display:none;align-items:stretch;justify-content:space-around;
     height:64px;
     padding-bottom:env(safe-area-inset-bottom,0);
-    background:rgba(20,18,14,.96);
+    background:rgba(12,11,9,.97);
     backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-    border-top:1px solid rgba(243,197,138,.12);
-    box-shadow:0 -8px 24px rgba(0,0,0,.18);
+    border-top:1px solid rgba(63,227,178,.20);
+    box-shadow:0 -8px 24px rgba(0,0,0,.28);
   }
   body.in-journey .tab-bar{display:flex}
   .tab-btn{
+    position:relative;
     flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
     gap:3px;
     background:transparent;border:0;padding:6px 4px;cursor:pointer;
-    color:rgba(243,230,210,.55);font-size:11px;font-weight:600;
+    color:rgba(238,238,230,.50);font-size:11px;font-weight:600;
     transition:color .15s;
     -webkit-tap-highlight-color:transparent;
   }
   .tab-btn .tab-lbl{letter-spacing:.02em}
   .tab-btn:active{transform:scale(.96)}
-  .tab-btn.active{color:#f3c58a}
-  .tab-btn.active svg{color:#f3c58a}
+  .tab-btn.active{color:#3FE3B2}
+  .tab-btn.active svg{color:#3FE3B2}
+  /* Mint indicator tab on the active button */
+  .tab-btn.active::before{
+    content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+    width:26px;height:3px;border-radius:0 0 3px 3px;background:#3FE3B2;
+  }
 
   /* Map tab — bigger SVG (uses available vertical space) */
   .tab-mapa-inner .rm-head{display:flex;align-items:flex-start;gap:10px;margin:8px 0 12px}
   .tab-mapa-inner .rm-title{font-family:var(--font-display);font-size:22px;font-weight:700;line-height:1.1}
-  .tab-mapa-inner .rm-sub{font-size:13px;color:var(--accent-deep,#d4ad77);margin-top:3px}
+  .tab-mapa-inner .rm-sub{font-size:13px;color:var(--accent-deep,#10C896);margin-top:3px}
   .tab-mapa-inner .rm-svg{
     width:100%;height:auto;display:block;border-radius:12px;
-    background:radial-gradient(ellipse at center,#241914 0%,#0c0905 90%);
-    border:1px solid rgba(243,197,138,.08);
+    background:radial-gradient(ellipse at center,#102019 0%,#0c0905 90%);
+    border:1px solid rgba(63,227,178,.08);
   }
-  .tab-mapa-inner .rm-svg .trail-bg{fill:none;stroke:rgba(243,197,138,.22);stroke-width:2.5;stroke-dasharray:4 5;stroke-linecap:round}
-  .tab-mapa-inner .rm-svg .trail-fg{fill:none;stroke:#f3c58a;stroke-width:3.5;stroke-linecap:round}
-  .tab-mapa-inner .rm-svg .wp-dot{fill:#1a1410;stroke:#f3c58a;stroke-width:2}
-  .tab-mapa-inner .rm-svg .wp-dot.passed{fill:#f3c58a}
-  .tab-mapa-inner .rm-svg .wp-label{fill:#e8d2a8;font-size:10px;text-anchor:middle;font-family:var(--font-ui);font-weight:600}
-  .tab-mapa-inner .rm-svg .wp-label.passed{fill:#f3c58a}
-  .tab-mapa-inner .rm-svg .pin-pulse{fill:none;stroke:#ee6d20;stroke-width:2;opacity:.6;animation:rm-pulse 1.8s ease-out infinite}
-  .tab-mapa-inner .rm-svg .pin-dot{fill:#ee6d20;stroke:#fff;stroke-width:2.5}
+  .tab-mapa-inner .rm-svg .trail-bg{fill:none;stroke:rgba(63,227,178,.22);stroke-width:2.5;stroke-dasharray:4 5;stroke-linecap:round}
+  .tab-mapa-inner .rm-svg .trail-fg{fill:none;stroke:#3FE3B2;stroke-width:3.5;stroke-linecap:round}
+  .tab-mapa-inner .rm-svg .wp-dot{fill:#1a1410;stroke:#3FE3B2;stroke-width:2}
+  .tab-mapa-inner .rm-svg .wp-dot.passed{fill:#3FE3B2}
+  .tab-mapa-inner .rm-svg .wp-label{fill:#9fe9cf;font-size:10px;text-anchor:middle;font-family:var(--font-ui);font-weight:600}
+  .tab-mapa-inner .rm-svg .wp-label.passed{fill:#3FE3B2}
+  .tab-mapa-inner .rm-svg .pin-pulse{fill:none;stroke:#3FE3B2;stroke-width:2;opacity:.6;animation:rm-pulse 1.8s ease-out infinite}
+  .tab-mapa-inner .rm-svg .pin-dot{fill:#3FE3B2;stroke:#fff;stroke-width:2.5}
   .tab-mapa-inner .rm-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px}
 
   /* Logros tab */
@@ -825,24 +854,24 @@
   .logros-medals{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:24px;min-height:36px}
   .logros-medals .logro-empty{font-size:13px;color:var(--ink-soft);font-style:italic}
   .logros-ranks{display:flex;flex-direction:column;gap:6px;font-size:14px}
-  .logros-ranks .lr-row{display:flex;justify-content:space-between;padding:8px 12px;background:rgba(243,197,138,.06);border-radius:8px}
-  .logros-ranks .lr-row.achieved{background:rgba(243,197,138,.16);color:var(--accent-deep,#d4ad77);font-weight:600}
+  .logros-ranks .lr-row{display:flex;justify-content:space-between;padding:8px 12px;background:rgba(63,227,178,.06);border-radius:8px}
+  .logros-ranks .lr-row.achieved{background:rgba(63,227,178,.16);color:var(--accent-deep,#10C896);font-weight:600}
 
   /* Ajustes tab */
   .ajustes-list{display:flex;flex-direction:column;gap:8px}
   .ajustes-row{
     display:flex;align-items:center;gap:12px;
     width:100%;padding:14px 16px;text-align:left;
-    background:rgba(243,197,138,.05);
-    border:1px solid rgba(243,197,138,.1);border-radius:10px;
+    background:rgba(63,227,178,.05);
+    border:1px solid rgba(63,227,178,.1);border-radius:10px;
     color:inherit;cursor:pointer;font:inherit;
     transition:background .15s;
   }
-  .ajustes-row:hover{background:rgba(243,197,138,.1)}
+  .ajustes-row:hover{background:rgba(63,227,178,.1)}
   .ajustes-row:active{transform:scale(.99)}
   .ajustes-row .ajustes-icon{font-size:18px;flex:0 0 auto;width:24px;text-align:center}
   .ajustes-row .ajustes-label{flex:1;font-weight:600}
-  .ajustes-row .ajustes-value{color:var(--accent-deep,#d4ad77);font-size:13px}
+  .ajustes-row .ajustes-value{color:var(--accent-deep,#10C896);font-size:13px}
 
   /* Map button — mirrors pano-toggle on the LEFT side of the panorama.
      Tap opens the overview map modal. */
@@ -872,16 +901,16 @@
     background:linear-gradient(180deg,#1a1410 0%,#0c0905 100%);
     border-radius:18px;
     padding:18px 18px 16px;
-    color:#f3e6d2;
+    color:#e9f5ef;
     display:flex;flex-direction:column;
     box-shadow:0 30px 80px rgba(0,0,0,.55);
   }
   .route-map-modal .rm-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px}
   .route-map-modal .rm-titles{flex:1;min-width:0}
   .route-map-modal .rm-title{font-family:var(--font-display);font-size:22px;font-weight:700;line-height:1.1}
-  .route-map-modal .rm-sub{font-size:13px;color:#d4ad77;margin-top:3px}
+  .route-map-modal .rm-sub{font-size:13px;color:#10C896;margin-top:3px}
   .route-map-modal .rm-close{
-    background:transparent;border:0;color:#f3e6d2;
+    background:transparent;border:0;color:#e9f5ef;
     font-size:24px;line-height:1;width:32px;height:32px;
     cursor:pointer;padding:0;border-radius:50%;
     display:flex;align-items:center;justify-content:center;
@@ -891,18 +920,18 @@
   .route-map-modal .rm-svg{
     width:100%;height:auto;
     display:block;
-    background:radial-gradient(ellipse at center,#241914 0%,#0c0905 90%);
+    background:radial-gradient(ellipse at center,#102019 0%,#0c0905 90%);
     border-radius:12px;
-    border:1px solid rgba(243,197,138,.08);
+    border:1px solid rgba(63,227,178,.08);
   }
-  .route-map-modal .rm-svg .trail-bg{fill:none;stroke:rgba(243,197,138,.22);stroke-width:2.5;stroke-dasharray:4 5;stroke-linecap:round}
-  .route-map-modal .rm-svg .trail-fg{fill:none;stroke:#f3c58a;stroke-width:3.5;stroke-linecap:round}
-  .route-map-modal .rm-svg .wp-dot{fill:#1a1410;stroke:#f3c58a;stroke-width:2}
-  .route-map-modal .rm-svg .wp-dot.passed{fill:#f3c58a}
-  .route-map-modal .rm-svg .wp-label{fill:#e8d2a8;font-size:10px;text-anchor:middle;font-family:var(--font-ui);font-weight:600}
-  .route-map-modal .rm-svg .wp-label.passed{fill:#f3c58a}
-  .route-map-modal .rm-svg .pin-pulse{fill:none;stroke:#ee6d20;stroke-width:2;opacity:.6}
-  .route-map-modal .rm-svg .pin-dot{fill:#ee6d20;stroke:#fff;stroke-width:2.5}
+  .route-map-modal .rm-svg .trail-bg{fill:none;stroke:rgba(63,227,178,.22);stroke-width:2.5;stroke-dasharray:4 5;stroke-linecap:round}
+  .route-map-modal .rm-svg .trail-fg{fill:none;stroke:#3FE3B2;stroke-width:3.5;stroke-linecap:round}
+  .route-map-modal .rm-svg .wp-dot{fill:#1a1410;stroke:#3FE3B2;stroke-width:2}
+  .route-map-modal .rm-svg .wp-dot.passed{fill:#3FE3B2}
+  .route-map-modal .rm-svg .wp-label{fill:#9fe9cf;font-size:10px;text-anchor:middle;font-family:var(--font-ui);font-weight:600}
+  .route-map-modal .rm-svg .wp-label.passed{fill:#3FE3B2}
+  .route-map-modal .rm-svg .pin-pulse{fill:none;stroke:#3FE3B2;stroke-width:2;opacity:.6}
+  .route-map-modal .rm-svg .pin-dot{fill:#3FE3B2;stroke:#fff;stroke-width:2.5}
   @keyframes rm-pulse{0%{r:7;opacity:.7}100%{r:20;opacity:0}}
   .route-map-modal .rm-svg .pin-pulse{animation:rm-pulse 1.8s ease-out infinite}
   .route-map-modal .rm-stats{
@@ -911,10 +940,10 @@
   }
   .route-map-modal .rm-stat{
     background:rgba(20,16,12,.55);
-    border:1px solid rgba(243,197,138,.08);
+    border:1px solid rgba(63,227,178,.08);
     border-radius:10px;padding:9px 8px;text-align:center;
   }
-  .route-map-modal .rm-stat .v{font-size:18px;font-weight:700;color:#f3c58a;line-height:1.1}
+  .route-map-modal .rm-stat .v{font-size:18px;font-weight:700;color:#3FE3B2;line-height:1.1}
   .route-map-modal .rm-stat .l{font-size:11px;color:#a18866;margin-top:3px}
 
   /* Toggle button floats in the panorama's top-right corner.
@@ -963,7 +992,7 @@
     display:flex;align-items:flex-end;justify-content:center;
   }
   .pano-pl-hiker .hiker-sil{
-    width:64px;height:96px;background:#ee6d20;display:block;
+    width:64px;height:96px;background:#3FE3B2;display:block;
     -webkit-mask-position:center bottom;mask-position:center bottom;
     -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
     -webkit-mask-size:contain;mask-size:contain;
@@ -1113,14 +1142,6 @@
         <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M5.5 1L1 2.6v11.4l4.5-1.6 5 1.6 4.5-1.6V1L10.5 2.6 5.5 1zm0 1.6l4 1.3v9.4l-4-1.3V2.6zm5 1.3l3.5-1.3v9.4l-3.5 1.3V3.9z"/></svg>
         <span>Mapa</span>
       </button>
-      <!-- Toggle: switch between full-screen panorama and short strip mode.
-           Shows icon + label so it's obvious what tapping it will do. -->
-      <button class="pano-toggle" id="pano-toggle" type="button" aria-label="Cambiar tamaño de la panorama">
-        <svg class="pano-toggle-full" viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M2 9.5h2v2H6v1.5H2v-3.5zm12 0v3.5h-4v-1.5h2v-2h2zm-12-3V3h4v1.5H4v2H2zm12 0H12v-2h-2V3h4v3.5z"/></svg>
-        <svg class="pano-toggle-short" viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M4 8.5h2v-2H7.5V10.5h-3.5v-2zm6 0h2v-2H10.5V10.5H14v-2h-4zM6 5.5V3.5H7.5V0.5H4V2h2v3.5h0zm6 0V3.5H10.5V0.5H14V2h-2v3.5h0z"/></svg>
-        <span class="pano-toggle-label-full">Pantalla completa</span>
-        <span class="pano-toggle-label-short">Vista compacta</span>
-      </button>
     </div>
 
     <!-- ROUTE MAP MODAL — Fantasy-Hike-style overview of the whole trail.
@@ -1173,8 +1194,6 @@
       <div class="eta healthy" id="eta-health"><div class="v" id="eta-health-v">—</div><div class="l" id="eta-health-l">al ritmo saludable</div></div>
     </div>
 
-    <div class="stats" id="stats"></div>
-
     <!-- STEPS OF THE DAY -->
     <div class="day">
       <div class="day-top">
@@ -1207,10 +1226,6 @@
       </div>
     </div>
 
-    <div class="passport">
-      <h3>Pasaporte</h3>
-      <div id="stops"></div>
-    </div>
 
     <button class="btn block sm" id="reset-btn" style="margin-top:6px">Reiniciar esta ruta</button>
 
@@ -1242,19 +1257,15 @@
     </div>
   </section>
 
-  <!-- ====================== TAB: LOGROS (achievements) ====================== -->
-  <section class="tab-page tab-logros hide">
+  <!-- ====================== TAB: PASAPORTE (route stamps feed) =============
+       Fantasy-Hike-style passport: a scrollable feed of the landmarks you've
+       reached on the current route. Each reached stop is a banner card (scene
+       art + name chip + distance/flavor); upcoming stops show as locked rows. -->
+  <section class="tab-page tab-pasaporte hide">
     <div class="tab-inner">
-      <h2 class="tab-h">Logros</h2>
-      <div class="logros-summary">
-        <div class="rm-stat"><div class="v" id="logros-streak">—</div><div class="l">días seguidos</div></div>
-        <div class="rm-stat"><div class="v" id="logros-total-miles">—</div><div class="l">millas totales</div></div>
-        <div class="rm-stat"><div class="v" id="logros-routes-done">—</div><div class="l">rutas completadas</div></div>
-      </div>
-      <h3 class="tab-h2">Medallas de hoy</h3>
-      <div class="logros-medals" id="logros-medals-today"></div>
-      <h3 class="tab-h2">Rangos del día</h3>
-      <div class="logros-ranks" id="logros-ranks"></div>
+      <h2 class="tab-h">Pasaporte</h2>
+      <p class="pp-intro" id="pp-intro">—</p>
+      <div id="stops" class="pasaporte-feed"></div>
     </div>
   </section>
 
@@ -1278,10 +1289,20 @@
           <span class="ajustes-label">Tu ruta</span>
           <span class="ajustes-value" id="ajustes-route-val">—</span>
         </button>
+        <button class="ajustes-row" id="ajustes-goal" type="button">
+          <span class="ajustes-icon">🎯</span>
+          <span class="ajustes-label">Meta diaria</span>
+          <span class="ajustes-value" id="ajustes-goal-val">—</span>
+        </button>
         <button class="ajustes-row" id="ajustes-mute" type="button">
           <span class="ajustes-icon">🔔</span>
           <span class="ajustes-label">Avisos del coach</span>
           <span class="ajustes-value" id="ajustes-mute-val">—</span>
+        </button>
+        <button class="ajustes-row" id="ajustes-theme" type="button">
+          <span class="ajustes-icon">🎨</span>
+          <span class="ajustes-label">Tema</span>
+          <span class="ajustes-value" id="ajustes-theme-val">—</span>
         </button>
         <button class="ajustes-row" id="ajustes-reset" type="button">
           <span class="ajustes-icon">↺</span>
@@ -1306,11 +1327,13 @@
       </svg>
       <span class="tab-lbl">Mapa</span>
     </button>
-    <button class="tab-btn" type="button" data-tab="logros" aria-label="Logros">
+    <button class="tab-btn" type="button" data-tab="pasaporte" aria-label="Pasaporte">
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M6 4h12v3a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V4zM6 4H4v3a3 3 0 0 0 3 3M18 4h2v3a3 3 0 0 1-3 3M10 11v4a2 2 0 0 1-2 2h-1v3h10v-3h-1a2 2 0 0 1-2-2v-4"/>
+        <rect x="5" y="3" width="14" height="18" rx="2"/>
+        <circle cx="12" cy="10.5" r="2.8"/>
+        <path d="M9.2 16.2h5.6"/>
       </svg>
-      <span class="tab-lbl">Logros</span>
+      <span class="tab-lbl">Pasaporte</span>
     </button>
     <button class="tab-btn" type="button" data-tab="ajustes" aria-label="Ajustes">
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1548,12 +1571,14 @@ var state=(function(){
       if(typeof p.maestroSeen !== 'boolean') p.maestroSeen = false;  // first-ever Maestro reveal
       if(typeof p.silverDays   !== 'number')  p.silverDays   = 0;     // lifetime 🥈 unlocks
       if(typeof p.goldDays     !== 'number')  p.goldDays     = 0;     // lifetime 🥇 unlocks
-      // Panorama display mode — 'full' (default, Fantasy-Hike sized) or 'short' (strip + stats)
-      if(p.panoMode !== 'full' && p.panoMode !== 'short') p.panoMode = 'full';
+      // Panorama display mode — toggle removed; panorama is a single fixed
+      // hero size. Force any legacy 'full' state to 'short' so old sessions
+      // don't hide the coach / step controls.
+      p.panoMode = 'short';
       return p;
     }}
   }catch(e){}
-  return {goal:DEFAULT_GOAL, j:{}, maestroSeen:false, silverDays:0, goldDays:0, panoMode:'full'};
+  return {goal:DEFAULT_GOAL, j:{}, maestroSeen:false, silverDays:0, goldDays:0, panoMode:'short'};
 })();
 function save(){try{LS.setItem(STORE_KEY,JSON.stringify(state));}catch(e){}}
 
@@ -2985,7 +3010,7 @@ function panoHiker(x,y,fill,filterId){
   }
   // Fallback: procedural silhouette. Color also adapts: ink on light skies,
   // paper on dusk, mint on night, so the procedural hiker stays readable too.
-  var colorByFilter = {hkInk:['#1a1614','#0b0a09'],hkPaper:['#fbfaf6','#ece6d8'],hkMint:['#10C896','#0EA178'],hkOrange:['#ee6d20','#c95613']};
+  var colorByFilter = {hkInk:['#1a1614','#0b0a09'],hkPaper:['#fbfaf6','#ece6d8'],hkMint:['#10C896','#0EA178'],hkOrange:['#3FE3B2','#10C896']};
   var pair = colorByFilter[fId] || colorByFilter.hkMint;
   var ACC = pair[0], ACCD = pair[1];
   return '<g>'
@@ -3117,7 +3142,7 @@ function buildPanorama(j,walked,c){
   defs+='<filter id="hkInk"    x="0%" y="0%" width="100%" height="100%"><feColorMatrix type="matrix" values="0 0 0 0 0.102  0 0 0 0 0.086  0 0 0 0 0.078  0 0 0 1 0"/></filter>';
   defs+='<filter id="hkPaper"  x="0%" y="0%" width="100%" height="100%"><feColorMatrix type="matrix" values="0 0 0 0 0.984  0 0 0 0 0.980  0 0 0 0 0.965  0 0 0 1 0"/></filter>';
   defs+='<filter id="hkMint"   x="0%" y="0%" width="100%" height="100%"><feColorMatrix type="matrix" values="0 0 0 0 0.063  0 0 0 0 0.784  0 0 0 0 0.588  0 0 0 1 0"/></filter>';
-  defs+='<filter id="hkOrange" x="0%" y="0%" width="100%" height="100%"><feColorMatrix type="matrix" values="0 0 0 0 0.933  0 0 0 0 0.427  0 0 0 0 0.125  0 0 0 1 0"/></filter>';
+  defs+='<filter id="hkOrange" x="0%" y="0%" width="100%" height="100%"><feColorMatrix type="matrix" values="0 0 0 0 0.247  0 0 0 0 0.890  0 0 0 0 0.698  0 0 0 1 0"/></filter>';
   defs+='</defs>';
   s+=defs;
   s+='<rect width="'+W+'" height="'+H+'" fill="url(#pTop)"/>';
@@ -3377,7 +3402,7 @@ function switchTab(name){
   _activeTab = name;
   // Render the tab's content on entry
   if (name === 'mapa')   renderMapaTab();
-  if (name === 'logros') renderLogrosTab();
+  if (name === 'pasaporte') renderPasaporte();
   if (name === 'ajustes') renderAjustesTab();
   // Reset scroll to top when switching
   try { window.scrollTo(0, 0); } catch(e){}
@@ -3507,11 +3532,15 @@ function renderAjustesTab(){
   var ch = state.character && CHARACTER_NAMES[state.character] ? CHARACTER_NAMES[state.character] : 'Sin elegir';
   var r = current && J(current) ? (J(current).name || current) : 'Sin elegir';
   var muted = state.coachMuted ? 'Silenciados' : 'Activos';
+  var goal = state.goal ? state.goal.toLocaleString('es') + ' pasos' : 'Sin elegir';
+  var theme = document.body.getAttribute('data-theme') === 'black' ? 'Oscuro' : 'Claro';
   var setVal = function(id, v){ var el = document.getElementById(id); if (el) el.textContent = v; };
   setVal('ajustes-coach-val', c);
   setVal('ajustes-character-val', ch);
   setVal('ajustes-route-val', r);
+  setVal('ajustes-goal-val', goal);
   setVal('ajustes-mute-val', muted);
+  setVal('ajustes-theme-val', theme);
 }
 
 /* Wire tab buttons + settings rows once. */
@@ -3527,11 +3556,18 @@ function renderAjustesTab(){
   var ch = byId('ajustes-character');
   if (ch) ch.onclick = function(){ if (typeof showCharacterPicker === 'function') showCharacterPicker(); };
   var rt = byId('ajustes-route');
-  if (rt) rt.onclick = function(){ if (typeof showRoutePicker === 'function') showRoutePicker(); };
+  if (rt) rt.onclick = function(){ if (typeof showRoutes === 'function') showRoutes(); };
+  var goal = byId('ajustes-goal');
+  if (goal) goal.onclick = function(){ if (typeof showGoalPicker === 'function') showGoalPicker(); };
   var mute = byId('ajustes-mute');
   if (mute) mute.onclick = function(){
     state.coachMuted = !state.coachMuted;
     save();
+    renderAjustesTab();
+  };
+  var theme = byId('ajustes-theme');
+  if (theme) theme.onclick = function(){
+    if (typeof toggleTheme === 'function') toggleTheme();
     renderAjustesTab();
   };
   var reset = byId('ajustes-reset');
@@ -3807,7 +3843,7 @@ function _paintParallaxHiker(){
     var f = charFile(state.character);
     hk.innerHTML = '<span class="hiker-sil" style="-webkit-mask-image:url(\''+f+'\');mask-image:url(\''+f+'\')"></span>';
   } else {
-    hk.innerHTML = '<span style="width:14px;height:30px;background:#ee6d20;border-radius:40% 40% 30% 30%;margin-bottom:8px;display:block"></span>';
+    hk.innerHTML = '<span style="width:14px;height:30px;background:#3FE3B2;border-radius:40% 40% 30% 30%;margin-bottom:8px;display:block"></span>';
   }
 }
 
@@ -3916,9 +3952,10 @@ function render(){
   document.getElementById('eta-health-v').textContent=done?'✓':nFmt(dHealth);
   document.getElementById('eta-health-l').innerHTML=done?'¡bien hecho!':'días al ritmo saludable<br>'+nFmt(RECOMMENDED)+'/día';
 
-  // stats row
+  // stats row — only present in Estadísticas now; guard in case absent
   var pct=Math.min(100,Math.round(walked/j.total*100));
-  document.getElementById('stats').innerHTML=
+  var statsEl=document.getElementById('stats');
+  if(statsEl) statsEl.innerHTML=
     statTile(fmtMi1(walked),'Recorrido')+statTile(pct+'%','Completado')+statTile(fmtMi1(remainMi),'Faltan');
 
   // day card
@@ -3938,23 +3975,55 @@ function render(){
   document.getElementById('goal-link').textContent=nFmt(state.goal)+' pasos';
   document.getElementById('undo-link').classList.toggle('hide',ts<=0);
 
-  // passport — each stop is a place you "collect" as a scene when you reach it
-  var sc=document.getElementById('stops');sc.innerHTML='';
-  var nextShown=false;
-  j.stops.forEach(function(st,i){
-    var on=walked>=st.mi-0.001;
-    var isNext=!on&&!nextShown; if(isNext)nextShown=true;
-    var d=document.createElement('div');d.className='stop'+(on?'':' locked')+(isNext?' next':'')+(on?' clickable':'');
-    var label=i===0?'Salida':fmtMi(st.mi)+' desde la salida';
-    var foot=on?st.f:(isNext?('Próxima parada — a '+fmtMi1(Math.max(0,st.mi-walked))+'.'):'Bloqueado — sigue caminando.');
-    var thumb;
-    if(on){ var s3=sceneOf(j.id,st,i,j.stops.length); thumb='<div class="stop-thumb">'+sceneSVG(s3.biome,s3.mood,SC)+'</div>'; }
-    else { thumb='<div class="stop-thumb locked">·</div>'; }
-    d.innerHTML=thumb+'<div class="stop-body"><div class="nm">'+st.n+'</div><div class="di">'+label+'</div><div class="ft">'+foot+'</div></div>';
-    if(on){ d.onclick=(function(idx){return function(){openScene(j,idx);};})(i); }
-    sc.appendChild(d);
-  });
+  // passport — rendered as a banner feed in the Pasaporte tab
+  renderPasaporte(j, walked);
   save();
+}
+
+/* ============================================================================
+   PASAPORTE — Fantasy-Hike-style feed of the landmarks reached on the route.
+   Reached stops render as banner cards (scene art + name chip + flavor);
+   upcoming stops render as locked rows. Lives in the Pasaporte tab; called
+   by render() and on tab entry. Safe to call when the tab DOM is absent.
+============================================================================ */
+function renderPasaporte(j, walked){
+  if(!j){ if(!current) return; j=J(current); }
+  if(!j) return;
+  if(typeof walked!=='number'){ walked=cumSteps(current)/STEPS_PER_MILE; }
+  var sc=document.getElementById('stops'); if(!sc) return;
+  var SC=sceneCSS();
+  var reached=[], locked=[];
+  j.stops.forEach(function(st,i){
+    (walked>=st.mi-0.001 ? reached : locked).push({st:st,i:i});
+  });
+  var intro=document.getElementById('pp-intro');
+  if(intro) intro.textContent='Has sellado '+reached.length+' de '+j.stops.length+' paradas'+(j.name?' en '+j.name:'')+'.';
+  var html='';
+  // reached → banner cards, most recent (furthest) first
+  reached.slice().reverse().forEach(function(o){
+    var st=o.st, i=o.i, s3=sceneOf(j.id,st,i,j.stops.length);
+    var label=(i===0?'Salida':fmtMi(st.mi)+' desde la salida');
+    html+='<article class="pp-card on" data-i="'+i+'">'
+      +'<div class="pp-banner">'+sceneSVG(s3.biome,s3.mood,SC)+'</div>'
+      +'<span class="pp-chip">'+st.n+'</span>'
+      +'<div class="pp-cap"><div class="pp-meta">'+label+'</div>'
+      +'<div class="pp-line">'+(st.f||'')+'</div></div>'
+      +'</article>';
+  });
+  // upcoming → locked rows (first one is the next stop)
+  locked.forEach(function(o,idx){
+    var st=o.st, isNext=(idx===0);
+    var foot=isNext?('Próxima parada — a '+fmtMi1(Math.max(0,st.mi-walked))+'.'):'Bloqueado — sigue caminando.';
+    html+='<div class="pp-locked'+(isNext?' next':'')+'">'
+      +'<span class="pp-lock-ico">'+(isNext?'◷':'🔒')+'</span>'
+      +'<div class="pp-lock-body"><div class="pp-lock-nm">'+st.n+'</div><div class="pp-lock-ft">'+foot+'</div></div>'
+      +'<span class="pp-lock-mi">'+fmtMi(st.mi)+'</span></div>';
+  });
+  if(!html) html='<p class="pp-intro">Camina para sellar tu primera parada.</p>';
+  sc.innerHTML=html;
+  sc.querySelectorAll('.pp-card.on').forEach(function(card){
+    card.onclick=function(){ openScene(j, parseInt(card.getAttribute('data-i'),10)); };
+  });
 }
 
 /* ============================================================================
