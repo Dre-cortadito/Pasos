@@ -843,11 +843,19 @@
   .tab-mapa-inner .rm-head{display:flex;align-items:flex-start;gap:10px;margin:8px 0 12px}
   .tab-mapa-inner .rm-title{font-family:var(--font-display);font-size:22px;font-weight:700;line-height:1.1}
   .tab-mapa-inner .rm-sub{font-size:13px;color:var(--accent-deep,#10C896);margin-top:3px}
-  .tab-mapa-inner .rm-svg{
-    width:100%;height:auto;display:block;border-radius:12px;
+  /* Zoom/pan wrapper for the aerial map — the SVG is rendered larger than the
+     wrapper and the wrapper scrolls (pan to follow the route). */
+  .rm-zoomwrap{
+    overflow:auto;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;
+    border-radius:12px;border:1px solid rgba(63,227,178,.12);
     background:radial-gradient(ellipse at center,#102019 0%,#0c0905 90%);
-    border:1px solid rgba(63,227,178,.08);
   }
+  .tab-mapa-inner .rm-svg{
+    width:100%;height:auto;display:block;border:0;border-radius:0;background:none;
+  }
+  /* Horizontal zoom/scroll for the elevation profile */
+  .trail-scroll{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-x}
+  .trail-scroll svg{display:block;height:auto;width:300%;min-width:980px}
   .tab-mapa-inner .rm-svg .trail-bg{fill:none;stroke:rgba(63,227,178,.22);stroke-width:2.5;stroke-dasharray:4 5;stroke-linecap:round}
   .tab-mapa-inner .rm-svg .trail-fg{fill:none;stroke:#3FE3B2;stroke-width:3.5;stroke-linecap:round}
   .tab-mapa-inner .rm-svg .wp-dot{fill:#1a1410;stroke:#3FE3B2;stroke-width:2}
@@ -1256,12 +1264,14 @@
           <div class="rm-sub" id="rm-sub-tab">—</div>
         </div>
       </div>
-      <svg class="rm-svg" id="rm-svg-tab" viewBox="0 0 800 460" preserveAspectRatio="xMidYMid meet">
-        <path id="rm-trail-bg-tab" class="trail-bg"></path>
-        <path id="rm-trail-fg-tab" class="trail-fg"></path>
-        <g id="rm-waypoints-tab"></g>
-        <g id="rm-player-pin-tab"></g>
-      </svg>
+      <div class="rm-zoomwrap" id="rm-zoomwrap">
+        <svg class="rm-svg" id="rm-svg-tab" viewBox="0 0 800 460" preserveAspectRatio="xMidYMid meet">
+          <path id="rm-trail-bg-tab" class="trail-bg"></path>
+          <path id="rm-trail-fg-tab" class="trail-fg"></path>
+          <g id="rm-waypoints-tab"></g>
+          <g id="rm-player-pin-tab"></g>
+        </svg>
+      </div>
       <div class="rm-stats">
         <div class="rm-stat"><div class="v" id="rm-stat-walked-tab">—</div><div class="l">recorrido</div></div>
         <div class="rm-stat"><div class="v" id="rm-stat-left-tab">—</div><div class="l">restante</div></div>
@@ -2832,20 +2842,23 @@ function buildTrailProfile(j,walked){
     var on=walked>=st.mi-1e-6, p=pts[idx], isPass=passes.indexOf(idx)>=0;
     // tent for day-camp stops (drawn below the dot)
     if(campMi[st.mi]){ var tx=p.x, tyc=p.y+12; s+='<path d="M '+(tx-6)+' '+(tyc+6)+' L '+tx+' '+(tyc-5)+' L '+(tx+6)+' '+(tyc+6)+' Z" fill="none" stroke="'+(on?DP:SOFT)+'" stroke-width="1.6" stroke-linejoin="round"/><line x1="'+tx+'" y1="'+(tyc-5)+'" x2="'+tx+'" y2="'+(tyc+6)+'" stroke="'+(on?DP:SOFT)+'" stroke-width="1.2"/>'; }
-    if(isPass){ var dd=5.5; s+='<rect x="'+(p.x-dd)+'" y="'+(p.y-dd)+'" width="'+(dd*2)+'" height="'+(dd*2)+'" rx="1.5" transform="rotate(45 '+p.x+' '+p.y+')" fill="'+(on?ACC:BG)+'" stroke="'+(on?DP:LNS)+'" stroke-width="2"/>';
+    if(isPass){ var dd=5.5; s+='<rect x="'+(p.x-dd)+'" y="'+(p.y-dd)+'" width="'+(dd*2)+'" height="'+(dd*2)+'" rx="1.5" transform="rotate(45 '+p.x+' '+p.y+')" fill="'+(on?INK:BG)+'" stroke="'+(on?'#fbfaf6':INK)+'" stroke-width="2"/>';
       s+='<text x="'+p.x+'" y="'+(p.y+(campMi[st.mi]?30:14))+'" text-anchor="middle" font-size="8.5" font-weight="700" fill="'+(on?DP:SOFT)+'">'+passTag[idx]+'</text>'; }
-    else { s+='<circle cx="'+p.x+'" cy="'+p.y+'" r="'+(on?4:3.5)+'" fill="'+(on?ACC:BG)+'" stroke="'+(on?DP:LNS)+'" stroke-width="2"/>'; }
+    else { s+='<circle cx="'+p.x+'" cy="'+p.y+'" r="'+(on?4:3.5)+'" fill="'+(on?INK:BG)+'" stroke="'+(on?'#fbfaf6':INK)+'" stroke-width="2"/>'; }
     // angled name + elevation, anchored to keep within bounds
     var anc = (p.x > padL+iw*0.60) ? 'end' : 'start';
     var lx=p.x+(anc==='end'?-7:7), ly=p.y-9;
-    s+='<text transform="rotate(-42 '+lx+' '+ly+')" x="'+lx+'" y="'+ly+'" text-anchor="'+anc+'" font-size="10" font-weight="700" fill="'+(on?DP:INK)+'">'+_esc(shortName(st.n))+'  <tspan font-size="8.5" font-weight="600" fill="'+SOFT+'">'+st.el.toLocaleString('es')+' m</tspan></text>';
+    s+='<text transform="rotate(-42 '+lx+' '+ly+')" x="'+lx+'" y="'+ly+'" text-anchor="'+anc+'" font-size="10" font-weight="700" fill="'+INK+'">'+_esc(shortName(st.n))+'  <tspan font-size="8.5" font-weight="600" fill="'+SOFT+'">'+st.el.toLocaleString('es')+' m</tspan></text>';
   });
   // player marker riding the profile
   s+='<line x1="'+px+'" y1="'+py+'" x2="'+px+'" y2="'+baseY+'" stroke="'+ACC+'" stroke-width="1.5" stroke-dasharray="2 3" opacity="0.7"/>';
   s+='<circle cx="'+px+'" cy="'+py+'" r="8" fill="none" stroke="'+ACC+'" stroke-width="2" opacity="0.45"/>';
   s+='<circle cx="'+px+'" cy="'+py+'" r="5.5" fill="'+ACC+'" stroke="'+BG+'" stroke-width="2"/>';
   s+='</svg>';
-  return '<div class="trail-label">Perfil de elevación</div>'+s+_trailMeta(j,walked);
+  var pfx=_round1(px/W*1000)/1000;
+  return '<div class="trail-label">Perfil de elevación</div>'
+    +'<div class="trail-scroll" data-pfx="'+pfx+'">'+s+'</div>'
+    +_trailMeta(j,walked);
 }
 
 /* Simple flat progress bar — fallback for routes without elevation data. */
@@ -3597,6 +3610,16 @@ function incaMountain(x,y,s,snow){
   return t;
 }
 function _esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+/* Scroll a zoom wrapper so the given fraction of its content is centred. */
+function _centerScroll(wrap, fx, fy){
+  if(!wrap) return;
+  requestAnimationFrame(function(){
+    try{
+      if(fx!=null && wrap.scrollWidth>wrap.clientWidth)  wrap.scrollLeft = Math.max(0, wrap.scrollWidth*fx  - wrap.clientWidth/2);
+      if(fy!=null && wrap.scrollHeight>wrap.clientHeight) wrap.scrollTop  = Math.max(0, wrap.scrollHeight*fy - wrap.clientHeight/2);
+    }catch(e){}
+  });
+}
 function renderIncaAerial(svg, walkedMi, totalMi){
   var A=INCA_AERIAL, stops=J('inca').stops, N=stops.length, VW=A.VW, VH=A.VH;
   svg.setAttribute('viewBox','0 0 '+VW+' '+VH);
@@ -3652,6 +3675,19 @@ function renderIncaAerial(svg, walkedMi, totalMi){
   s+='<circle cx="'+hx+'" cy="'+headY+'" r="'+R+'" fill="#1a1614" stroke="#fbfaf6" stroke-width="3"/>';
   s+='<circle cx="'+hx+'" cy="'+headY+'" r="6.5" fill="#3FE3B2"/>';
   svg.innerHTML=s;
+  // Zoom (~3×) + pan to centre on the player
+  var wrap=svg.parentNode;
+  if(wrap && wrap.classList && wrap.classList.contains('rm-zoomwrap')){
+    var fx=playerPt.x/VW, fy=playerPt.y/VH;
+    requestAnimationFrame(function(){
+      var ww=wrap.clientWidth||340, ZOOM=3;
+      var winH=Math.min(Math.round(ww*0.8), Math.round((window.innerHeight||700)*0.52));
+      wrap.style.height=winH+'px';
+      svg.style.width=Math.round(ww*ZOOM)+'px';
+      svg.style.height=Math.round(ww*ZOOM*(VH/VW))+'px';
+      _centerScroll(wrap, fx, fy);
+    });
+  }
 }
 
 /* Render the Mapa tab. For the Inca route it draws the aerial map; other
@@ -3675,6 +3711,10 @@ function renderMapaTab(){
     else ovBtn.style.display='none';
   }
 
+  // Centre the (zoomed) elevation profile scroll on the player's position
+  var tsc=document.querySelector('#trail .trail-scroll');
+  if(tsc){ _centerScroll(tsc, parseFloat(tsc.getAttribute('data-pfx'))||0, null); }
+
   // INCA → aerial map
   if (current === 'inca' && typeof INCA_AERIAL !== 'undefined'){
     renderIncaAerial(svg, walked, j.total);
@@ -3687,7 +3727,12 @@ function renderMapaTab(){
     return;
   }
 
-  // OTHER ROUTES → rebuild the simple curve structure, then position it
+  // OTHER ROUTES → reset any aerial zoom, rebuild the simple curve, position it
+  var gwrap=svg.parentNode;
+  if(gwrap && gwrap.classList && gwrap.classList.contains('rm-zoomwrap')){
+    gwrap.style.height=''; gwrap.scrollLeft=0; gwrap.scrollTop=0;
+    svg.style.width='100%'; svg.style.height='auto';
+  }
   svg.setAttribute('viewBox','0 0 800 460');
   svg.innerHTML = '<path id="rm-trail-bg-tab" class="trail-bg"></path>'
     + '<path id="rm-trail-fg-tab" class="trail-fg"></path>'
