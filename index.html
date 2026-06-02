@@ -761,6 +761,79 @@
   body.pano-full .stats,
   body.pano-full .coach-card-game,
   body.pano-full .day{display:none}
+  /* Map button — mirrors pano-toggle on the LEFT side of the panorama.
+     Tap opens the overview map modal. */
+  .pano-map-btn{
+    position:absolute;top:8px;left:8px;z-index:20;
+    height:32px;padding:0 12px 0 10px;border-radius:999px;
+    background:rgba(20,18,14,.6);color:#fff;border:0;
+    display:inline-flex;align-items:center;gap:6px;
+    font:600 12px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    letter-spacing:.01em;
+    cursor:pointer;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+    transition:background .15s,transform .08s;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .pano-map-btn:active{transform:scale(.96)}
+  .pano-map-btn:hover{background:rgba(20,18,14,.8)}
+  .pano-map-btn svg{flex:0 0 auto}
+
+  /* Route-map modal — fullscreen-ish dark overlay with the trail SVG. */
+  .route-map-modal{position:fixed;inset:0;z-index:2500;display:none;align-items:center;justify-content:center;padding:16px}
+  .route-map-modal.open{display:flex}
+  .route-map-modal .rm-overlay{position:absolute;inset:0;background:rgba(8,6,4,.86);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+  .route-map-modal .rm-panel{
+    position:relative;
+    width:min(96vw,640px);
+    max-height:92dvh;
+    background:linear-gradient(180deg,#1a1410 0%,#0c0905 100%);
+    border-radius:18px;
+    padding:18px 18px 16px;
+    color:#f3e6d2;
+    display:flex;flex-direction:column;
+    box-shadow:0 30px 80px rgba(0,0,0,.55);
+  }
+  .route-map-modal .rm-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px}
+  .route-map-modal .rm-titles{flex:1;min-width:0}
+  .route-map-modal .rm-title{font-family:var(--font-display);font-size:22px;font-weight:700;line-height:1.1}
+  .route-map-modal .rm-sub{font-size:13px;color:#d4ad77;margin-top:3px}
+  .route-map-modal .rm-close{
+    background:transparent;border:0;color:#f3e6d2;
+    font-size:24px;line-height:1;width:32px;height:32px;
+    cursor:pointer;padding:0;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    transition:background .15s;
+  }
+  .route-map-modal .rm-close:hover{background:rgba(255,255,255,.08)}
+  .route-map-modal .rm-svg{
+    width:100%;height:auto;
+    display:block;
+    background:radial-gradient(ellipse at center,#241914 0%,#0c0905 90%);
+    border-radius:12px;
+    border:1px solid rgba(243,197,138,.08);
+  }
+  .route-map-modal .rm-svg .trail-bg{fill:none;stroke:rgba(243,197,138,.22);stroke-width:2.5;stroke-dasharray:4 5;stroke-linecap:round}
+  .route-map-modal .rm-svg .trail-fg{fill:none;stroke:#f3c58a;stroke-width:3.5;stroke-linecap:round}
+  .route-map-modal .rm-svg .wp-dot{fill:#1a1410;stroke:#f3c58a;stroke-width:2}
+  .route-map-modal .rm-svg .wp-dot.passed{fill:#f3c58a}
+  .route-map-modal .rm-svg .wp-label{fill:#e8d2a8;font-size:10px;text-anchor:middle;font-family:var(--font-ui);font-weight:600}
+  .route-map-modal .rm-svg .wp-label.passed{fill:#f3c58a}
+  .route-map-modal .rm-svg .pin-pulse{fill:none;stroke:#ee6d20;stroke-width:2;opacity:.6}
+  .route-map-modal .rm-svg .pin-dot{fill:#ee6d20;stroke:#fff;stroke-width:2.5}
+  @keyframes rm-pulse{0%{r:7;opacity:.7}100%{r:20;opacity:0}}
+  .route-map-modal .rm-svg .pin-pulse{animation:rm-pulse 1.8s ease-out infinite}
+  .route-map-modal .rm-stats{
+    display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;
+    margin-top:12px;
+  }
+  .route-map-modal .rm-stat{
+    background:rgba(20,16,12,.55);
+    border:1px solid rgba(243,197,138,.08);
+    border-radius:10px;padding:9px 8px;text-align:center;
+  }
+  .route-map-modal .rm-stat .v{font-size:18px;font-weight:700;color:#f3c58a;line-height:1.1}
+  .route-map-modal .rm-stat .l{font-size:11px;color:#a18866;margin-top:3px}
+
   /* Toggle button floats in the panorama's top-right corner.
      Pill with icon + label so it's obvious what tapping it does. */
   .pano-toggle{
@@ -944,6 +1017,12 @@
       <div class="pano-bottom">
         <div class="scene-line" id="scene-line"></div>
       </div>
+      <!-- Map button: opens the overview map modal. Top-LEFT of the panorama
+           (mirror of the size toggle). -->
+      <button class="pano-map-btn" id="pano-map-btn" type="button" aria-label="Ver mapa de la ruta">
+        <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M5.5 1L1 2.6v11.4l4.5-1.6 5 1.6 4.5-1.6V1L10.5 2.6 5.5 1zm0 1.6l4 1.3v9.4l-4-1.3V2.6zm5 1.3l3.5-1.3v9.4l-3.5 1.3V3.9z"/></svg>
+        <span>Mapa</span>
+      </button>
       <!-- Toggle: switch between full-screen panorama and short strip mode.
            Shows icon + label so it's obvious what tapping it will do. -->
       <button class="pano-toggle" id="pano-toggle" type="button" aria-label="Cambiar tamaño de la panorama">
@@ -952,6 +1031,34 @@
         <span class="pano-toggle-label-full">Pantalla completa</span>
         <span class="pano-toggle-label-short">Vista compacta</span>
       </button>
+    </div>
+
+    <!-- ROUTE MAP MODAL — Fantasy-Hike-style overview of the whole trail.
+         Opens when user taps the "Mapa" button on the panorama. Shows
+         the trail as a stylized SVG path, with 8 landmark waypoints
+         and the player's current position as a pulsing pin. -->
+    <div class="route-map-modal" id="route-map-modal" role="dialog" aria-modal="true" aria-labelledby="rm-title">
+      <div class="rm-overlay" id="rm-overlay"></div>
+      <div class="rm-panel">
+        <div class="rm-head">
+          <div class="rm-titles">
+            <div class="rm-title" id="rm-title">Tu camino</div>
+            <div class="rm-sub" id="rm-sub">—</div>
+          </div>
+          <button class="rm-close" id="rm-close" type="button" aria-label="Cerrar">×</button>
+        </div>
+        <svg class="rm-svg" id="rm-svg" viewBox="0 0 800 460" preserveAspectRatio="xMidYMid meet">
+          <path id="rm-trail-bg" class="trail-bg"></path>
+          <path id="rm-trail-fg" class="trail-fg"></path>
+          <g id="rm-waypoints"></g>
+          <g id="rm-player-pin"></g>
+        </svg>
+        <div class="rm-stats">
+          <div class="rm-stat"><div class="v" id="rm-stat-walked">—</div><div class="l">recorrido</div></div>
+          <div class="rm-stat"><div class="v" id="rm-stat-left">—</div><div class="l">restante</div></div>
+          <div class="rm-stat"><div class="v" id="rm-stat-pct">—</div><div class="l">% completado</div></div>
+        </div>
+      </div>
     </div>
 
     <!-- PROGRESS BAR — the route trail (between panorama and coach) -->
@@ -1488,89 +1595,108 @@ COACH_MILESTONE['ristretto'] = {
   ],
 };
 COACH_LINES_POS['puchi'] = {
+  // 6-bucket structure (see _bucketFor):
+  //   start  0-10 %   warmup 10-25 %   early 25-45 %
+  //   half   45-65 %  push   65-85 %   final 85-100 %
   start: [
-    "¡Hola! Calienta caminando suave los primeros cinco minutos — el cuerpo agradece.",
-    "Buenos días. Hombros sueltos, cabeza alta, primer paso.",
-    "Empezamos despacito. Pisada del talón a la punta, sin apurar.",
-    "¡Vamos! Ata bien los cordones — un detalle que cuida tus pies.",
-    "Un primer paso con ritmo cómodo: poder hablar pero no cantar, esa es la zona.",
-    "Hidrátate un poquito antes de salir. Ayuda mucho más de lo que parece.",
-    "Empezamos. Pasos cortos y rápidos cuidan las rodillas mejor que zancadas largas.",
-    "Buenos días. Camina los primeros minutos como calentamiento, después subimos.",
-    "Hoy te acompaño. Cabeza alta, mirada al frente — protege tu cuello.",
-    "Listo, listo — los primeros cinco minutos son los más valiosos.",
-    "Un primer paso con propósito. Eso suma más de lo que parece.",
-    "Empezamos suaves. Brazos sueltos, que sigan el ritmo natural de tu paso.",
-    "Tu yo de mañana te lo agradece desde ya. Vamos.",
-    "Hola, qué dicha verte salir. Hoy todo lo que camines cuenta el doble.",
-    "Empezamos. En cinco minutos el cuerpo despierta solo — confía.",
+    "¡Hola, amor! Sé que cuesta empezar. Pero ya estás aquí — y eso es lo más grande.",
+    "Buenos días. Hombros sueltos, cabeza alta, vámonos juntos/as.",
+    "Si el cuerpo no quiere hoy, está bien. Un paso suave es suficiente para arrancar.",
+    "Pisada del talón a la punta, sin apurar. Así arrancamos lindo.",
+    "Ata bien los cordones antes de salir — tus pies te lo agradecen.",
+    "Lo más difícil ya lo hiciste: ponerte de pie. Tú puedes con esto, te acompaño.",
+    "Hidrátate con un sorbito antes del primer paso. Ayuda más de lo que parece.",
+    "Cinco minutos suaves para despertar el cuerpo. Después subimos.",
+    "Primer paso con cariño. El cuerpo confía cuando empiezas bien.",
+    "No tiene que ser perfecto. Solo tiene que ser hoy. Vamos suave.",
+    "Hola, qué dicha verte salir. ¡Hoy lo que camines cuenta el doble!",
+    "Vámonos suave. En cinco minutos el cuerpo despierta solo, ya verás.",
+  ],
+  warmup: [
+    "Cuenta cien pasos a este ritmo — vas a sentir cómo se acomoda el cuerpo.",
+    "Brazos sueltos, que sigan tu paso natural. Eso ayuda más que apretar.",
+    "Si puedes hablar pero no cantar, estás en la zona perfecta.",
+    "Cada veinte minutos un sorbito de agua. El cuerpo lo agradece, te lo prometo.",
+    "Camina como si llevaras algo equilibrado en la cabeza. Postura natural y bonita.",
+    "Activa el abdomen un momentito. Protege la espalda al caminar.",
+    "Marca un punto al final de la cuadra. Vamos directo, sin distracciones.",
+    "Diez minutos dentro — ya entraste en ritmo. No lo pierdas.",
+    "Respira por la nariz si puedes. El cuerpo aprovecha mejor el oxígeno así.",
+    "Suelta los hombros una vez más. Siempre se vuelven a subir, no es solo tú.",
+    "Vas regalándole salud a tu yo del futuro. ¡Qué lindo eso!",
+    "Si la respiración se acelera, baja un poquito el ritmo. Sin parar.",
   ],
   early: [
-    "Brazos sueltos, que sigan el ritmo natural. Eso ayuda más que apretar.",
-    "Cada veinte minutos toma un sorbito de agua — el cuerpo lo agradece.",
-    "Activa el abdomen un momento. Protege la espalda al caminar.",
-    "Vas con buen ritmo. Si puedes hablar pero no cantar, estás perfecto.",
-    "Camina como si llevaras algo equilibrado en la cabeza. Postura natural.",
+    "Vas con buen ritmo. Reconócelo y disfrútalo.",
+    "Mira ese edificio al fondo y camina directo hacia allá.",
+    "Cuenta cincuenta pasos firmes después de cada semáforo. El ritmo no se regala.",
+    "Si pisas muy fuerte, suaviza — cuida rodillas y caderas con cariño.",
+    "Una cuadra con paso largo, otra con paso corto. Juega con el ritmo.",
+    "Activa los brazos como si empujaras aire suavecito. Suman velocidad sin esfuerzo.",
+    "Veinte minutos de caminar bajan el estrés más que casi cualquier cosa.",
+    "Esta esquina la pasas y la cuentas: ¡una más en el bolsillo!",
+    "Aprieta el abdomen treinta segundos y suéltalo. Eso es ejercicio extra gratis.",
+    "Si traes audífonos, una canción favorita ahora ayuda muchísimo.",
     "Cada cuadra que sumas es salud para tu corazón. Literal.",
-    "Respira por la nariz si puedes — el cuerpo aprovecha mejor el oxígeno.",
-    "Mira al frente, no al suelo. Cuida cuello y respiración.",
-    "Si vas pisando muy fuerte, suaviza — protege rodillas y caderas.",
-    "Veinte minutos de caminar bajan el estrés más que casi cualquier otra cosa.",
-    "Vas regalándole salud a tu yo del futuro. Qué lindo eso.",
-    "Suelta los hombros otra vez. Siempre se vuelven a subir.",
-    "Caminar es el ejercicio más completo y barato que existe. Aprovéchalo.",
-    "Sigue así — me llena el corazón verte moverte hoy.",
-    "Si la respiración se acelera mucho, baja un poquito el ritmo. Sin parar.",
+    "Aguanta hasta el próximo semáforo sin bajar el ritmo. Después decides.",
   ],
-  mid: [
+  half: [
     "¡Mitad del camino! Bebe un sorbito de agua si llevas.",
-    "Estás a la mitad — buen momento para revisar la postura.",
-    "Mitad lograda. Hombros sueltos, mandíbula suelta, sigue suave.",
-    "La segunda mitad la disfrutamos sin apurar — la constancia es la clave.",
-    "Mitad del camino, mitad de los beneficios ya están en el cuerpo.",
-    "Sigue con esa actitud — vas armando un hábito poderoso.",
-    "Si te cansas un poquito, baja velocidad antes que pararte.",
-    "Mitad ya es tuya. Tu corazón está más fuerte de lo que sabes.",
-    "Buen momento para una respiración profunda. Tres conscientes y sigues.",
-    "Vas en el medio — el cuerpo ya entró en su ritmo eficiente.",
-    "Qué orgullo me das — la mitad sin queja es nivel pro.",
-    "Si te duelen los pies, revisa los cordones. A veces es solo eso.",
-    "Mitad del camino, qué lindo se siente, ¿no?",
-    "Sigue suave — la constancia vale más que la intensidad. Siempre.",
-    "Halfway con cariño. Estás cuidándote bonito hoy.",
+    "Estás a la mitad — buen momento para revisar la postura, ¿cómo van los hombros?",
+    "¡La mitad ya es tuya! Qué orgullo me das.",
+    "La segunda mitad la disfrutamos sin apurar. La constancia vale más que la prisa.",
+    "Mitad del camino, mitad de los beneficios ya están en tu cuerpo.",
+    "Tres respiraciones profundas ahora — vas a sentir cómo se acomoda todo.",
+    "Si te cansas un poquito, baja velocidad antes que pararte. Saber cuidarse es nivel.",
+    "Mitad ganada. Tu corazón está más fuerte de lo que sabes.",
+    "Marca un punto al frente y camina directo hacia allá con calma.",
+    "Cuenta cien pasos suaves antes de subir el ritmo otra vez.",
+    "Si te duelen los pies, revisa los cordones — a veces es solo eso.",
+    "¡Mitad del camino, qué lindo se siente!",
   ],
-  late: [
+  push: [
+    "Dos tercios hechos. ¡Queda menos del que llevas, amor!",
+    "Pasaste la mitad. Ahora no aflojamos, vamos administrando con cariño.",
+    "Aguanta tres cuadras más al ritmo de ahora. Después ajustas si necesitas.",
+    "Si la cabeza pide pausa, ofrécele cien pasos suaves primero.",
+    "Una canción más a este ritmo — verás cómo se siente cuando acabe.",
+    "Marca un edificio al fondo y camina derechito hacia allá.",
+    "¡Queda menos de un tercio! Aquí es donde se construye la caminata.",
+    "Sigue suave — la constancia vale más que la intensidad. Siempre.",
+    "Cada cuadra ahora pesa el doble. Aprovéchala bien.",
+    "Si tus piernas pesan, agradéceles — te están llevando.",
+    "Respira hondo dos veces y suelta los hombros. Reset gratis.",
+    "Mira el final del trayecto y dirígete allá con confianza.",
+  ],
+  final: [
     "¡Ya casi llegas! Termina con paso firme pero suave.",
-    "Falta poquito — los últimos pasos también construyen.",
-    "Cierre con la cabeza alta. Te lo ganaste.",
-    "Un par de pasos más — no aceleres, mantén el ritmo que ya tienes.",
-    "¡Casi! Estos últimos minutos son oro para el corazón.",
-    "Cierra con orgullo — eres más constante de lo que crees.",
-    "Qué dicha verte casi en la meta. Sigue así.",
-    "Los últimos pasos cuentan igual que los primeros. Termina bien.",
-    "Estás cerca. Ritmo cómodo hasta el final, sin acelerar.",
+    "Último tramo — los últimos pasos cuentan igual que los primeros.",
+    "Cierre con la cabeza alta. ¡Te lo ganaste con cariño!",
+    "Un par de cuadras más — no aceleres, mantén el ritmo que ya tienes.",
+    "¡Casi! Estos últimos minutos son oro para tu corazón.",
+    "Cuenta cien pasos a este ritmo. Cuando termines, ya casi pisas la meta.",
     "Una respiración profunda, una sonrisa, ¡y sigue!",
-    "Eres súper constante. Eso es lo que cambia un cuerpo de verdad.",
-    "Falta tan poco que ya casi puedes celebrar.",
-    "Cuando termines, estírate un poquito — el cuerpo te lo pide.",
-    "Llegaste casi sin darte cuenta. ¡Qué fuerza la tuya!",
-    "Último tramo. Camina suave y disfruta el cierre.",
+    "Falta tan poquito que ya casi puedes celebrar.",
+    "Últimos cinco minutos: postura recta, hombros sueltos, sonrisa lista.",
+    "Cuando termines, estírate un poquito. El cuerpo te lo pide con cariño.",
+    "Eres más constante de lo que crees. Esto se siente lindo.",
+    "Camina suave y disfruta el cierre. ¡No hay prisa ahora!",
   ],
 };
 COACH_MILESTONE['puchi'] = {
   greeting: [
-    "¡Hola! Calienta caminando suave los primeros cinco minutos.",
-    "Me llena el corazón estar aquí contigo en este reto.",
-    "Empezamos suave. Hombros sueltos, cabeza alta, primer paso.",
-    "Qué dicha empezar el día contigo. Te acompaño.",
-    "Buenos días — un sorbito de agua antes de salir, ¿sí?",
+    "¡Hola! Qué dicha empezarlo contigo hoy.",
+    "Buenos días, amor. Hombros sueltos, cabeza alta, primer paso.",
+    "Vámonos juntos/as — un sorbito de agua antes de salir, ¿sí?",
+    "Me llena el corazón verte aquí. Empezamos suave.",
+    "Hoy te acompaño. Primer paso con cariño y vamos.",
   ],
   halfway: [
     "¡Mitad del camino! Me llena el corazón verte ahí.",
-    "Estás a la mitad — un sorbito de agua si llevas.",
-    "Mitad del camino — la segunda parte la disfrutamos sin apurar.",
     "¡La mitad ya es tuya! Qué orgullo me das.",
-    "Halfway con cariño. Sigue con ese ritmo cómodo.",
+    "Mitad lograda. Hombros sueltos, mandíbula suelta, sigue suave.",
+    "Mitad del camino — la segunda parte la disfrutamos sin apurar.",
+    "Cincuenta por ciento hecho. Tu corazón está más fuerte que esta mañana.",
   ],
   almostThere: [
     "¡Ya casi llegas! Mantén el ritmo, no aceleres ahora.",
@@ -1583,94 +1709,113 @@ COACH_MILESTONE['puchi'] = {
     "¡Lo lograste! Estírate un poquito — el cuerpo te lo pide.",
     "¡Completaste la ruta! Tu corazón ya está más fuerte.",
     "¡Meta cumplida! Te lo ganaste con cariño y constancia.",
-    "¡Llegaste! Hoy te ganaste un descanso bien merecido.",
+    "¡Llegaste, amor! Hoy te ganaste un descanso bien merecido.",
     "¡Misión cumplida! Sigue cuidándote así, paso a paso.",
   ],
 };
 COACH_LINES_POS['togo'] = {
+  // 6-bucket structure (see _bucketFor):
+  //   start  0-10 %   warmup 10-25 %   early 25-45 %
+  //   half   45-65 %  push   65-85 %   final 85-100 %
   start: [
-    "Press play — primer paso, primer compás. Suena bien.",
-    "Set on. Saca el flow desde el primer pisotón.",
-    "Track one, cara A: arranca con groove.",
-    "Ponle un beat a la cabeza y camina con él.",
-    "Hoy tú eres el DJ del camino — marca el ritmo.",
-    "Abrimos el set, eh. Vamos suave para entrar en pulso.",
-    "Pulso firme, cabeza arriba. Eso es estilo, mi rey.",
-    "Soundcheck: ¿escuchas tu paso? Entonces ya empezamos.",
-    "El primer minuto es para sintonizarte. Después, flow.",
-    "Auriculares puestos o no, el ritmo lo pones tú.",
-    "Cinco pasos para encontrar el compás. Cuenta conmigo.",
+    "Press play. ¡Primer paso, primer compás!",
+    "Set en marcha. Vamos suave para entrar en pulso.",
+    "Track uno: arranca con groove.",
     "Saca pecho, suelta hombros, primer paso con sello.",
-    "Hoy se camina como se canta: sin apuro, con verdad.",
-    "Set en marcha. La primera canción es siempre la base.",
-    "Abrimos el track del día. Cabeza, pulso, paso.",
+    "El primer minuto es para sintonizarte. Después, flow.",
+    "Auriculares o no, el ritmo lo pones tú.",
+    "Marca el pulso desde el primer paso. Cabeza arriba.",
+    "Soundcheck: ¿escuchas tu paso? Entonces ya empezamos.",
+    "Una canción suave para entrar en zona. Después subimos.",
+    "Cinco pasos para encontrar el compás. Cuenta conmigo.",
+    "Pulso firme, cabeza arriba. Eso es estilo.",
+    "Track del día arrancando. Cabeza, pulso, paso.",
   ],
-  early: [
+  warmup: [
+    "Cuenta cien pasos al ritmo que escogiste. Verás cómo se siente.",
     "Mantén el compás — un paso, dos pasos, un paso, dos pasos.",
-    "Si el ritmo se cae, no rebobines: empata desde el siguiente paso.",
-    "Vas con flow. Mantén la mirada al frente.",
-    "Una cuadra al doble de velocidad, una en velocidad normal. Remix.",
+    "Cuatro pasos por respiración. Encuentra ese patrón.",
+    "Si traes música, una canción favorita ahora ayuda muchísimo.",
+    "Tres minutos dentro — ya entraste en zona.",
     "Marca el pulso con los brazos. Suena mejor así.",
-    "Si el cuerpo pide pausa, hazla — el track aguanta.",
-    "Cuenta cuatro pasos, respira; cuatro más, respira.",
-    "Esto ya tiene groove. Mantén el sello.",
+    "Si el ritmo se cae, no rebobines: empata desde el siguiente paso.",
     "Cabeza arriba — el camino se ve mejor desde ahí.",
-    "Un tramo con respiración fuerte, otro con respiración suave. Dinámica.",
-    "El ritmo es tuyo — no lo pierdas por una notificación.",
+    "Una cuadra a respiración fuerte, otra suave. Dinámica.",
     "Pies sueltos, paso ligero. Eso es estilo.",
     "Cada paso es una nota. Hoy estás tocando bonito.",
     "Mantén el flow sin forzar. Lo bueno sale solo.",
-    "Tres canciones de caminar y ya entraste en zona.",
   ],
-  mid: [
-    "Side B activada — la segunda mitad tiene mejor ritmo.",
-    "Halfway con groove. Mantén el sello.",
+  early: [
+    "Esto ya tiene groove. Mantén el sello.",
+    "Marca un edificio al fondo y camina hacia allá al pulso.",
+    "Cuenta cincuenta pasos al doble de ritmo, veinte al ritmo normal. Remix.",
+    "Si traes música, una canción rápida ahora suma cuadras gratis.",
+    "Pies sueltos, brazos al pulso. Suena mejor.",
+    "Tres canciones de caminar y ya entraste en zona.",
+    "El ritmo es tuyo — no lo pierdas por una notificación.",
+    "Aguanta hasta el próximo semáforo sin bajar el pulso. Después decides.",
+    "Cada cuadra que sumas es una nota más en tu set.",
+    "Activa los brazos como si llevaras el compás. Suma velocidad.",
+    "Si pisas muy fuerte, suaviza — protege rodillas y caderas.",
+    "Camina como si grabaran tu cierre. ¡Eso es Togo!",
+  ],
+  half: [
+    "Side B activado — la segunda mitad tiene mejor ritmo.",
     "Mitad del set y todavía marcas pulso. Eso es nivel.",
     "Bridge del track — respira, ajusta, sigue.",
-    "La segunda mitad se siente diferente. Disfrútala.",
-    "Cincuenta por ciento — ya entraste en flow.",
-    "Sin frenar — el track aguanta hasta el final.",
+    "Cincuenta por ciento. La segunda mitad la cerramos con sello.",
+    "Marca un punto al frente y camina derechito hacia allá al pulso.",
+    "Tres respiraciones profundas. Reset de track.",
+    "Mantén el abdomen activo: te ayuda a sostener el compás.",
     "Un tramo fuerte y vuelves a la base. Esa es la fórmula.",
-    "Si el cuerpo se cansa, suaviza — el ritmo no se rompe.",
+    "Si te cansas un poquito, suaviza — el ritmo no se rompe.",
     "Tu paso tiene firma propia. Mantenla.",
-    "La cabeza pesa menos cuando el cuerpo se mueve. Sigue.",
-    "Esto suena mejor con cada cuadra. Ya casi llega el coro.",
-    "Mantén abdomen activo: te ayuda a sostener el compás.",
+    "Cuenta cien pasos a este ritmo antes de subir otra vez.",
     "Mid-track — el momento donde el groove decide.",
-    "Caminas con sello — eso ya no se enseña.",
   ],
-  late: [
+  push: [
+    "Dos tercios del track. Queda menos del que llevas.",
+    "Pasaste la mitad. Ahora no se afloja, se administra.",
+    "Aguanta tres cuadras más al ritmo actual. Después ajustas.",
+    "Si la cabeza pide pausa, una canción más al pulso de ahora primero.",
+    "Marca un edificio al fondo y camina al pulso hasta allá.",
+    "Queda menos de un tercio. ¡Aquí se gana el cierre!",
+    "El track aguanta hasta el final. No frenes.",
+    "Cada cuadra ahora pesa el doble. Cóbrala bien.",
+    "Tu paso tiene firma propia — sostenla hasta el final.",
+    "Si tus piernas pesan, agradéceles — te están llevando.",
+    "Respira hondo dos veces y suelta los hombros. Reset gratis.",
+    "Mira el final del trayecto y dirígete allá al pulso de tu canción.",
+  ],
+  final: [
     "Outro en marcha — recta final con estilo.",
     "Últimos compases — termina con flow, no con prisa.",
     "Casi suena el último beat. Mantén el sello.",
-    "Final del set: no se baja la energía, se cierra con clase.",
+    "Final del set: ¡no se baja la energía, se cierra con clase!",
     "Llegas al coro final. Siéntelo, no lo apures.",
-    "El track ya casi cierra — bonito haber caminado contigo.",
+    "Cierra el track caminando fuerte, no apurado.",
+    "Cuenta cien pasos a este ritmo y ya casi cierras.",
     "Mantén el pulso hasta el último paso.",
     "Cierre con sello propio. Eso es lo tuyo.",
-    "Recta final — un poco de pecho, un poco de sonrisa.",
-    "Cierra el track caminando fuerte, no apurado.",
     "Casi end credits. Camina como si grabaran tu cierre.",
-    "Mi rey, falta poco. Termina con groove.",
-    "Mantén el flow hasta que se acabe la canción.",
-    "Outro limpio — eso es de DJ pro.",
+    "¡Outro limpio! Eso es de DJ pro.",
     "Cierre con clase, sin forzar. Eso es Togo.",
   ],
 };
 COACH_MILESTONE['togo'] = {
   greeting: [
     "Press play — el día comienza, ponle ritmo desde el primer paso.",
-    "Eh, abrimos el track: cabeza arriba, beat marcado, vamos.",
-    "Track one, primer paso — siente el ritmo que tú escogiste.",
     "Set on. Saca el groove desde el principio, no esperes el coro.",
+    "Track one, primer paso — siente el ritmo que tú escogiste.",
     "Hoy tú eres el DJ del camino — empieza con flow.",
+    "Abrimos el track del día. Cabeza, pulso, paso.",
   ],
   halfway: [
     "Side B activado: estamos a la mitad del track.",
-    "Halfway con groove — el beat se siente mejor de aquí en adelante.",
     "Mitad del set y tú estás manteniendo el ritmo. Sigue así.",
     "Cincuenta por ciento, el flow no se rompe — pulso firme.",
     "Llegamos al puente del track. Mantén el compás.",
+    "Mitad con groove — el beat se siente mejor de aquí en adelante.",
   ],
   almostThere: [
     "Outro en proceso — recta final con estilo.",
@@ -1680,66 +1825,88 @@ COACH_MILESTONE['togo'] = {
     "Llega el coro final — siéntelo, no lo apures.",
   ],
   finish: [
-    "Track completed — ese cierre fue puro estilo.",
-    "Mic drop: ruta cerrada. Eso fue cool de verdad.",
+    "¡Track completed! Ese cierre fue puro estilo.",
+    "Mic drop. Ruta cerrada — eso fue cool de verdad.",
     "Closing notes — limpio, con flow, como debe ser.",
-    "Fin del set, llegaste con ritmo. Bien jugado.",
+    "¡Fin del set! Llegaste con ritmo. Bien jugado.",
     "End credits del día — bien sonado, bien terminado.",
   ],
 };
 COACH_LINES_POS['granito'] = {
+  // 6-bucket structure (see _bucketFor):
+  //   start  0-10 %   warmup 10-25 %   early 25-45 %
+  //   half   45-65 %  push   65-85 %   final 85-100 %
   start: [
     "¡Wiii! Hoy salimos a caminar. ¡Vamos a ver qué hay!",
-    "¡Primer paso! ¿Listos? Va a estar divertido.",
+    "¡Primer paso! ¿Listo/a? Va a estar divertido.",
     "¡Yupi! Empezamos a explorar el camino.",
     "Saltamos al camino con una sonrisota.",
-    "¡Va! Hoy se camina y se descubre.",
     "Tres, dos, uno… ¡pum! Ya estamos caminando.",
     "¡Mira qué bonito está el día para salir!",
-    "¡Wiii! Cada paso una aventura mini.",
     "¡Empezamos! Pies, atentos: hay mucho que pisar.",
     "Hoy se camina con saltitos en el corazón.",
     "¡Vámonos! El camino tiene cosas para enseñar.",
     "Primer paso con risa: así sale mejor.",
-    "Listo, listo, listo. ¡A caminar!",
+    "¿Llegas hasta la esquina sin parar? ¡Yo apuesto que sí!",
     "¡Saltémonos esa primera flojera y arrancamos!",
-    "El camino empieza ahora. ¡Qué emoción!",
   ],
-  early: [
-    "¡Mira cuántos pasos llevas! ¡Eso fue rápido!",
+  warmup: [
+    "Cuenta diez pasos en voz alta. Yo te ayudo: ¡uno, dos, tres!",
     "¡Wiii! Una cuadra más en el saco.",
-    "¿Viste ese pájaro? ¡Sigue, sigue!",
-    "¡Bota piedritas con cuidado, son tus amigas!",
-    "Salta ese charco si quieres — yo no juzgo.",
-    "¡Otra esquina! ¡Qué chévere!",
-    "Cuenta diez pasos en voz alta. Yo te ayudo.",
+    "¿Viste ese pájaro? ¡Sigue, sigue, no te distraigas mucho!",
+    "Marca un árbol o un poste al frente. ¡Vamos a llegar ahí juntos!",
+    "Cinco minutitos suaves y ya entraste en zona.",
+    "Suelta los hombros como si fueran de gelatina.",
+    "Respira por la nariz. ¡Es truco de campeones!",
     "¿Una sonrisa? Tú ya sabes. ¡Sonríe!",
-    "¡Qué velocidad! ¡Mira esa zancada!",
-    "Salta una grieta y sigues, ¡así!",
-    "¡Cada paso es una mini aventura!",
-    "Caminamos, miramos, caminamos más. ¡Diversión!",
-    "¿Ves esa nube con forma de algo? ¡Yo sí!",
-    "¡Yupi! Otra cuadra y todavía con energía.",
+    "Brazos sueltos, sigue su ritmo. ¡No los pelees!",
+    "Cada paso es una mini aventura. ¡Vamos!",
+    "¿Tienes agüita? Un sorbito ahora hace magia.",
     "El cuerpo está jugando contigo. ¡Sigue jugando!",
   ],
-  mid: [
+  early: [
+    "Cuenta cincuenta pasos rapiditos y veinte suavecitos. ¡Repite!",
+    "¡Otra esquina! ¡Qué chévere! ¡Una más en el bolsillo!",
+    "Marca un punto al fondo y camina directo. ¡Como flecha!",
+    "¡Salta una grieta si la ves! Es parte de la aventura.",
+    "¿Llegas hasta el próximo semáforo sin bajar el ritmo? ¡Vamos a ver!",
+    "Activa los brazos como si fueras a despegar. ¡Wiii!",
+    "¡Cada paso una mini aventura!",
+    "¿Ves esa nube con forma de algo? ¡Yo sí!",
+    "Veinte pasos a paso largo, diez a paso corto. ¡Es un baile!",
+    "Si pisas muy fuerte, suaviza — las rodillas te dicen gracias.",
+    "¡Cuántos pasos llevas! ¡Eso fue rápido!",
+    "El ritmo es tuyo. Yo solo te animo desde aquí.",
+  ],
+  half: [
     "¡La mitad! ¡Qué emocionante!",
     "¡Wiiii! Cincuenta por ciento y mira qué feliz vas.",
     "¡Llegamos al medio! ¡Esto se está poniendo bueno!",
     "Mitad del camino, ¡todavía nos quedan aventuras!",
-    "¡Vamos sumando esquinas como cromos!",
-    "¿Una mini pausa para respirar? ¡Y seguimos!",
+    "Vamos sumando esquinas como cromos.",
+    "¿Una mini pausa para respirar? ¡Tres respiraciones profundas!",
     "¡Mira lo que hicimos en muy poquito!",
-    "¡Esto está chévere! Sigue, sigue.",
-    "La mitad del juego ya la pasaste. ¡Bravo!",
-    "¡Yupi! Un descanso de cinco segundos y para adelante.",
     "¿Tienes agua? ¡Bebe! Es parte de la aventura.",
-    "¡Sigue con esa risa adentro!",
+    "Cuenta cien pasos antes de subir el ritmo otra vez.",
     "¡Mitad del mapa! Ya viste un poco, ahora a ver el resto.",
-    "¡Estás haciendo un buen juego de caminar!",
+    "Marca un punto al frente y vamos directito hacia allá.",
     "¡Cuántas cosas pasaron y todavía hay más!",
   ],
-  late: [
+  push: [
+    "¡Dos tercios! Mira qué cerquita estás del final.",
+    "Pasaste la mitad. ¡Ya no se afloja!",
+    "Aguanta tres cuadras más al ritmo de ahora. ¡Como un juego!",
+    "Si tu cabeza pide pausa, cuenta cien pasos antes de decidir.",
+    "Marca un edificio al fondo. ¡Carrera hasta allá (mental)!",
+    "¡Queda menos de un tercio! ¡Qué emoción!",
+    "Cada cuadra ahora pesa el doble. ¡Pero tú pesas más!",
+    "Si tus piernas pesan, agradéceles — son tus mejores amigas hoy.",
+    "Respira hondo dos veces y suelta los hombros. ¡Reset gratis!",
+    "¡El cuerpo todavía tiene cuerda!",
+    "¡Mira lo lejos que has llegado!",
+    "Mira el final y dirígete allá. ¡Casi llegamos!",
+  ],
+  final: [
     "¡Casi! ¡Casi! ¡Mira qué cerca!",
     "¡Yupi! ¡Un poquito más!",
     "¡Ya casi llegamos! ¡Qué emoción!",
@@ -1747,14 +1914,11 @@ COACH_LINES_POS['granito'] = {
     "¡Casi, casi, casi! No puedo más con la emoción.",
     "¡Termina con una sonrisota!",
     "¡Falta menos que lo que ya caminaste!",
-    "¡Wiii! ¡Cierre aventurero!",
-    "¡Mira esa esquina! ¡Casi ahí!",
+    "Cuenta cien pasitos a este ritmo. ¡Y ya casi cierras!",
     "¡Un saltito mental y llegamos!",
     "¡Tú puedes, tú puedes, tú puedes!",
     "¡Una respiración profunda y a por el cierre!",
-    "¡Brinquitos por dentro: ya casi!",
     "¡Que se note la sonrisa al terminar!",
-    "¡Lo estás logrando! ¡Casi, casi!",
   ],
 };
 COACH_MILESTONE['granito'] = {
@@ -1788,181 +1952,219 @@ COACH_MILESTONE['granito'] = {
   ],
 };
 COACH_LINES_POS['moka'] = {
+  // 6-bucket structure (see _bucketFor):
+  //   start  0-10 %   warmup 10-25 %   early 25-45 %
+  //   half   45-65 %  push   65-85 %   final 85-100 %
   start: [
-    "Foco. Día nuevo, primer paso con propósito.",
+    "Foco. Día nuevo, primer paso con intención.",
     "Cabeza clara, respiración firme. Empezamos.",
-    "Hoy se camina con dirección. Sin distracciones.",
+    "Hoy entrenamos marcha. Sin distracciones, sin negociación.",
     "Activación: dos minutos en pie y ya ganaste el inicio.",
     "Salimos. La decisión ya está tomada — solo ejecuta.",
-    "Postura primero, paso después. Así arranca una atleta.",
-    "Primer kilómetro con intención. Después con confianza.",
+    "Postura primero, paso después. Abdomen apretado desde el primer metro.",
     "Respira hondo dos veces, luego pisa con seguridad.",
-    "Hoy es un día de hacer, no de pensar. Vamos.",
-    "Activa cuerpo, activa cabeza, activa propósito.",
-    "Comienza como quieres terminar: con foco.",
-    "No hay excusas hoy — solo pasos.",
-    "Cabeza arriba, hombros sueltos, pisada firme. Lista.",
-    "Cada paso del inicio cuenta el doble. Ponte seria.",
-    "Hoy te muestras de lo que estás hecha. Primer paso.",
+    "Hoy es un día de hacer, no de pensar.",
+    "Calienta dos minutos a ritmo cómodo. Después subimos a ritmo de marcha.",
+    "Cabeza arriba, hombros sueltos, pisada firme. ¡Listo/a!",
+    "Cada paso del inicio cuenta el doble. Ponte serio/a.",
+    "Hoy te muestras de lo que estás hecho/a. Primer paso.",
+  ],
+  warmup: [
+    "Cuenta cien pasos a este ritmo. Verás cómo la cabeza se concentra.",
+    "Diez minutos de calidad. Sin acelerar, sin distraerte.",
+    "Respira fuerte sin colapsar la postura.",
+    "Marca un punto al final de la cuadra. Esa es tu primera meta.",
+    "Cinco minutos dentro — el cuerpo entró en zona aeróbica.",
+    "Si te dispersas, vuelve a la respiración. Siempre vuelve ahí.",
+    "Pisada firme, brazos a 90 grados. Forma de marcha rápida.",
+    "Suelta los hombros cada cinco minutos. La tensión cuesta foco.",
+    "Esto se entrena cada día. Hoy estás entrenando.",
+    "Cadencia alta, paso corto. Más eficiente, menos impacto.",
+    "No mires el reloj — mira tu pisada.",
+    "Recupera el ritmo apenas pierdas concentración.",
   ],
   early: [
     "Mantén el foco. La cabeza decide más que las piernas.",
+    "Tres series: cincuenta pasos rápidos, veinte de recuperación. ¡Sin negociar!",
     "Diez pasos de calidad valen más que veinte sin técnica.",
-    "Respira fuerte, sin colapsar la postura.",
-    "Una cuadra activa, una de recuperación. Disciplina.",
-    "El cuerpo sigue cuando la cabeza marca el ritmo.",
-    "Sin desviarte — la meta es la meta.",
-    "Aprieta abdomen cada cinco minutos. Postura es poder.",
-    "Si te dispersas, vuelve a la respiración. Siempre vuelve ahí.",
-    "Esto se entrena cada día. Hoy estás entrenando.",
-    "No mires el reloj — mira tu pisada.",
-    "Cabeza fuerte, paso firme. Eso es lo tuyo.",
-    "Recupera el ritmo apenas pierdas concentración.",
+    "Activa glúteo cada vez que pisas. Empuja desde atrás.",
+    "Marca un destino visible y ve directo. Sin desviarte.",
+    "Aprieta el abdomen cada cinco minutos. Postura es poder.",
+    "Aguanta hasta el próximo semáforo sin bajar el ritmo. Después decides.",
     "Esto se gana en los detalles. Atiende los detalles.",
-    "El esfuerzo de hoy es el orgullo de mañana.",
+    "Brazos como pistones — codos pegados al cuerpo, balanceo limpio.",
+    "Si pisas muy fuerte, suaviza — protege rodillas y caderas.",
+    "El esfuerzo de hoy es el rendimiento de mañana.",
     "Mantén la intención del primer paso hasta el último.",
   ],
-  mid: [
+  half: [
     "Mitad lograda. Eso ya es un logro real.",
-    "Cincuenta por ciento. Sigue concentrada.",
-    "Halfway con disciplina. Esto se siente bien.",
+    "Cincuenta por ciento. Sigue concentrado/a.",
+    "Mitad con disciplina. Esto se siente bien.",
     "La mitad la trajo tu cabeza, no tus piernas.",
     "Mitad del camino, mitad del orgullo. Vamos por el resto.",
-    "No aflojes ahora — la mitad es prueba de carácter.",
-    "Respira y sigue con la misma intención.",
-    "Esto distingue a la que cumple de la que solo empieza.",
-    "El cuerpo se entrenó hasta acá. La cabeza lleva el resto.",
-    "Cada paso de la segunda mitad pesa más. Acéptalo.",
-    "Mitad del trabajo hecho, mitad del trabajo por hacer.",
-    "El foco no se negocia — ni a la mitad.",
-    "Buena. Ahora a sostener el nivel.",
-    "Mantén la postura aunque empiece a costar.",
+    "No aflojes ahora — la mitad es prueba de actitud.",
+    "Tres respiraciones profundas. Reset y sigue.",
+    "Segunda serie: cien pasos al doble de ritmo. Si la cabeza dice no, la cabeza miente.",
+    "Esto distingue a quien cumple de quien solo empieza.",
+    "Marca un punto al frente y camina directo hacia allá.",
+    "Mantén la postura aunque empiece a costar. Ahí es donde se entrena.",
     "Mitad del camino: tu disciplina te trajo hasta acá.",
   ],
-  late: [
-    "Recta final. Aquí se demuestra el carácter.",
+  push: [
+    "Dos tercios hechos. Queda menos del que llevas.",
+    "Pasaste la mitad. Ahora no aflojas, administras.",
+    "Aguanta tres cuadras más al ritmo de ahora.",
+    "Si la cabeza pide pausa, ofrécele cien pasos a cadencia alta primero.",
+    "Marca un edificio al fondo y camina derecho hacia allá.",
+    "Queda menos de un tercio. ¡Aquí se gana el cierre!",
+    "Cada cuadra ahora pesa el doble. ¡Cóbrala bien!",
+    "Si tus piernas pesan, agradéceles — te están llevando.",
+    "Respira hondo dos veces y suelta los hombros. Reset.",
+    "El cuerpo se entrenó hasta acá. La cabeza lleva el resto.",
+    "Cada paso de la segunda mitad pesa más. Acéptalo y sigue.",
+    "Mira el final del trayecto y dirígete allá con decisión.",
+  ],
+  final: [
+    "Recta final. Aquí se demuestra el foco.",
     "Mantén el foco — no aflojes en el último tramo.",
     "Cierre con la misma intención del inicio.",
     "Termina con técnica, no con prisa.",
     "Los últimos pasos definen el resto del día.",
-    "Pon todo lo tuyo en el cierre. Que valga.",
+    "Pon todo lo tuyo en el cierre. ¡Que valga!",
     "Disciplina hasta el último metro.",
-    "Cerca de la meta — exige más de ti.",
-    "Cierra como entrenas: con intención.",
-    "El final es donde se separan los compromisos.",
-    "Termina con orgullo. Te lo estás ganando.",
+    "Cerca de la meta — ¡exige más de ti!",
+    "Cuenta cien pasos a este ritmo y ya casi cierras.",
+    "Aprieta los últimos diez minutos al máximo. Después estiras.",
     "Mantén la cabeza fría hasta el cierre.",
-    "Falta poco. Que el cierre te represente.",
-    "Esto se está volviendo un logro real. Cierra.",
-    "Última recta — la merece la atleta que llegó hasta acá.",
+    "Última recta — la merece quien llegó hasta acá.",
   ],
 };
 COACH_MILESTONE['moka'] = {
   greeting: [
     "Foco. Día nuevo, ruta nueva — abrimos con intención.",
     "Empezamos. Cabeza clara, paso firme, sin distracciones.",
-    "Hoy se camina con propósito. Primer paso, deliberado.",
-    "Activación: respira hondo y comienza con dirección.",
-    "Lista. Abrimos el día con la actitud que mereces.",
+    "Hoy se camina con dirección. Primer paso, deliberado.",
+    "Activación: respira hondo y comienza con foco.",
+    "Listo/a. Abrimos el día con la actitud que mereces.",
   ],
   halfway: [
     "Mitad lograda. Eso ya es un avance que vale.",
-    "Cincuenta por ciento en el bolsillo. Sigue concentrada.",
+    "Cincuenta por ciento en el bolsillo. Sigue concentrado/a.",
     "Llegaste a la mitad — el foco te trajo hasta aquí.",
     "Mitad del camino, mitad del orgullo. Vamos por el resto.",
-    "Halfway con disciplina. Esto se siente bien.",
+    "Mitad con disciplina. Esto se siente bien.",
   ],
   almostThere: [
-    "Recta final. Aquí se demuestra el carácter.",
+    "Recta final. Aquí se demuestra el foco.",
     "Casi cierras — mantén el foco, no aflojes.",
     "Últimos metros. Termina con la misma intención del inicio.",
     "El cierre se construye desde aquí — pon todo lo tuyo.",
     "Cerquita de la meta. Que el final iguale al esfuerzo.",
   ],
   finish: [
-    "Cerrado. Te llevas un logro real — bien merecido.",
+    "¡Cerrado! Te llevas un logro real — bien merecido.",
     "Meta cumplida con disciplina. Eso es orgullo del bueno.",
-    "Lo lograste con propósito. Felicítate, te lo ganaste.",
-    "Ruta completada. Hoy demostraste de qué estás hecha.",
-    "Cierre con carácter. Anota esto: hoy te superaste.",
+    "¡Lo lograste con foco! Felicítate, te lo ganaste.",
+    "Ruta completada. Hoy demostraste de qué estás hecho/a.",
+    "Cierre con carácter. Veinte segundos estirando cada pierna — recuperación es entrenamiento también.",
   ],
 };
 COACH_LINES_POS['franco'] = {
+  // 6-bucket structure (see _bucketFor):
+  //   start  0-10 %   warmup 10-25 %   early 25-45 %
+  //   half   45-65 %  push   65-85 %   final 85-100 %
   start: [
-    "Buen día. Empieza tranquilo — el camino tiene su propio ritmo.",
+    "Buen día. Empieza tranquilo/a — el camino tiene su propio ritmo.",
     "Respira hondo. El primer paso siempre es el más importante.",
-    "Abrimos despacio. No hay prisa, hay propósito.",
-    "Bienvenido. Paso a paso, sin afanarte.",
+    "Abrimos despacio. No hay prisa, hay intención.",
+    "Bienvenido/a. Paso a paso, sin afanarte.",
     "Buenos días. Camina con calma; el paisaje también es la meta.",
-    "El camino enseña al que se deja enseñar. Empezamos.",
     "Un paso a la vez. Así se han hecho los caminos largos.",
     "Salir es la mitad. La otra mitad es disfrutarlo.",
     "Cabeza tranquila, paso firme. Así arrancamos.",
     "Hoy no hay que correr — hoy hay que caminar bien.",
     "Una caminata empieza con un solo paso. Aquí está el tuyo.",
-    "Respira tres veces antes de arrancar. Ya estás listo.",
-    "No te midas hoy. Camina y deja que el cuerpo hable.",
+    "Respira tres veces antes de arrancar. Ya estás aquí.",
     "El que persevera, llega. Empezamos con calma.",
-    "Buen día — el camino te espera sin prisa.",
   ],
-  early: [
+  warmup: [
+    "Cuenta diez respiraciones lentas mientras caminas. Encontrarás el ritmo solo.",
     "Mantén un ritmo cómodo. No tienes que probar nada.",
     "Camina diez minutos sin pensar en el contador.",
     "Respira por la nariz, suelta por la boca. Sin forzar.",
     "Si el cuerpo pide pausa, escucha. Después sigues.",
     "El paisaje cuenta también. Levanta la mirada.",
+    "Marca un árbol al frente. Camina hacia allá sin prisa, sin tardanza.",
     "Una zancada cómoda dura más que una agitada.",
     "Confía en el cuerpo. Te ha llevado a todas partes.",
-    "El camino no se acaba si no paras de caminar.",
     "Si te apuras, te cansas. Si te calmas, llegas.",
-    "Un paso a la vez. Solo eso pido.",
     "Mantén los hombros sueltos. La tensión cansa más que el camino.",
-    "Caminar es de los pocos lujos baratos. Disfrútalo.",
-    "Cada paso enseña algo si lo escuchas.",
-    "No es lejos lo que falta, es cerca lo que llevas.",
     "Respira y sigue. Esa es toda la fórmula.",
   ],
-  mid: [
+  early: [
+    "Veinte pasos suaves después de cada cruce. El cuerpo aprende.",
+    "Caminar es de los pocos lujos baratos. Disfrútalo.",
+    "Cuenta cien pasos a este ritmo y verás cómo el cuerpo entra en sintonía.",
+    "Si pisas muy fuerte, suaviza. Las rodillas duran más así.",
+    "Marca un punto visible al frente. Camina derecho hacia allá.",
+    "Cada paso enseña algo si lo escuchas.",
+    "El camino no se acaba si no paras de caminar.",
+    "Aguanta hasta el próximo semáforo al ritmo que llevas. Después decides.",
+    "Aprieta el abdomen treinta segundos y suéltalo. Eso protege la espalda.",
+    "No es lejos lo que falta, es cerca lo que llevas.",
+    "Si traes agua, dos tragos ahora. El cuerpo lo agradece.",
+    "Activa los brazos suavemente. El paso fluye mejor.",
+  ],
+  half: [
     "Mitad del camino. Buen ritmo, sigue así.",
     "Has llegado a la mitad — es un buen momento para respirar.",
     "Cincuenta por ciento. La constancia trae estos resultados.",
     "Mitad recorrida con calma. Eso es sabiduría también.",
-    "Halfway. Mira hacia atrás un momento — has hecho mucho.",
+    "Mitad del camino. Mira hacia atrás un momento — has hecho mucho.",
     "El cuerpo ya entró en ritmo. Ahora se camina solo.",
     "La mitad sin afán: eso es lo difícil. Bien hecho.",
-    "Respira, sonríe un poquito, sigue.",
-    "El que llega a la mitad, casi siempre llega al final.",
+    "Tres respiraciones profundas antes de seguir. Reset.",
+    "Cuenta cien pasos a este ritmo antes de subir otra vez.",
     "No corras la segunda mitad. Es la mejor para disfrutar.",
-    "Bebe agua si la traes, y sigue suave.",
+    "Marca un punto al frente. Camina hacia allá con calma.",
     "Cuerpo y cabeza ya están en sintonía. Mantenlo.",
-    "Mitad del camino — buen lugar para agradecer.",
-    "Sigue con el mismo paso. No hay premio por apurarse.",
-    "Vas bien, vas bien. No cambies nada.",
   ],
-  late: [
+  push: [
+    "Dos tercios hechos. Queda menos del que llevas.",
+    "Pasaste la mitad. La segunda parte se administra, no se apura.",
+    "Aguanta tres cuadras más al ritmo de ahora. Después ajustas.",
+    "Si la cabeza pide pausa, ofrécele cien pasos suaves primero.",
+    "Marca un edificio al fondo y camina derechito hacia allá.",
+    "Queda menos de un tercio. El que persevera, llega.",
+    "Sigue con el mismo paso. No hay premio por apurarse.",
+    "Si tus piernas pesan, agradéceles — te están llevando.",
+    "Respira hondo dos veces y suelta los hombros. Reset.",
+    "Cada paso ahora pesa más, pero también enseña más.",
+    "Mantén la respiración tranquila. La urgencia no es necesaria.",
+    "Mira el final del trayecto. Camina hacia allá con confianza.",
+  ],
+  final: [
     "Ya estás cerca. Termina con la misma serenidad del inicio.",
     "Recta final. No es momento de apurarse, sino de mantener.",
     "Casi llegas. Confía en lo que ya hiciste.",
     "Últimos pasos. Disfruta este tramo, ya es tuyo.",
     "Cerca de la meta. El que persevera, llega.",
     "No cambies el ritmo ahora — termina como vienes.",
-    "Falta poco para llegar a casa.",
     "Respira hondo. Estás muy cerca.",
     "El cuerpo sabe que ya casi. Déjate llevar.",
-    "Un kilómetro más, paso a paso, y listo.",
+    "Cuenta cien pasos a este ritmo y ya casi cierras.",
     "Mantén la respiración tranquila. La urgencia no es necesaria.",
-    "Vas a llegar — no hay duda. Sigue suave.",
     "Termina como empieza un sabio: sin prisa.",
-    "Lo difícil ya pasó. El cierre es disfrute.",
     "Falta menos de lo que parece. Confía.",
   ],
 };
 COACH_MILESTONE['franco'] = {
   greeting: [
-    "Buen día. Empieza tranquilo: el camino tiene su propio ritmo.",
+    "Buen día. Empieza tranquilo/a: el camino tiene su propio ritmo.",
     "Respira hondo. El primer paso siempre es el más importante.",
-    "Abrimos despacio. No hay prisa — hay propósito.",
-    "Bienvenido al camino. Paso a paso, sin afanarte.",
+    "Abrimos despacio. No hay prisa — hay intención.",
+    "Bienvenido/a al camino. Paso a paso, sin afanarte.",
     "Buenos días. Camina con calma; el paisaje también es la meta.",
   ],
   halfway: [
@@ -1970,7 +2172,7 @@ COACH_MILESTONE['franco'] = {
     "Has llegado a la mitad — es un buen momento para respirar.",
     "Cincuenta por ciento. La constancia trae estos resultados.",
     "Mitad recorrida con calma. Eso es sabiduría también.",
-    "Halfway. Mira hacia atrás un momento — has hecho mucho.",
+    "Mitad del camino. Mira hacia atrás un momento — has hecho mucho.",
   ],
   almostThere: [
     "Ya estás cerca. Termina con la misma serenidad del inicio.",
@@ -1988,58 +2190,80 @@ COACH_MILESTONE['franco'] = {
   ],
 };
 COACH_LINES_POS['nata'] = {
+  // 6-bucket structure (see _bucketFor):
+  //   start  0-10 %   warmup 10-25 %   early 25-45 %
+  //   half   45-65 %  push   65-85 %   final 85-100 %
   start: [
     "Hola. Caminamos suave — sin prisa, sin presión.",
     "Buenos días. Respira hondo, hombros relajados, primer paso.",
     "Abrimos el día con calma. Tu ritmo, tu paz.",
-    "Bienvenida. Hoy lo importante es cómo te sientes al caminar.",
+    "Bienvenido/a. Hoy lo importante es cómo te sientes al caminar.",
     "Empezamos suave. No hay que correr por correr.",
     "Inhala por la nariz, exhala por la boca. Ahora un paso.",
-    "Suelta los hombros antes de empezar. Listo, vamos.",
     "Hoy caminar es cuidarte. Sin más.",
     "Empieza con un paso pequeño. Y luego otro pequeño.",
     "Pies sueltos, abdomen relajado, primer paso suave.",
     "Respira tres veces y arranca con dulzura.",
     "Hoy no se trata de cuánto, sino de cómo.",
-    "El primer paso ya es regalo para el cuerpo.",
-    "Hombros sueltos, mandíbula suelta, cuello largo. Vamos.",
     "Empieza desde un lugar amable contigo.",
   ],
-  early: [
-    "Mantén la respiración suave. No la fuerces.",
+  warmup: [
+    "Cuenta cuatro pasos por inhalación, cuatro por exhalación. Encuentra el ritmo.",
     "Hombros abajo, lejos de las orejas. Suelta.",
-    "Camina por donde te dé calma — sin obligación.",
-    "Si la cabeza pesa, respira hondo dos veces.",
-    "Cada paso es una respiración pequeña.",
+    "Mantén la respiración suave. No la fuerces.",
+    "Si el cuerpo pide pausa, escucha. Después sigues.",
     "Suelta la mandíbula. Suele estar apretada.",
-    "No corras por correr. Hoy cuenta el cómo.",
+    "Cada paso es una respiración pequeña.",
     "Mira hacia los árboles, hacia el cielo. Descansa los ojos.",
     "Pasos pequeños y constantes valen oro.",
-    "Si te apuras, te cansas más. Suave.",
+    "Marca un punto suave al frente y camina sin prisa hacia allá.",
     "Cuerpo presente — cabeza con el cuerpo.",
-    "Inhala cuatro pasos, exhala cuatro pasos. Encuentra el ritmo.",
     "No hay nada que probar. Solo caminar.",
-    "Si te cruzas con alguien, sonríele. Suaviza el día.",
     "Mantén la lengua suelta del paladar. Es sutil pero importante.",
   ],
-  mid: [
+  early: [
+    "Camina por donde te dé calma — sin obligación.",
+    "Si la cabeza pesa, respira hondo dos veces.",
+    "Pasos pequeños y constantes. Eso te lleva más lejos.",
+    "Cuenta cien pasos a este ritmo y observa cómo se sienten.",
+    "Si te apuras, te cansas más. Suave.",
+    "Si pisas muy fuerte, suaviza. Las rodillas duran más.",
+    "Si te cruzas con alguien, sonríele. Suaviza el día.",
+    "Marca un árbol o un poste al frente. Camina hacia allá con calma.",
+    "Aprieta el abdomen treinta segundos y suéltalo. Conexión cuerpo-mente.",
+    "Inhala cuatro pasos, exhala cuatro pasos. Mantén ese patrón.",
+    "Cuello largo, hombros abajo. Postura amable.",
+    "No corras por correr. Hoy cuenta el cómo.",
+  ],
+  half: [
     "Estás a la mitad. Respira, siente cómo va tu cuerpo.",
     "Mitad del camino, con calma. Bien por ti.",
     "Cincuenta por ciento — mantén esa respiración suave.",
     "Llegaste al medio sin forzar. Eso es equilibrio.",
-    "Halfway, respiración tranquila. Vas perfecto.",
+    "Mitad con respiración tranquila. Vas perfecto.",
     "Pausa interior por dos segundos. Sigue.",
     "El cuerpo agradece que no lo apures.",
     "Un paso tranquilo vale más que diez forzados.",
     "Suelta los hombros otra vez. Siempre vuelven a subir.",
-    "Hoy estás cuidándote — y se nota.",
-    "La mitad sin estrés es la mitad bien caminada.",
+    "Tres respiraciones profundas. Reset y sigue.",
+    "Cuenta cien pasos a este ritmo antes de subir otra vez.",
     "Mantén la mirada amable. El cuerpo lo siente.",
-    "Cuerpo presente, mente quieta, paso suave.",
-    "Sin prisa. La mitad es para disfrutar.",
-    "Estás en buen ritmo. No cambies nada.",
   ],
-  late: [
+  push: [
+    "Dos tercios del camino. Queda menos del que llevas.",
+    "Pasaste la mitad. Sigue suave — no hace falta apurar.",
+    "Aguanta tres cuadras más al ritmo de ahora. Después ajustas.",
+    "Si la cabeza pide pausa, ofrécele tres respiraciones profundas primero.",
+    "Marca un edificio al fondo y camina con calma hacia allá.",
+    "Queda menos de un tercio. La calma te lleva.",
+    "Si tus piernas pesan, agradéceles — te están llevando.",
+    "Respira hondo dos veces y suelta los hombros. Reset.",
+    "Cada paso de aquí en adelante es un acto de cuidarte.",
+    "Cuerpo presente, mente quieta. Sigue así.",
+    "Mantén la respiración suave aunque el cuerpo se sienta más pesado.",
+    "Mira el final del trayecto. Camina hacia allá con paz.",
+  ],
+  final: [
     "Ya falta poquito. Termina suave, como empezaste.",
     "Cerquita de la meta. No hay que apurar nada.",
     "Casi llegamos — disfruta este último tramo con calma.",
@@ -2047,14 +2271,11 @@ COACH_LINES_POS['nata'] = {
     "Final cercano. Mantén la calma; ya es tuyo.",
     "Termina sin agitar la respiración.",
     "Hombros sueltos hasta el último paso.",
-    "Vas a llegar. Sigue como vienes.",
+    "Cuenta cien pasos a este ritmo y ya casi cierras.",
     "Cierre suave — sin prisa, sin esfuerzo extra.",
-    "El cuerpo te lo va a agradecer al final.",
     "Una respiración profunda más. Casi.",
     "Termina caminando con la cabeza serena.",
-    "Falta menos de lo que parece. Sigue suave.",
     "Cierre amable. Eres equilibrio.",
-    "Termina con la sensación de cuerpo descansado.",
   ],
 };
 COACH_MILESTONE['nata'] = {
@@ -2062,7 +2283,7 @@ COACH_MILESTONE['nata'] = {
     "Hola. Hoy caminamos suave — sin prisa, sin presión.",
     "Buenos días. Respira hondo, hombros relajados, primer paso.",
     "Abrimos el día con calma. Tu ritmo, tu paz.",
-    "Bienvenida. Hoy lo importante es cómo te sientes al caminar.",
+    "Bienvenido/a. Hoy lo importante es cómo te sientes al caminar.",
     "Empezamos suave. Recuerda: no hay que correr por correr.",
   ],
   halfway: [
@@ -2070,7 +2291,7 @@ COACH_MILESTONE['nata'] = {
     "Mitad del camino, con calma. Bien por ti.",
     "Cincuenta por ciento — mantén esa respiración suave.",
     "Llegaste al medio sin forzar. Eso es equilibrio.",
-    "Halfway, respiración tranquila. Vas perfecto.",
+    "Mitad con respiración tranquila. Vas perfecto.",
   ],
   almostThere: [
     "Ya falta poquito. Termina suave, como empezaste.",
@@ -2816,6 +3037,129 @@ function togglePanoMode(){
 })();
 
 /* ============================================================================
+   ROUTE OVERVIEW MAP — Fantasy-Hike-style stylized map of the whole trail.
+   Each trail has an SVG path representing its profile (low → climb →
+   peak → descend → climb → end). Waypoints are placed at fixed % along
+   the path corresponding to each landmark's segment. The player pin
+   slides along the path based on walked/total ratio.
+============================================================================ */
+
+// Inca trail — SVG path with profile: low at Km 82, big climb to Dead
+// Woman's Pass (peak ~50%), descent to Pacaymayo, second climb to
+// Wiñay Wayna, final approach to Machu Picchu. ViewBox is 800x460.
+var ROUTE_MAP_PATHS = {
+  inca: "M 60 410 C 130 405 200 360 270 290 S 380 110 430 80 S 510 130 530 195 S 600 220 640 210 S 740 200 760 180",
+};
+
+// Landmark waypoints with their fractional position along the route
+// (matches segment-indexed positions for the 8 Inca landmarks).
+var ROUTE_MAP_WAYPOINTS = {
+  inca: [
+    { name: 'Km 82',          frac: 0.02 },
+    { name: 'Wayllabamba',    frac: 0.13 },
+    { name: 'Llulluchapampa', frac: 0.35 },
+    { name: 'Paso',           frac: 0.50 },
+    { name: 'Pacaymayo',      frac: 0.65 },
+    { name: 'Runkurakay',     frac: 0.76 },
+    { name: 'Wiñay Wayna',    frac: 0.87 },
+    { name: 'Machu Picchu',   frac: 1.00 },
+  ],
+};
+
+function openRouteMap(){
+  if (!current) return;
+  if (!ROUTE_MAP_PATHS[current]) {
+    showInfo('Mapa', 'El mapa detallado de esta ruta llega pronto. Por ahora, sigue avanzando — el mapa del Camino Inca ya está listo si quieres explorarlo.');
+    return;
+  }
+  document.getElementById('route-map-modal').classList.add('open');
+  renderRouteMap();
+}
+function closeRouteMap(){
+  var m = document.getElementById('route-map-modal');
+  if (m) m.classList.remove('open');
+}
+function renderRouteMap(){
+  if (!current || !ROUTE_MAP_PATHS[current]) return;
+  var j = J(current); if (!j) return;
+  var d = ROUTE_MAP_PATHS[current];
+  var wps = ROUTE_MAP_WAYPOINTS[current] || [];
+  var bg = document.getElementById('rm-trail-bg');
+  var fg = document.getElementById('rm-trail-fg');
+  if (!bg || !fg) return;
+  bg.setAttribute('d', d);
+  fg.setAttribute('d', d);
+
+  // Compute path length for "traveled portion" trimming.
+  var L = bg.getTotalLength();
+  var walked = cumSteps(current) / STEPS_PER_MILE;
+  var milesFrac = Math.max(0, Math.min(1, walked / j.total));
+  fg.style.strokeDasharray = (milesFrac * L) + ' ' + L;
+
+  // Render waypoints
+  var SVG_NS = 'http://www.w3.org/2000/svg';
+  var wpg = document.getElementById('rm-waypoints');
+  wpg.innerHTML = '';
+  wps.forEach(function(wp, i){
+    var pt = bg.getPointAtLength(wp.frac * L);
+    var passed = milesFrac >= wp.frac;
+    var dot = document.createElementNS(SVG_NS, 'circle');
+    dot.setAttribute('cx', pt.x);
+    dot.setAttribute('cy', pt.y);
+    dot.setAttribute('r', 5);
+    dot.setAttribute('class', 'wp-dot' + (passed ? ' passed' : ''));
+    wpg.appendChild(dot);
+    // Label — alternate above/below to reduce collision with the path
+    var label = document.createElementNS(SVG_NS, 'text');
+    label.setAttribute('x', pt.x);
+    label.setAttribute('y', pt.y + (i % 2 === 0 ? -12 : 18));
+    label.setAttribute('class', 'wp-label' + (passed ? ' passed' : ''));
+    label.textContent = wp.name;
+    wpg.appendChild(label);
+  });
+
+  // Player pin
+  var pin = document.getElementById('rm-player-pin');
+  pin.innerHTML = '';
+  var pp = bg.getPointAtLength(milesFrac * L);
+  var pulse = document.createElementNS(SVG_NS, 'circle');
+  pulse.setAttribute('cx', pp.x);
+  pulse.setAttribute('cy', pp.y);
+  pulse.setAttribute('r', 7);
+  pulse.setAttribute('class', 'pin-pulse');
+  pin.appendChild(pulse);
+  var dot2 = document.createElementNS(SVG_NS, 'circle');
+  dot2.setAttribute('cx', pp.x);
+  dot2.setAttribute('cy', pp.y);
+  dot2.setAttribute('r', 6);
+  dot2.setAttribute('class', 'pin-dot');
+  pin.appendChild(dot2);
+
+  // Header subtitle — current/nearest waypoint
+  var here = wps.slice().reverse().find(function(w){ return milesFrac >= w.frac - 0.02; }) || wps[0];
+  var nextWp = wps.find(function(w){ return w.frac > milesFrac + 0.02; });
+  var sub = 'Estás en ' + (here ? here.name : '—');
+  if (nextWp) sub += ' · próximo: ' + nextWp.name;
+  document.getElementById('rm-sub').textContent = sub;
+
+  // Stats
+  var left = Math.max(0, j.total - walked);
+  document.getElementById('rm-stat-walked').textContent = walked.toFixed(1) + ' mi';
+  document.getElementById('rm-stat-left').textContent   = left.toFixed(1) + ' mi';
+  document.getElementById('rm-stat-pct').textContent    = Math.round(milesFrac * 100) + '%';
+}
+
+// Wire open/close once on first script run.
+(function wireRouteMap(){
+  var btn = document.getElementById('pano-map-btn');
+  var close = document.getElementById('rm-close');
+  var overlay = document.getElementById('rm-overlay');
+  if (btn) btn.onclick = openRouteMap;
+  if (close) close.onclick = closeRouteMap;
+  if (overlay) overlay.onclick = closeRouteMap;
+})();
+
+/* ============================================================================
    Inca-trail COMPOSITE RENDERER — single image per segment, Fantasy-Hike feel
    ----------------------------------------------------------------------------
    Files live at panoramas/inca/composites/<NN>.png  (01.png … 08.png)
@@ -2844,6 +3188,7 @@ var INCA_SEGMENT_PROPS = {
   '01': [
     { sprite:'01-quechua-greeter',      xPct:0.40, heightPct:20, stepUp:0,  cap:"Una mujer quechua te saluda al inicio del camino." },
     { sprite:'flora-eucalyptus',        xPct:0.12, heightPct:32, stepUp:0 },
+    { sprite:'wildlife-toucan',         xPct:0.75, heightPct:18, stepUp:0 },
     { sprite:'flora-ichu-tufts',        xPct:0.92, heightPct:9,  stepUp:0 },
   ],
   '02': [
@@ -2857,19 +3202,19 @@ var INCA_SEGMENT_PROPS = {
     { sprite:'flora-ichu-tufts',        xPct:0.88, heightPct:8,  stepUp:0 },
   ],
   '04': [
-    { sprite:'04-porter-setup',         xPct:0.45, heightPct:18, stepUp:0,  cap:"Llegada a Wayllabamba — un porteador arma el campamento." },
+    { sprite:'scene-hikers-camp-setup', xPct:0.45, heightPct:22, stepUp:0,  cap:"Llegada a Wayllabamba — el equipo arma el campamento juntos." },
     { sprite:'flora-eucalyptus',        xPct:0.10, heightPct:30, stepUp:0 },
     { sprite:'flora-cantua',            xPct:0.85, heightPct:9,  stepUp:0 },
   ],
   '05': [
     { sprite:'05-hiker-stretching',     xPct:0.55, heightPct:17, stepUp:0,  cap:"Una caminante estira sus piernas en la subida." },
     { sprite:'flora-queñua-tree',       xPct:0.20, heightPct:18, stepUp:0 },
-    { sprite:'flora-ichu-tufts',        xPct:0.92, heightPct:9,  stepUp:0 },
+    { sprite:'wildlife-caracara-perched', xPct:0.88, heightPct:14, stepUp:0 },
   ],
   '06': [
-    { sprite:'06-stream-stepping',      xPct:0.50, heightPct:10, stepUp:0,  cap:"Cruzas un arroyo de piedra en piedra." },
-    { sprite:'flora-tree-fern',         xPct:0.85, heightPct:22, stepUp:0 },
-    { sprite:'flora-ichu-tufts',        xPct:0.15, heightPct:8,  stepUp:0 },
+    { sprite:'06-stream-stepping',      xPct:0.30, heightPct:10, stepUp:0,  cap:"Cruzas un arroyo de piedra en piedra." },
+    { sprite:'scene-river-crossing-group', xPct:0.65, heightPct:20, stepUp:0 },
+    { sprite:'flora-tree-fern',         xPct:0.92, heightPct:22, stepUp:0 },
   ],
   '07': [
     { sprite:'07-apacheta-low',         xPct:0.60, heightPct:12, stepUp:0,  cap:"Pones tu piedra en una apacheta del camino." },
@@ -2887,9 +3232,10 @@ var INCA_SEGMENT_PROPS = {
     { sprite:'flora-puya-tower',        xPct:0.85, heightPct:28, stepUp:0 },
   ],
   '10': [
-    { sprite:'10-porter-cooking',       xPct:0.45, heightPct:18, stepUp:0,  cap:"En Llulluchapampa, una cocinera prepara la cena." },
-    { sprite:'flora-queñua-tree',       xPct:0.85, heightPct:16, stepUp:0 },
-    { sprite:'flora-ichu-tufts',        xPct:0.18, heightPct:8,  stepUp:0 },
+    { sprite:'10-porter-cooking',       xPct:0.35, heightPct:18, stepUp:0,  cap:"En Llulluchapampa, los porteadores preparan la cena." },
+    { sprite:'scene-porter-meal-prep',  xPct:0.65, heightPct:20, stepUp:0 },
+    { sprite:'flora-queñua-tree',       xPct:0.92, heightPct:16, stepUp:0 },
+    { sprite:'flora-ichu-tufts',        xPct:0.05, heightPct:8,  stepUp:0 },
   ],
   '11': [
     { sprite:'11-chasqui-runner',       xPct:0.55, heightPct:17, stepUp:0,  cap:"Un chasqui corre con un mensaje." },
@@ -2897,9 +3243,9 @@ var INCA_SEGMENT_PROPS = {
     { sprite:'flora-ichu-tufts',        xPct:0.88, heightPct:8,  stepUp:0 },
   ],
   '12': [
-    { sprite:'12-stone-steps-diagonal', xPct:0.50, heightPct:18, stepUp:26, cap:"Subes el largo tramo de escalera inca." },
-    { sprite:'flora-puya-tower',        xPct:0.85, heightPct:30, stepUp:0 },
-    { sprite:'flora-ichu-tufts',        xPct:0.18, heightPct:9,  stepUp:0 },
+    { sprite:'12-stone-steps-diagonal', xPct:0.40, heightPct:18, stepUp:26, cap:"El guía señala el tramo de escalera inca. Subes." },
+    { sprite:'scene-guide-with-group',  xPct:0.70, heightPct:20, stepUp:0 },
+    { sprite:'flora-puya-tower',        xPct:0.92, heightPct:30, stepUp:0 },
   ],
   '13': [
     { sprite:'13-hiker-photo',          xPct:0.50, heightPct:20, stepUp:0,  cap:"Otra caminante captura el paisaje con su cámara." },
@@ -2907,12 +3253,13 @@ var INCA_SEGMENT_PROPS = {
     { sprite:'flora-puya-tower',        xPct:0.85, heightPct:25, stepUp:0 },
   ],
   '14': [
-    { sprite:'14-apacheta-tall',        xPct:0.45, heightPct:23, stepUp:22, cap:"Llegaste al paso. Pones tu piedra en la cumbre." },
+    { sprite:'14-apacheta-tall',        xPct:0.45, heightPct:23, stepUp:22, cap:"Llegaste al paso. Pones tu piedra en la cumbre — y un cóndor te sobrevuela." },
+    { sprite:'wildlife-condor-soaring', xPct:0.70, heightPct:30, stepUp:0 },
     { sprite:'flora-yareta-cushion',    xPct:0.18, heightPct:7,  stepUp:0 },
-    { sprite:'flora-yareta-cushion',    xPct:0.85, heightPct:6,  stepUp:0 },
+    { sprite:'flora-yareta-cushion',    xPct:0.92, heightPct:6,  stepUp:0 },
   ],
   '15': [
-    { sprite:'15-hiker-pair-walking',   xPct:0.50, heightPct:20, stepUp:0,  cap:"Una pareja de caminantes avanza junta." },
+    { sprite:'scene-campfire-gather',   xPct:0.50, heightPct:22, stepUp:0,  cap:"Llegada al campamento: el grupo se reúne alrededor del fuego." },
     { sprite:'flora-polylepis-cluster', xPct:0.85, heightPct:16, stepUp:0 },
     { sprite:'flora-ichu-tufts',        xPct:0.18, heightPct:8,  stepUp:0 },
   ],
@@ -2923,33 +3270,37 @@ var INCA_SEGMENT_PROPS = {
   ],
   '17': [
     { sprite:'17-llama-resting',        xPct:0.55, heightPct:13, stepUp:0,  cap:"Una llama descansa con su carga." },
+    { sprite:'wildlife-taruka-deer',    xPct:0.85, heightPct:17, stepUp:0 },
     { sprite:'flora-queñua-tree',       xPct:0.20, heightPct:16, stepUp:0 },
-    { sprite:'flora-ichu-tufts',        xPct:0.85, heightPct:8,  stepUp:0 },
   ],
   '18': [
-    { sprite:'18-waterfall-porter',     xPct:0.45, heightPct:22, stepUp:0,  cap:"Un porteador lava ollas junto a la cascada." },
-    { sprite:'flora-tree-fern',         xPct:0.85, heightPct:24, stepUp:0 },
+    { sprite:'18-waterfall-porter',     xPct:0.45, heightPct:22, stepUp:0,  cap:"Un porteador lava ollas junto a la cascada. Un colibrí pasa." },
+    { sprite:'wildlife-hummingbird-hovering', xPct:0.72, heightPct:13, stepUp:0 },
+    { sprite:'flora-tree-fern',         xPct:0.90, heightPct:24, stepUp:0 },
     { sprite:'flora-bromeliad',         xPct:0.15, heightPct:13, stepUp:0 },
   ],
   '19': [
-    { sprite:'19-alpaca-family',        xPct:0.55, heightPct:13, stepUp:0,  cap:"Una madre alpaca y su cría te miran pasar." },
-    { sprite:'flora-polylepis-cluster', xPct:0.85, heightPct:17, stepUp:0 },
-    { sprite:'flora-cantua',            xPct:0.18, heightPct:9,  stepUp:0 },
+    { sprite:'19-alpaca-family',        xPct:0.40, heightPct:13, stepUp:0,  cap:"Una madre alpaca y su cría te miran pasar. Una taruka asoma." },
+    { sprite:'wildlife-taruka-deer',    xPct:0.72, heightPct:17, stepUp:0 },
+    { sprite:'flora-polylepis-cluster', xPct:0.90, heightPct:17, stepUp:0 },
+    { sprite:'flora-cantua',            xPct:0.15, heightPct:9,  stepUp:0 },
   ],
   '20': [
-    { sprite:'20-hiker-arms-up',        xPct:0.50, heightPct:22, stepUp:0,  cap:"Una caminante celebra en el mirador." },
+    { sprite:'20-hiker-arms-up',        xPct:0.50, heightPct:22, stepUp:0,  cap:"Una caminante celebra en el mirador. Un cóndor surca el cielo." },
+    { sprite:'wildlife-condor-soaring', xPct:0.70, heightPct:28, stepUp:0 },
     { sprite:'flora-polylepis-cluster', xPct:0.15, heightPct:17, stepUp:0 },
-    { sprite:'flora-polylepis-cluster', xPct:0.85, heightPct:15, stepUp:0 },
+    { sprite:'flora-polylepis-cluster', xPct:0.92, heightPct:15, stepUp:0 },
   ],
   '21': [
     { sprite:'21-ruins-doorway',        xPct:0.45, heightPct:23, stepUp:14, cap:"Atraviesas el portal de Runkurakay." },
-    { sprite:'flora-tree-fern',         xPct:0.85, heightPct:22, stepUp:0 },
+    { sprite:'wildlife-caracara-perched', xPct:0.78, heightPct:14, stepUp:0 },
+    { sprite:'flora-tree-fern',         xPct:0.92, heightPct:22, stepUp:0 },
     { sprite:'flora-bromeliad',         xPct:0.15, heightPct:13, stepUp:0 },
   ],
   '22': [
-    { sprite:'22-hiker-water-fill',     xPct:0.55, heightPct:18, stepUp:0,  cap:"Un caminante rellena su botella en el arroyo." },
+    { sprite:'22-hiker-water-fill',     xPct:0.50, heightPct:18, stepUp:0,  cap:"Un caminante rellena su botella en el arroyo. Un zorro andino mira desde lejos." },
+    { sprite:'wildlife-andean-fox',     xPct:0.80, heightPct:11, stepUp:0 },
     { sprite:'flora-tree-fern',         xPct:0.18, heightPct:22, stepUp:0 },
-    { sprite:'flora-bromeliad',         xPct:0.88, heightPct:12, stepUp:0 },
   ],
   '23': [
     { sprite:'23-quechua-children',     xPct:0.50, heightPct:12, stepUp:0,  cap:"Niños quechuas te saludan con la mano." },
@@ -2957,24 +3308,28 @@ var INCA_SEGMENT_PROPS = {
     { sprite:'flora-cantua',            xPct:0.15, heightPct:9,  stepUp:0 },
   ],
   '24': [
-    { sprite:'24-terrace-climb',        xPct:0.45, heightPct:22, stepUp:28, cap:"Subes las terrazas de Wiñay Wayna." },
-    { sprite:'flora-wild-orchid',       xPct:0.85, heightPct:14, stepUp:0 },
-    { sprite:'flora-wild-orchid',       xPct:0.20, heightPct:13, stepUp:0 },
+    { sprite:'24-terrace-climb',        xPct:0.35, heightPct:22, stepUp:28, cap:"Subes las terrazas de Wiñay Wayna. Cotorras chillan en los árboles." },
+    { sprite:'wildlife-mitred-parakeets', xPct:0.65, heightPct:11, stepUp:0 },
+    { sprite:'wildlife-coati',          xPct:0.82, heightPct:13, stepUp:0 },
+    { sprite:'flora-wild-orchid',       xPct:0.15, heightPct:13, stepUp:0 },
+    { sprite:'flora-wild-orchid',       xPct:0.95, heightPct:12, stepUp:0 },
   ],
   '25': [
-    { sprite:'25-tent-single-night',    xPct:0.50, heightPct:13, stepUp:0,  cap:"Una sola carpa contra la noche estrellada." },
-    { sprite:'flora-polylepis-cluster', xPct:0.18, heightPct:16, stepUp:0 },
-    { sprite:'flora-polylepis-cluster', xPct:0.88, heightPct:14, stepUp:0 },
+    { sprite:'25-tent-single-night',    xPct:0.40, heightPct:13, stepUp:0,  cap:"Una sola carpa contra la noche estrellada. Un oso de anteojos cruza el bosque." },
+    { sprite:'wildlife-spectacled-bear', xPct:0.72, heightPct:13, stepUp:0 },
+    { sprite:'flora-polylepis-cluster', xPct:0.15, heightPct:16, stepUp:0 },
+    { sprite:'flora-polylepis-cluster', xPct:0.92, heightPct:14, stepUp:0 },
   ],
   '26': [
-    { sprite:'26-stars-cairn',          xPct:0.55, heightPct:22, stepUp:0,  cap:"Una apacheta bajo el cielo estrellado." },
-    { sprite:'flora-ichu-tufts',        xPct:0.18, heightPct:9,  stepUp:0 },
-    { sprite:'flora-ichu-tufts',        xPct:0.85, heightPct:8,  stepUp:0 },
+    { sprite:'26-stars-cairn',          xPct:0.40, heightPct:22, stepUp:0,  cap:"Una apacheta bajo el cielo estrellado. Un puma cruza, silencioso." },
+    { sprite:'wildlife-puma-prowling',  xPct:0.75, heightPct:11, stepUp:0 },
+    { sprite:'flora-ichu-tufts',        xPct:0.15, heightPct:9,  stepUp:0 },
+    { sprite:'flora-ichu-tufts',        xPct:0.92, heightPct:8,  stepUp:0 },
   ],
   '27': [
-    { sprite:'27-sun-gate-guide',       xPct:0.40, heightPct:23, stepUp:18, cap:"Una guía te recibe al alba en el Inti Punku." },
-    { sprite:'flora-queñua-tree',       xPct:0.78, heightPct:17, stepUp:0 },
-    { sprite:'flora-ichu-tufts',        xPct:0.92, heightPct:8,  stepUp:0 },
+    { sprite:'scene-sun-gate-arrival',  xPct:0.45, heightPct:25, stepUp:18, cap:"Llegas al Inti Punku al alba con el grupo. La meta a la vista." },
+    { sprite:'flora-queñua-tree',       xPct:0.85, heightPct:17, stepUp:0 },
+    { sprite:'flora-ichu-tufts',        xPct:0.95, heightPct:8,  stepUp:0 },
   ],
 };
 // Width (as % of route) over which the avatar's step-up ramps in and out.
