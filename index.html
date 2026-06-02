@@ -1269,7 +1269,7 @@
       <div class="rm-stats">
         <div class="rm-stat"><div class="v" id="rm-stat-walked-tab">—</div><div class="l">recorrido</div></div>
         <div class="rm-stat"><div class="v" id="rm-stat-left-tab">—</div><div class="l">restante</div></div>
-        <div class="rm-stat"><div class="v" id="rm-stat-pct-tab">—</div><div class="l">% completado</div></div>
+        <div class="rm-stat"><div class="v" id="rm-stat-pct-tab">—</div><div class="l">completado</div></div>
       </div>
 
       <!-- 2) AERIAL MAP -->
@@ -1290,6 +1290,12 @@
       </div>
 
       <!-- 3) ELEVATION PROFILE -->
+      <div class="rm-head">
+        <div class="rm-titles">
+          <div class="rm-title">Perfil de elevación</div>
+          <div class="rm-sub">Altitud a lo largo del sendero</div>
+        </div>
+      </div>
       <div class="trail" id="elevprofile"></div>
 
       <!-- 4) ETAs + overview -->
@@ -2800,7 +2806,11 @@ function buildTrailProfile(j,walked){
   var INK=V('--ink','#1a1614'), SOFT=V('--ink-soft','#8a847f'), BG=V('--bg','#fff'), PAPER=V('--paper','#fbfaf6');
   var W=1180,H=320, padL=54,padR=30, top=128, baseY=250, iw=W-padL-padR, elevH=baseY-top;
   var stops=j.stops, N=stops.length;
-  var minE=Infinity,maxE=-Infinity; stops.forEach(function(s){ if(s.el<minE)minE=s.el; if(s.el>maxE)maxE=s.el; });
+  // Y-domain with a baseline well below the lowest stop, so a 2.700 m start
+  // sits visibly up the chart (not at "sea level"), plus headroom above the peak.
+  var dataMin=Infinity,dataMax=-Infinity; stops.forEach(function(s){ if(s.el<dataMin)dataMin=s.el; if(s.el>dataMax)dataMax=s.el; });
+  var minE=Math.floor((dataMin-300)/500)*500;
+  var maxE=Math.ceil((dataMax+250)/500)*500;
   var range=Math.max(1,maxE-minE);
   function X(mi){return padL+(mi/j.total)*iw;}
   function Y(el){return baseY-((el-minE)/range)*elevH;}
@@ -2824,10 +2834,10 @@ function buildTrailProfile(j,walked){
 
   var s='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">';
   // elevation gridlines (min + max) with left labels
-  [minE,maxE].forEach(function(e){ var gy=Y(e);
+  for(var gg=minE; gg<=maxE; gg+=1000){ var gy=Y(gg);
     s+='<line x1="'+padL+'" y1="'+gy+'" x2="'+(W-padR)+'" y2="'+gy+'" stroke="'+LN+'" stroke-width="1" stroke-dasharray="2 5"/>';
-    s+='<text x="'+(padL-8)+'" y="'+(gy+3)+'" text-anchor="end" font-size="11" fill="'+SOFT+'">'+e.toLocaleString('es')+' m</text>';
-  });
+    s+='<text x="'+(padL-8)+'" y="'+(gy+3)+'" text-anchor="end" font-size="11" fill="'+SOFT+'">'+gg.toLocaleString('es')+' m</text>';
+  }
   // day bands: separators + cumulative distance markers + per-day distance & hours
   if(days){ var prev=0; days.forEach(function(d,di){ var dx=X(d.mi);
     if(di<days.length-1){
@@ -2850,9 +2860,9 @@ function buildTrailProfile(j,walked){
     var on=walked>=st.mi-1e-6, p=pts[idx], isPass=passes.indexOf(idx)>=0;
     // tent for day-camp stops (drawn below the dot)
     if(campMi[st.mi]){ var tx=p.x, tyc=p.y+12; s+='<path d="M '+(tx-6)+' '+(tyc+6)+' L '+tx+' '+(tyc-5)+' L '+(tx+6)+' '+(tyc+6)+' Z" fill="none" stroke="'+(on?DP:SOFT)+'" stroke-width="1.6" stroke-linejoin="round"/><line x1="'+tx+'" y1="'+(tyc-5)+'" x2="'+tx+'" y2="'+(tyc+6)+'" stroke="'+(on?DP:SOFT)+'" stroke-width="1.2"/>'; }
-    if(isPass){ var dd=5.5; s+='<rect x="'+(p.x-dd)+'" y="'+(p.y-dd)+'" width="'+(dd*2)+'" height="'+(dd*2)+'" rx="1.5" transform="rotate(45 '+p.x+' '+p.y+')" fill="'+(on?INK:BG)+'" stroke="'+(on?'#fbfaf6':INK)+'" stroke-width="2"/>';
+    if(isPass){ var dd=5.5; s+='<rect x="'+(p.x-dd)+'" y="'+(p.y-dd)+'" width="'+(dd*2)+'" height="'+(dd*2)+'" rx="1.5" transform="rotate(45 '+p.x+' '+p.y+')" fill="'+INK+'" stroke="'+PAPER+'" stroke-width="2"/>';
       s+='<text x="'+p.x+'" y="'+(p.y+(campMi[st.mi]?30:14))+'" text-anchor="middle" font-size="8.5" font-weight="700" fill="'+(on?DP:SOFT)+'">'+passTag[idx]+'</text>'; }
-    else { s+='<circle cx="'+p.x+'" cy="'+p.y+'" r="'+(on?4:3.5)+'" fill="'+(on?INK:BG)+'" stroke="'+(on?'#fbfaf6':INK)+'" stroke-width="2"/>'; }
+    else { s+='<circle cx="'+p.x+'" cy="'+p.y+'" r="'+(on?4:3.5)+'" fill="'+INK+'" stroke="'+PAPER+'" stroke-width="2"/>'; }
     // name + elevation: always angled UP and above the curve (never into the
     // mountain fill); paper halo (drawn behind) so it reads over the line.
     var lastIdx=idx===N-1;
@@ -2869,8 +2879,7 @@ function buildTrailProfile(j,walked){
   s+='<circle cx="'+px+'" cy="'+py+'" r="5.5" fill="'+ACC+'" stroke="'+BG+'" stroke-width="2"/>';
   s+='</svg>';
   var pfx=_round1(px/W*1000)/1000;
-  return '<div class="trail-label">Perfil de elevación</div>'
-    +'<div class="trail-scroll" data-pfx="'+pfx+'">'+s+'</div>';
+  return '<div class="trail-scroll" data-pfx="'+pfx+'">'+s+'</div>';
 }
 
 /* Simple flat progress bar — fallback for routes without elevation data. */
@@ -3667,7 +3676,8 @@ function _aerWire(){
   _aer.scroller.addEventListener('scroll', function(){
     if(!_aer.active) return;
     var max=_aer.scroller.scrollWidth-_aer.scroller.clientWidth;
-    _aer.t = max>0 ? _aer.scroller.scrollLeft/max : 0;
+    // inverted: swipe right (scrollLeft↓) advances along the trail → natural drag
+    _aer.t = max>0 ? 1-_aer.scroller.scrollLeft/max : 0;
     _aerCenter();
   }, {passive:true});
 }
@@ -3751,7 +3761,7 @@ function renderIncaAerial(svg, walkedMi, totalMi){
       var trackW=Math.round(ww*2.6);
       if(_aer.spacer) _aer.spacer.style.width=trackW+'px';
       _aerWire();
-      if(_aer.scroller){ var maxS=trackW-_aer.scroller.clientWidth; _aer.scroller.scrollLeft=Math.max(0, _aer.t*maxS); }
+      if(_aer.scroller){ var maxS=trackW-_aer.scroller.clientWidth; _aer.scroller.scrollLeft=Math.max(0, (1-_aer.t)*maxS); }
       _aerCenter();
     });
   }
@@ -3767,8 +3777,8 @@ function renderMapaTab(){
   var walked = cumSteps(current) / STEPS_PER_MILE;
   var milesFrac = Math.max(0, Math.min(1, walked / j.total));
   var left = Math.max(0, j.total - walked);
-  document.getElementById('rm-stat-walked-tab').textContent = walked.toFixed(1) + ' mi';
-  document.getElementById('rm-stat-left-tab').textContent   = left.toFixed(1) + ' mi';
+  document.getElementById('rm-stat-walked-tab').textContent = walked.toFixed(1).replace('.',',') + ' mi';
+  document.getElementById('rm-stat-left-tab').textContent   = left.toFixed(1).replace('.',',') + ' mi';
   document.getElementById('rm-stat-pct-tab').textContent    = Math.round(milesFrac * 100) + '%';
 
   // Trail-overview button — only for routes that have an overview image
