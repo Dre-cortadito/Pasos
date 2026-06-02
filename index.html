@@ -760,6 +760,7 @@
   .scene-day{font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:1.8px;text-transform:uppercase;color:var(--accent)}
   .scene-place{font-family:var(--font-display);font-size:23px;font-weight:700;color:#fff;line-height:1.05;margin-top:2px}
   .scene-line{font-family:var(--font-display);font-style:italic;font-size:13.5px;color:rgba(255,255,255,.92);margin-top:3px;line-height:1.35}
+  .scene-steps{font-family:var(--font-ui);font-size:12px;font-weight:700;letter-spacing:.3px;color:rgba(255,255,255,.82);margin-top:4px;text-shadow:0 1px 3px rgba(0,0,0,.5)}
   .stop-thumb{width:74px;height:52px;flex:none;border-radius:9px;overflow:hidden;border:1px solid var(--ink-line);background:var(--paper);line-height:0}
   .stop-thumb.locked{display:flex;align-items:center;justify-content:center;border-style:dashed;border-color:var(--ink-line-strong);color:var(--ink-line-strong);font-size:20px}
   .stop-body{flex:1;min-width:0}
@@ -1132,6 +1133,7 @@
       <div class="pano-top">
         <div class="scene-day" id="scene-day"></div>
         <div class="scene-place" id="scene-place"></div>
+        <div class="scene-steps" id="scene-steps"></div>
       </div>
       <div class="pano-bottom">
         <div class="scene-line" id="scene-line"></div>
@@ -1172,10 +1174,6 @@
       </div>
     </div>
 
-    <!-- PROGRESS BAR — the route trail (between panorama and coach) -->
-    <div class="trail" id="trail"></div>
-    <div class="loc" id="loc"></div>
-
     <!-- COACH PANEL — voice-of-your-coach. Thin, horizontal: small pose + line.
          Hidden until a coach is chosen. Updates on game-entry and on sync/log. -->
     <div class="coach-card-game hide" id="coach-card-game">
@@ -1189,19 +1187,9 @@
       </div>
     </div>
 
-    <div class="eta-card">
-      <div class="eta" id="eta-mine"><div class="v" id="eta-mine-v">—</div><div class="l" id="eta-mine-l">a tu ritmo</div></div>
-      <div class="eta healthy" id="eta-health"><div class="v" id="eta-health-v">—</div><div class="l" id="eta-health-l">al ritmo saludable</div></div>
-    </div>
-
-    <!-- STEPS OF THE DAY -->
+    <!-- STEPS OF THE DAY — count shown small on the panorama; this panel is the
+         goal bar + sync/log controls. -->
     <div class="day">
-      <div class="day-top">
-        <h3>Pasos de hoy</h3>
-        <span class="day-rank" id="day-rank"></span>
-      </div>
-      <div class="day-count"><span id="day-count">0</span> <small>pasos</small></div>
-
       <div class="day-goalbar"><i id="day-fill"></i><span class="pin" id="pin-goal" data-l="tu meta"></span></div>
       <div class="day-tiers" id="day-tiers"></div>
 
@@ -1253,6 +1241,16 @@
         <div class="rm-stat"><div class="v" id="rm-stat-walked-tab">—</div><div class="l">recorrido</div></div>
         <div class="rm-stat"><div class="v" id="rm-stat-left-tab">—</div><div class="l">restante</div></div>
         <div class="rm-stat"><div class="v" id="rm-stat-pct-tab">—</div><div class="l">% completado</div></div>
+      </div>
+
+      <!-- TU PROGRESO EN LA RUTA — trail bar, current leg, and ETAs
+           (moved here from Camina). -->
+      <h3 class="tab-h2">Tu progreso en la ruta</h3>
+      <div class="trail" id="trail"></div>
+      <div class="loc" id="loc"></div>
+      <div class="eta-card">
+        <div class="eta" id="eta-mine"><div class="v" id="eta-mine-v">—</div><div class="l" id="eta-mine-l">a tu ritmo</div></div>
+        <div class="eta healthy" id="eta-health"><div class="v" id="eta-health-v">—</div><div class="l" id="eta-health-l">al ritmo saludable</div></div>
       </div>
     </div>
   </section>
@@ -3958,9 +3956,15 @@ function render(){
   if(statsEl) statsEl.innerHTML=
     statTile(fmtMi1(walked),'Recorrido')+statTile(pct+'%','Completado')+statTile(fmtMi1(remainMi),'Faltan');
 
-  // day card
-  document.getElementById('day-count').textContent=nFmt(ts);
-  document.getElementById('day-rank').innerHTML='Rango de hoy: <b>'+RANKS[ri]+'</b>';
+  // pasos de hoy — shown small under the place name on the panorama
+  var stepsEl=document.getElementById('scene-steps');
+  if(stepsEl) stepsEl.textContent=nFmt(ts)+' pasos hoy · '+RANKS[ri];
+
+  // day card (count/rank now live on the panorama; guard legacy nodes)
+  var dayCountEl=document.getElementById('day-count');
+  if(dayCountEl) dayCountEl.textContent=nFmt(ts);
+  var dayRankEl=document.getElementById('day-rank');
+  if(dayRankEl) dayRankEl.innerHTML='Rango de hoy: <b>'+RANKS[ri]+'</b>';
   document.getElementById('day-fill').style.width=clamp(ts/RECOMMENDED,0,1)*100+'%';
   var pin=document.getElementById('pin-goal');
   pin.style.left=clamp(state.goal/RECOMMENDED,0,1)*100+'%';
