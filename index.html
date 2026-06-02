@@ -846,11 +846,15 @@
   /* Zoom/pan wrapper for the aerial map — the SVG is rendered larger than the
      wrapper and the wrapper scrolls (pan to follow the route). */
   .rm-zoomwrap{
-    position:relative;overflow:hidden;touch-action:pan-y;cursor:grab;
+    position:relative;overflow:hidden;
     border-radius:12px;border:1px solid rgba(63,227,178,.12);
     background:radial-gradient(ellipse at center,#102019 0%,#0c0905 90%);
   }
-  .rm-zoomwrap:active{cursor:grabbing}
+  /* Transparent native-scroll layer on top drives the path-follow (smooth on
+     touch); the map svg below is transformed to follow the trail. */
+  .rm-scroller{position:absolute;inset:0;z-index:2;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-x}
+  .rm-scroller::-webkit-scrollbar{height:0;width:0}
+  .rm-spacer{height:1px}
   .tab-mapa-inner .rm-svg{
     width:100%;height:auto;display:block;border:0;border-radius:0;background:none;
   }
@@ -1259,6 +1263,16 @@
   <!-- ====================== TAB: MAPA (route overview) ====================== -->
   <section class="tab-page tab-mapa hide">
     <div class="tab-mapa-inner">
+      <!-- 1) PROGRESS BAR — the at-a-glance "how far am I", shown first -->
+      <div class="trail" id="trail"></div>
+      <div class="loc" id="loc"></div>
+      <div class="rm-stats">
+        <div class="rm-stat"><div class="v" id="rm-stat-walked-tab">—</div><div class="l">recorrido</div></div>
+        <div class="rm-stat"><div class="v" id="rm-stat-left-tab">—</div><div class="l">restante</div></div>
+        <div class="rm-stat"><div class="v" id="rm-stat-pct-tab">—</div><div class="l">% completado</div></div>
+      </div>
+
+      <!-- 2) AERIAL MAP -->
       <div class="rm-head">
         <div class="rm-titles">
           <div class="rm-title">Vista aérea del sendero</div>
@@ -1272,24 +1286,17 @@
           <g id="rm-waypoints-tab"></g>
           <g id="rm-player-pin-tab"></g>
         </svg>
-      </div>
-      <div class="rm-stats">
-        <div class="rm-stat"><div class="v" id="rm-stat-walked-tab">—</div><div class="l">recorrido</div></div>
-        <div class="rm-stat"><div class="v" id="rm-stat-left-tab">—</div><div class="l">restante</div></div>
-        <div class="rm-stat"><div class="v" id="rm-stat-pct-tab">—</div><div class="l">% completado</div></div>
+        <div class="rm-scroller" id="rm-scroller"><div class="rm-spacer" id="rm-spacer"></div></div>
       </div>
 
-      <!-- TU PROGRESO EN LA RUTA — trail bar, current leg, and ETAs
-           (moved here from Camina). -->
-      <h3 class="tab-h2">Tu progreso en la ruta</h3>
-      <div class="trail" id="trail"></div>
-      <div class="loc" id="loc"></div>
+      <!-- 3) ELEVATION PROFILE -->
+      <div class="trail" id="elevprofile"></div>
+
+      <!-- 4) ETAs + overview -->
       <div class="eta-card">
         <div class="eta" id="eta-mine"><div class="v" id="eta-mine-v">—</div><div class="l" id="eta-mine-l">a tu ritmo</div></div>
         <div class="eta healthy" id="eta-health"><div class="v" id="eta-health-v">—</div><div class="l" id="eta-health-l">al ritmo saludable</div></div>
       </div>
-
-      <!-- Static trail-overview infographic (Inca only) — shown on demand -->
       <button class="btn block sm" id="route-overview-btn" type="button" style="margin-top:12px;display:none">Ver resumen de la ruta</button>
     </div>
   </section>
@@ -2833,11 +2840,11 @@ function buildTrailProfile(j,walked){
     prev=d.mi;
   }); }
   // areas
-  s+='<path d="'+line+' L '+pts[N-1].x+' '+baseY+' L '+pts[0].x+' '+baseY+' Z" fill="'+LNS+'" fill-opacity="0.16"/>';
-  if(wpts.length>1) s+='<path d="'+smoothMapPath(wpts)+' L '+px+' '+baseY+' L '+pts[0].x+' '+baseY+' Z" fill="'+ACC+'" fill-opacity="0.20"/>';
-  // lines
-  s+='<path d="'+line+'" fill="none" stroke="'+LNS+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
-  if(wpts.length>1) s+='<path d="'+smoothMapPath(wpts)+'" fill="none" stroke="'+ACC+'" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>';
+  s+='<path d="'+line+' L '+pts[N-1].x+' '+baseY+' L '+pts[0].x+' '+baseY+' Z" fill="'+INK+'" fill-opacity="0.07"/>';
+  if(wpts.length>1) s+='<path d="'+smoothMapPath(wpts)+' L '+px+' '+baseY+' L '+pts[0].x+' '+baseY+' Z" fill="'+ACC+'" fill-opacity="0.22"/>';
+  // lines — full route clearly visible (dark), walked portion in bold mint
+  s+='<path d="'+line+'" fill="none" stroke="'+INK+'" stroke-opacity="0.55" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
+  if(wpts.length>1) s+='<path d="'+smoothMapPath(wpts)+'" fill="none" stroke="'+ACC+'" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>';
   // stops — every stop labelled (angled), passes as diamonds, camps with a tent
   stops.forEach(function(st,idx){
     var on=walked>=st.mi-1e-6, p=pts[idx], isPass=passes.indexOf(idx)>=0;
@@ -2863,8 +2870,7 @@ function buildTrailProfile(j,walked){
   s+='</svg>';
   var pfx=_round1(px/W*1000)/1000;
   return '<div class="trail-label">Perfil de elevación</div>'
-    +'<div class="trail-scroll" data-pfx="'+pfx+'">'+s+'</div>'
-    +_trailMeta(j,walked);
+    +'<div class="trail-scroll" data-pfx="'+pfx+'">'+s+'</div>';
 }
 
 /* Simple flat progress bar — fallback for routes without elevation data. */
@@ -3632,7 +3638,7 @@ function _centerScroll(wrap, fx, fy){
    and the camera follows the trail's real 2D shape (it dips/rises with the
    path) instead of free 2D panning. Vertical follows the trail automatically.
 ============================================================================ */
-var _aer={t:0, cum:null, total:0, pts:null, svg:null, wrap:null, svgW:0, svgH:0, VW:0, VH:0, wired:false, active:false};
+var _aer={t:0, cum:null, total:0, pts:null, svg:null, wrap:null, scroller:null, spacer:null, svgW:0, svgH:0, VW:0, VH:0, wired:false, active:false};
 function _aerArc(pts){
   var cum=[0]; for(var i=1;i<pts.length;i++){ var dx=pts[i].x-pts[i-1].x, dy=pts[i].y-pts[i-1].y; cum.push(cum[i-1]+Math.sqrt(dx*dx+dy*dy)); }
   return {cum:cum, total:cum[cum.length-1]||1};
@@ -3657,16 +3663,13 @@ function _aerCenter(){
   _aer.svg.style.transform='translate('+Math.round(tx)+'px,'+Math.round(ty)+'px)';
 }
 function _aerWire(){
-  if(_aer.wired) return; _aer.wired=true;
-  var w=_aer.wrap, sx=0, st=0, drag=false;
-  function down(x,id,el){ drag=true; sx=x; st=_aer.t; try{el&&el.setPointerCapture&&el.setPointerCapture(id);}catch(e){} }
-  function move(x){ if(!drag||!_aer.active) return; var sens=(_aer.wrap.clientWidth||340)*3.2; _aer.t=Math.max(0,Math.min(1, st-(x-sx)/sens)); _aerCenter(); }
-  function up(){ drag=false; }
-  w.addEventListener('pointerdown',function(e){ down(e.clientX,e.pointerId,w); });
-  w.addEventListener('pointermove', function(e){ move(e.clientX); });
-  w.addEventListener('pointerup', up);
-  w.addEventListener('pointercancel', up);
-  w.addEventListener('pointerleave', up);
+  if(_aer.wired || !_aer.scroller) return; _aer.wired=true;
+  _aer.scroller.addEventListener('scroll', function(){
+    if(!_aer.active) return;
+    var max=_aer.scroller.scrollWidth-_aer.scroller.clientWidth;
+    _aer.t = max>0 ? _aer.scroller.scrollLeft/max : 0;
+    _aerCenter();
+  }, {passive:true});
 }
 function renderIncaAerial(svg, walkedMi, totalMi){
   var A=INCA_AERIAL, stops=J('inca').stops, N=stops.length, VW=A.VW, VH=A.VH;
@@ -3736,6 +3739,7 @@ function renderIncaAerial(svg, walkedMi, totalMi){
       pf=(c0+ff*(c1-c0))/arc.total;
     }
     _aer.pts=pts; _aer.cum=arc.cum; _aer.total=arc.total; _aer.svg=svg; _aer.wrap=wrap; _aer.VW=VW; _aer.VH=VH; _aer.t=pf; _aer.active=true;
+    _aer.scroller=wrap.querySelector('.rm-scroller'); _aer.spacer=wrap.querySelector('.rm-spacer');
     svg.style.position='absolute'; svg.style.left='0'; svg.style.top='0'; svg.style.willChange='transform';
     requestAnimationFrame(function(){
       var ww=wrap.clientWidth||340, ZOOM=3;
@@ -3743,7 +3747,12 @@ function renderIncaAerial(svg, walkedMi, totalMi){
       wrap.style.height=winH+'px';
       _aer.svgW=Math.round(ww*ZOOM); _aer.svgH=Math.round(ww*ZOOM*(VH/VW));
       svg.style.width=_aer.svgW+'px'; svg.style.height=_aer.svgH+'px';
-      _aerWire(); _aerCenter();
+      // scroll range: ~1.6 screen-widths of swipe traverses the whole trail
+      var trackW=Math.round(ww*2.6);
+      if(_aer.spacer) _aer.spacer.style.width=trackW+'px';
+      _aerWire();
+      if(_aer.scroller){ var maxS=trackW-_aer.scroller.clientWidth; _aer.scroller.scrollLeft=Math.max(0, _aer.t*maxS); }
+      _aerCenter();
     });
   }
 }
@@ -3770,7 +3779,7 @@ function renderMapaTab(){
   }
 
   // Centre the (zoomed) elevation profile scroll on the player's position
-  var tsc=document.querySelector('#trail .trail-scroll');
+  var tsc=document.querySelector('#elevprofile .trail-scroll');
   if(tsc){ _centerScroll(tsc, parseFloat(tsc.getAttribute('data-pfx'))||0, null); }
 
   // INCA → aerial map
@@ -3792,6 +3801,8 @@ function renderMapaTab(){
     gwrap.style.height=''; gwrap.scrollLeft=0; gwrap.scrollTop=0;
     svg.style.width='100%'; svg.style.height='auto';
     svg.style.position='static'; svg.style.transform='none'; svg.style.left=''; svg.style.top='';
+    var gsp=gwrap.querySelector('.rm-spacer'); if(gsp) gsp.style.width='0';
+    var gsc=gwrap.querySelector('.rm-scroller'); if(gsc) gsc.scrollLeft=0;
   }
   svg.setAttribute('viewBox','0 0 800 460');
   svg.innerHTML = '<path id="rm-trail-bg-tab" class="trail-bg"></path>'
@@ -4294,7 +4305,13 @@ function render(){
   document.getElementById('rank-medals').innerHTML=medals;
 
   document.getElementById('jtitle').innerHTML=j.name+'<small>'+j.sub+'</small>';
-  document.getElementById('trail').innerHTML=buildTrail(j,walked);
+  document.getElementById('trail').innerHTML=buildTrailBar(j,walked);
+  var _ep=document.getElementById('elevprofile');
+  if(_ep){
+    var _hasEl=true; for(var _ke=0;_ke<j.stops.length;_ke++){ if(typeof j.stops[_ke].el!=='number'){_hasEl=false;break;} }
+    _ep.innerHTML=_hasEl?buildTrailProfile(j,walked):'';
+    _ep.style.display=_hasEl?'':'none';
+  }
 
   // journey panorama — switch renderer based on route. Inca uses the new
   // image-layer parallax (Fantasy-Hike style); all other routes still use the
