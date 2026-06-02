@@ -3542,56 +3542,28 @@ function switchTab(name){
    i-th stop in the inca JOURNEY (so progress maps to the real stop miles).
 ============================================================================ */
 var INCA_AERIAL = {
-  viewW:1000, viewH:600,
-  // one point per inca stop, in order (right = start, top-left = Machu Picchu)
-  pts:[
-    {x:860,y:360}, // 0 Km 82
-    {x:790,y:382}, // 1 Llaqtapata
-    {x:702,y:462}, // 2 Wayllabamba
-    {x:632,y:440}, // 3 Ayapata
-    {x:576,y:414}, // 4 Llulluchapampa
-    {x:520,y:390}, // 5 Warmiwañusca (1.er paso)
-    {x:476,y:344}, // 6 Pacaymayo
-    {x:410,y:366}, // 7 Runkurakay (2.º paso)
-    {x:350,y:350}, // 8 Sayacmarca
-    {x:360,y:304}, // 9 Chaquicocha (3.er paso)
-    {x:300,y:274}, //10 Phuyupatamarca
-    {x:240,y:234}, //11 Intipata
-    {x:316,y:220}, //12 Wiñay Wayna
-    {x:250,y:150}, //13 Inti Punku
-    {x:174,y:114}  //14 Machu Picchu
-  ],
-  // per-stop label placement {dx,dy,a} to avoid collisions (a=text-anchor)
-  labels:[
-    {dx:0,  dy:-15, a:'middle'}, // 0 Km 82
-    {dx:10, dy:16,  a:'start'},  // 1 Llaqtapata
-    {dx:0,  dy:22,  a:'middle'}, // 2 Wayllabamba
-    {dx:-2, dy:22,  a:'middle'}, // 3 Ayapata
-    {dx:34, dy:20,  a:'start'},  // 4 Llulluchapampa
-    {dx:0,  dy:-14, a:'middle'}, // 5 Warmiwañusca
-    {dx:12, dy:-13, a:'start'},  // 6 Pacaymayo
-    {dx:0,  dy:24,  a:'middle'}, // 7 Runkurakay
-    {dx:-12,dy:20,  a:'end'},    // 8 Sayacmarca
-    {dx:16, dy:-11, a:'start'},  // 9 Chaquicocha
-    {dx:-14,dy:18,  a:'end'},    //10 Phuyupatamarca
-    {dx:-14,dy:2,   a:'end'},    //11 Intipata
-    {dx:16, dy:-2,  a:'start'},  //12 Wiñay Wayna
-    {dx:16, dy:4,   a:'start'},  //13 Inti Punku
-    {dx:0,  dy:-14, a:'middle'}  //14 Machu Picchu
+  // Painted background (ChatGPT) + live overlay. npts are normalised (0..1)
+  // positions traced onto the baked trail, one per inca stop in order.
+  img:'panoramas/maps/inca-aerial.png', VW:1703, VH:924,
+  npts:[
+    [0.6999,0.5335], // 0 Km 82
+    [0.6272,0.6323], // 1 Llaqtapata
+    [0.5611,0.7329], // 2 Wayllabamba
+    [0.5207,0.8153], // 3 Ayapata
+    [0.4703,0.7759], // 4 Llulluchapampa
+    [0.4226,0.7134], // 5 Warmiwañusca (1.er paso)
+    [0.3898,0.6589], // 6 Pacaymayo
+    [0.3597,0.6010], // 7 Runkurakay (2.º paso)
+    [0.3173,0.5831], // 8 Sayacmarca
+    [0.3019,0.5419], // 9 Chaquicocha (3.er paso)
+    [0.2741,0.4800], //10 Phuyupatamarca
+    [0.2381,0.4021], //11 Intipata
+    [0.2181,0.3306], //12 Wiñay Wayna
+    [0.2152,0.2500], //13 Inti Punku
+    [0.1985,0.2110]  //14 Machu Picchu
   ],
   passes:[5,7,9],
-  mountains:[
-    {x:560,y:520,s:84,snow:false},
-    {x:760,y:500,s:64,snow:false},
-    {x:432,y:474,s:62,snow:true},
-    {x:196,y:384,s:54,snow:true},
-    {x:664,y:300,s:72,snow:false}
-  ],
-  blobs:[
-    {x:320,y:250,rx:200,ry:130},
-    {x:720,y:430,rx:230,ry:140}
-  ],
-  river:'M 980 250 Q 830 232 728 286 T 520 252 Q 414 236 330 182 T 168 92'
+  labelIdx:[0,5,7,9,12,14]  // start, the 3 passes, Wiñay Wayna, Machu Picchu (+ current always)
 };
 function _round1(n){return Math.round(n*10)/10;}
 function smoothMapPath(p){
@@ -3614,51 +3586,47 @@ function incaMountain(x,y,s,snow){
 }
 function _esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function renderIncaAerial(svg, walkedMi, totalMi){
-  var A=INCA_AERIAL, pts=A.pts, stops=J('inca').stops;
-  svg.setAttribute('viewBox','0 0 '+A.viewW+' '+A.viewH);
+  var A=INCA_AERIAL, stops=J('inca').stops, N=stops.length, VW=A.VW, VH=A.VH;
+  svg.setAttribute('viewBox','0 0 '+VW+' '+VH);
+  var pts=A.npts.map(function(p){return {x:p[0]*VW,y:p[1]*VH};});
   var wMi=Math.max(0,Math.min(totalMi,walkedMi));
-  var reachedIdx=-1, i;
-  for(i=0;i<stops.length;i++){ if(stops[i].mi<=wMi+1e-6) reachedIdx=i; }
-  var walkedPts=[];
-  for(i=0;i<=reachedIdx;i++) walkedPts.push(pts[i]);
+  var reachedIdx=-1,i; for(i=0;i<N;i++){ if(stops[i].mi<=wMi+1e-6) reachedIdx=i; }
   var playerPt = reachedIdx>=0 ? pts[reachedIdx] : pts[0];
-  if(reachedIdx>=0 && reachedIdx<stops.length-1 && wMi>stops[reachedIdx].mi){
-    var a=stops[reachedIdx].mi, b=stops[reachedIdx+1].mi, f=(b>a)?(wMi-a)/(b-a):0;
-    var q0=pts[reachedIdx], q1=pts[reachedIdx+1];
+  if(reachedIdx>=0 && reachedIdx<N-1 && wMi>stops[reachedIdx].mi){
+    var a=stops[reachedIdx].mi,b=stops[reachedIdx+1].mi,f=(b>a)?(wMi-a)/(b-a):0;
+    var q0=pts[reachedIdx],q1=pts[reachedIdx+1];
     playerPt={x:q0.x+(q1.x-q0.x)*f, y:q0.y+(q1.y-q0.y)*f};
-    walkedPts.push(playerPt);
   }
-  if(reachedIdx<0){ playerPt=pts[0]; walkedPts=[pts[0]]; }
-  var s='';
-  (A.blobs||[]).forEach(function(b){ s+='<ellipse class="aer-blob" cx="'+b.x+'" cy="'+b.y+'" rx="'+b.rx+'" ry="'+b.ry+'"/>'; });
-  if(A.river) s+='<path class="aer-river" d="'+A.river+'"/>';
-  (A.mountains||[]).forEach(function(m){ s+=incaMountain(m.x,m.y,m.s,m.snow); });
-  s+='<path class="aer-bg" d="'+smoothMapPath(pts)+'"/>';
-  if(walkedPts.length>1) s+='<path class="aer-fg" d="'+smoothMapPath(walkedPts)+'"/>';
+  var wpts=[]; for(i=0;i<=reachedIdx;i++) wpts.push(pts[i]);
+  if(reachedIdx>=0 && reachedIdx<N-1 && wMi>stops[reachedIdx].mi) wpts.push(playerPt);
+  if(reachedIdx<0){ playerPt=pts[0]; wpts=[pts[0]]; }
+  // painted terrain background
+  var s='<image href="'+A.img+'" x="0" y="0" width="'+VW+'" height="'+VH+'" preserveAspectRatio="xMidYMid slice"/>';
+  // walked highlight over the baked trail (glow + bright mint)
+  if(wpts.length>1){ var wl=smoothMapPath(wpts);
+    s+='<path d="'+wl+'" fill="none" stroke="#0EA178" stroke-opacity="0.30" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>';
+    s+='<path d="'+wl+'" fill="none" stroke="#10C896" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>';
+  }
+  // stops
   pts.forEach(function(p,idx){
-    var passed = stops[idx].mi<=wMi+1e-6;
-    var isPass = A.passes.indexOf(idx)>=0;
-    var isMP = idx===stops.length-1;
-    if(isMP) s+=incaMountain(p.x, p.y, 28, true);
-    if(isPass){
-      var dd=7;
-      s+='<rect class="aer-pass'+(passed?' passed':'')+'" x="'+(p.x-dd)+'" y="'+(p.y-dd)+'" width="'+(dd*2)+'" height="'+(dd*2)+'" rx="2" transform="rotate(45 '+p.x+' '+p.y+')"/>';
-    } else if(!isMP){
-      s+='<circle class="aer-dot'+(passed?' passed':'')+'" cx="'+p.x+'" cy="'+p.y+'" r="5"/>';
+    var passed=stops[idx].mi<=wMi+1e-6, isPass=A.passes.indexOf(idx)>=0, isMP=idx===N-1;
+    var fill=passed?'#10C896':'#fbfaf6', strk=passed?'#0a5c44':'#6f6a63';
+    if(isPass){ var dd=11; s+='<rect x="'+(p.x-dd)+'" y="'+(p.y-dd)+'" width="'+(2*dd)+'" height="'+(2*dd)+'" rx="2" transform="rotate(45 '+p.x+' '+p.y+')" fill="'+fill+'" stroke="'+strk+'" stroke-width="3.5"/>'; }
+    else { s+='<circle cx="'+p.x+'" cy="'+p.y+'" r="'+(isMP?10:8)+'" fill="'+fill+'" stroke="'+strk+'" stroke-width="3.5"/>'; }
+    if(A.labelIdx.indexOf(idx)>=0 || idx===reachedIdx){
+      var anc='middle', lx=p.x, ly=p.y-22;
+      if(p.y<90) ly=p.y+36;
+      if(p.x<170){ anc='start'; lx=p.x+14; }
+      else if(p.x>VW-230){ anc='end'; lx=p.x-14; }
+      s+='<text x="'+lx+'" y="'+ly+'" text-anchor="'+anc+'" paint-order="stroke" stroke="#fbfaf6" stroke-width="5" stroke-linejoin="round" fill="#1a1614" font-size="23" font-weight="800">'+_esc(shortName(stops[idx].n))+'</text>';
+      if(stops[idx].el) s+='<text x="'+lx+'" y="'+(ly+22)+'" text-anchor="'+anc+'" paint-order="stroke" stroke="#fbfaf6" stroke-width="4" stroke-linejoin="round" fill="#5a544e" font-size="16" font-weight="600">'+stops[idx].el.toLocaleString('es')+' m</text>';
     }
-    var L=(A.labels&&A.labels[idx])||{dx:0,dy:(idx%2===0?-12:16),a:'middle'};
-    var lx=p.x+L.dx, ly=p.y+L.dy, above=L.dy<0;
-    s+='<text class="aer-lbl'+(passed?' passed':'')+'" x="'+lx+'" y="'+ly+'" text-anchor="'+L.a+'">'+_esc(stops[idx].n)+'</text>';
-    if(stops[idx].el){ var ey=above ? ly-11 : ly+11; s+='<text class="aer-el" x="'+lx+'" y="'+ey+'" text-anchor="'+L.a+'">'+stops[idx].el.toLocaleString('es')+' m</text>'; }
   });
-  s+='<circle class="pin-pulse" cx="'+_round1(playerPt.x)+'" cy="'+_round1(playerPt.y)+'" r="9"/>';
-  s+='<circle class="pin-dot" cx="'+_round1(playerPt.x)+'" cy="'+_round1(playerPt.y)+'" r="6"/>';
-  s+='<g transform="translate(42,52)"><path class="aer-snow" d="M0 -22 L6 0 L0 -6 L-6 0 Z"/><text class="aer-compass" x="0" y="-26" text-anchor="middle" font-size="12" font-weight="800">N</text></g>';
-  s+='<g transform="translate('+(A.viewW-250)+','+(A.viewH-24)+')">'
-    +'<line x1="0" y1="0" x2="24" y2="0" stroke="#3FE3B2" stroke-width="4" stroke-linecap="round"/>'
-    +'<text class="aer-legend-t" x="30" y="4">recorrido</text>'
-    +'<line x1="108" y1="0" x2="132" y2="0" stroke="rgba(255,255,255,.3)" stroke-width="3" stroke-dasharray="2 6" stroke-linecap="round"/>'
-    +'<text class="aer-legend-t" x="138" y="4">por recorrer</text></g>';
+  // player marker (animated pulse, self-contained)
+  s+='<circle cx="'+_round1(playerPt.x)+'" cy="'+_round1(playerPt.y)+'" r="13" fill="none" stroke="#10C896" stroke-width="3">'
+    +'<animate attributeName="r" values="13;30;13" dur="1.9s" repeatCount="indefinite"/>'
+    +'<animate attributeName="opacity" values="0.75;0;0.75" dur="1.9s" repeatCount="indefinite"/></circle>';
+  s+='<circle cx="'+_round1(playerPt.x)+'" cy="'+_round1(playerPt.y)+'" r="10" fill="#10C896" stroke="#fff" stroke-width="3.5"/>';
   svg.innerHTML=s;
 }
 
