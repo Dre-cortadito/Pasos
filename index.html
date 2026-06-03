@@ -3750,7 +3750,8 @@ function _aerWire(){
   if(!sl || _aer.wired) return; _aer.wired=true;
   sl.addEventListener('input', function(){
     if(!_aer.active) return;
-    _aer.t = (parseFloat(sl.value)||0)/1000;
+    // inverted: thumb on the RIGHT = Km 82 start (image runs right→left)
+    _aer.t = 1 - (parseFloat(sl.value)||0)/1000;
     _aerCenter();
   });
 }
@@ -3790,7 +3791,7 @@ function renderIncaAerial(svg, walkedMi, totalMi){
     s+='<circle cx="'+p.x+'" cy="'+p.y+'" r="'+(r+3)+'" fill="#fbfaf6" opacity="0.9"/>'; // halo
     if(isPass){ var dd=10; s+='<rect x="'+(p.x-dd)+'" y="'+(p.y-dd)+'" width="'+(2*dd)+'" height="'+(2*dd)+'" rx="2" transform="rotate(45 '+p.x+' '+p.y+')" fill="'+fill+'" stroke="'+strk+'" stroke-width="3"/>'; }
     else { s+='<circle cx="'+p.x+'" cy="'+p.y+'" r="'+r+'" fill="'+fill+'" stroke="'+strk+'" stroke-width="3"/>'; }
-    if(A.labelIdx.indexOf(idx)>=0 || idx===reachedIdx){
+    { // label every stop (matches the elevation chart)
       var anc='middle', lx=p.x, ly=p.y-22;
       if(p.y<90) ly=p.y+38;
       if(p.x<170){ anc='start'; lx=p.x+14; }
@@ -3830,7 +3831,7 @@ function renderIncaAerial(svg, walkedMi, totalMi){
       _aer.svgW=Math.round(ww*ZOOM); _aer.svgH=Math.round(ww*ZOOM*(VH/VW));
       svg.style.width=_aer.svgW+'px'; svg.style.height=_aer.svgH+'px';
       _aerWire();
-      var sl=document.getElementById('aer-slider'); if(sl) sl.value=Math.round(_aer.t*1000);
+      var sl=document.getElementById('aer-slider'); if(sl) sl.value=Math.round((1-_aer.t)*1000);
       _aerCenter();
     });
   }
