@@ -2888,7 +2888,7 @@ function buildTrailProfile(j,walked){
   var line=smoothMapPath(pts,0.42);   // sharper than the map (peaks spike)
   var isInca=(j.id==='inca');
   var passes=(typeof INCA_AERIAL!=='undefined' && isInca)?INCA_AERIAL.passes:[];
-  var passTag={5:'1.er paso',7:'2.º paso',9:'3.er paso'};
+  var passTag={5:'1.er paso',7:'2.º paso',10:'3.er paso'};
   var days=DAY_BOUNDS[j.id];
   var campMi={}; if(days){ for(i=0;i<days.length-1;i++) campMi[days[i].mi]=1; } // camp at each day's end (not the final)
 
@@ -3682,7 +3682,7 @@ var INCA_AERIAL = {
     [0.2152,0.2500], //13 Inti Punku
     [0.1985,0.2110]  //14 Machu Picchu
   ],
-  passes:[5,7,9],
+  passes:[5,7,10],
   // per-stop label offset [dx,dy,anchor] (image px) — fans names into the open
   // space around the trail so they don't pile up. s=start, e=end, m=middle.
   lab:[
@@ -3795,86 +3795,92 @@ function _aerWire(){
   });
 }
 function renderIncaAerial(svg, walkedMi, totalMi){
-  var A=INCA_AERIAL, stops=J('inca').stops, N=stops.length, VW=A.VW, VH=A.VH;
-  svg.setAttribute('viewBox','0 0 '+VW+' '+VH);
-  var pts=A.npts.map(function(p){return {x:p[0]*VW,y:p[1]*VH};});
-  var wMi=Math.max(0,Math.min(totalMi,walkedMi));
+  // Fully generated top-down route map (no painted background, no hand-traced
+  // points): stops are spaced by REAL mileage along a gently winding ribbon,
+  // labels are auto-placed in alternating top/bottom tiers so they never collide
+  // or sit on the trail. Colours read live from the theme (route accent + dark).
+  var cs=getComputedStyle(document.body), V=function(n,f){return (cs.getPropertyValue(n)||f).trim();};
+  var ACC=V('--accent','#10C896'), DP=V('--accent-deep','#0EA178');
+  var INK=V('--ink','#1a1614'), PAPER=V('--paper','#fbfaf6'), BG=V('--bg','#fff');
+  var j=J('inca'), stops=j.stops, N=stops.length, total=totalMi||j.total;
+  var W=Math.max(1180, N*155), H=440;
+  var padL=74, padR=74, iw=W-padL-padR, midY=H*0.52, amp=H*0.135;
+  var xSpan=total*1.02;
+  function X(mi){return padL+(mi/xSpan)*iw;}
+  function trailY(mi){ var t=mi/Math.max(1e-6,total); return midY + amp*Math.sin(t*3.0*Math.PI+0.7) + amp*0.32*Math.sin(t*7.0*Math.PI+1.3); }
+  var pts=stops.map(function(s){return {x:X(s.mi), y:trailY(s.mi)};});
+  var wMi=Math.max(0,Math.min(total,walkedMi));
   var reachedIdx=-1,i; for(i=0;i<N;i++){ if(stops[i].mi<=wMi+1e-6) reachedIdx=i; }
-  var playerPt = reachedIdx>=0 ? pts[reachedIdx] : pts[0];
-  if(reachedIdx>=0 && reachedIdx<N-1 && wMi>stops[reachedIdx].mi){
-    var a=stops[reachedIdx].mi,b=stops[reachedIdx+1].mi,f=(b>a)?(wMi-a)/(b-a):0;
-    var q0=pts[reachedIdx],q1=pts[reachedIdx+1];
-    playerPt={x:q0.x+(q1.x-q0.x)*f, y:q0.y+(q1.y-q0.y)*f};
-  }
+  var px=X(wMi), py=trailY(wMi);
   var wpts=[]; for(i=0;i<=reachedIdx;i++) wpts.push(pts[i]);
-  if(reachedIdx>=0 && reachedIdx<N-1 && wMi>stops[reachedIdx].mi) wpts.push(playerPt);
-  if(reachedIdx<0){ playerPt=pts[0]; wpts=[pts[0]]; }
-  // painted terrain background, with a soft paper scrim so the busy/blurry
-  // art recedes and the crisp overlay reads clearly
-  var s='<image href="'+A.img+'" x="0" y="0" width="'+VW+'" height="'+VH+'" preserveAspectRatio="xMidYMid slice"/>';
-  s+='<rect x="0" y="0" width="'+VW+'" height="'+VH+'" fill="#fbfaf6" opacity="0.30"/>';
-  // FULL route, crisp: white casing + dark dotted line so the whole path reads
-  var full=smoothMapPath(pts);
-  s+='<path d="'+full+'" fill="none" stroke="#fbfaf6" stroke-opacity="0.85" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>';
-  s+='<path d="'+full+'" fill="none" stroke="#1a1614" stroke-opacity="0.55" stroke-width="3" stroke-dasharray="1 10" stroke-linecap="round"/>';
-  // WALKED portion: white casing + bold mint so progress pops off the painting
-  if(wpts.length>1){ var wl=smoothMapPath(wpts);
-    s+='<path d="'+wl+'" fill="none" stroke="#fbfaf6" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>';
-    s+='<path d="'+wl+'" fill="none" stroke="#10C896" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>';
+  if(reachedIdx>=0 && reachedIdx<N-1 && wMi>stops[reachedIdx].mi) wpts.push({x:px,y:py});
+  var passSet={5:'1.er paso',7:'2.º paso',10:'3.er paso'};
+  var days=DAY_BOUNDS[j.id]||[], campMi={};
+  for(i=0;i<days.length-1;i++) campMi[days[i].mi]=1;
+
+  svg.setAttribute('viewBox','0 0 '+W+' '+H);
+  var s='';
+  for(var c=0;c<6;c++){ var cy=H*(0.12+c*0.15), d='M 0 '+cy.toFixed(1);
+    for(var xx=0;xx<=W;xx+=60){ var yy=cy+Math.sin(xx*0.012+c*1.4)*10+Math.sin(xx*0.03+c)*5; d+=' L '+xx+' '+yy.toFixed(1); }
+    s+='<path d="'+d+'" fill="none" stroke="'+INK+'" stroke-opacity="0.05" stroke-width="1"/>';
   }
-  // stops — white halo ring under each marker for separation from the art
-  pts.forEach(function(p,idx){
-    var passed=stops[idx].mi<=wMi+1e-6, isPass=A.passes.indexOf(idx)>=0, isMP=idx===N-1;
-    var fill=passed?'#10C896':'#fbfaf6', strk='#1a1614';
-    var r=isMP?10:8;
-    s+='<circle cx="'+p.x+'" cy="'+p.y+'" r="'+(r+3)+'" fill="#fbfaf6" opacity="0.9"/>'; // halo
-    if(isPass){ var dd=10; s+='<rect x="'+(p.x-dd)+'" y="'+(p.y-dd)+'" width="'+(2*dd)+'" height="'+(2*dd)+'" rx="2" transform="rotate(45 '+p.x+' '+p.y+')" fill="'+fill+'" stroke="'+strk+'" stroke-width="3"/>'; }
-    else { s+='<circle cx="'+p.x+'" cy="'+p.y+'" r="'+r+'" fill="'+fill+'" stroke="'+strk+'" stroke-width="3"/>'; }
-    { // every stop labelled, fanned into open space with a leader line
-      var L=(A.lab&&A.lab[idx])||[16,-22,'s'];
-      var lx=p.x+L[0], ly=p.y+L[1], anc=L[2]==='s'?'start':(L[2]==='e'?'end':'middle');
-      // leader from the pin to the label
-      var lead=anc==='end'?lx+4:(anc==='start'?lx-4:lx);
-      s+='<line x1="'+p.x+'" y1="'+p.y+'" x2="'+lead+'" y2="'+(ly-6)+'" stroke="#1a1614" stroke-opacity="0.28" stroke-width="1.5"/>';
-      var nm=_esc(shortName(stops[idx].n));
-      var lc='x="'+lx+'" y="'+ly+'" text-anchor="'+anc+'" font-size="17" font-weight="800"';
-      s+='<text '+lc+' fill="none" stroke="#fbfaf6" stroke-width="4" stroke-linejoin="round">'+nm+'</text>';
-      s+='<text '+lc+' fill="#1a1614">'+nm+'</text>';
-    }
+  (function(){ var y0=midY+amp+40, d='M 0 '+H; for(var xx=0;xx<=W;xx+=W/22){ var jag=(Math.sin(xx*0.009+0.6)*0.5+0.5)*0.6+(Math.sin(xx*0.023+1.7)*0.5+0.5)*0.4; var ry=y0-70*(0.3+0.7*jag); d+=' L '+xx.toFixed(1)+' '+ry.toFixed(1); } d+=' L '+W+' '+H+' Z'; s+='<path d="'+d+'" fill="'+ACC+'" opacity="0.10"/>'; })();
+  [0.16,0.34,0.52,0.7,0.88].forEach(function(fx,k){ var mx=padL+fx*iw, base=midY-amp-24, sz=70+(k%2?18:0), hh=sz*0.85;
+    s+='<path d="M '+(mx-sz/2)+' '+base+' L '+mx+' '+(base-hh)+' L '+(mx+sz/2)+' '+base+' Z" fill="'+INK+'" opacity="0.10"/>';
+    s+='<path d="M '+(mx-sz*0.15)+' '+(base-hh*0.72)+' L '+mx+' '+(base-hh)+' L '+(mx+sz*0.15)+' '+(base-hh*0.72)+' Z" fill="'+PAPER+'" opacity="0.5"/>';
   });
-  // BOLD "you are here" pin — dark head + mint core + white outline, tip on the trail
-  var hx=_round1(playerPt.x), hy=_round1(playerPt.y), R=15, headY=_round1(playerPt.y-30);
-  s+='<circle cx="'+hx+'" cy="'+hy+'" r="9" fill="none" stroke="#10C896" stroke-width="4">'
-    +'<animate attributeName="r" values="9;30;9" dur="1.9s" repeatCount="indefinite"/>'
-    +'<animate attributeName="opacity" values="0.8;0;0.8" dur="1.9s" repeatCount="indefinite"/></circle>';
-  s+='<circle cx="'+hx+'" cy="'+hy+'" r="4" fill="#1a1614"/>'; // ground dot at exact position
-  s+='<path d="M '+(hx-8)+' '+(headY+9)+' L '+hx+' '+hy+' L '+(hx+8)+' '+(headY+9)+' Z" fill="#1a1614" stroke="#fbfaf6" stroke-width="2.5" stroke-linejoin="round"/>';
-  s+='<circle cx="'+hx+'" cy="'+headY+'" r="'+R+'" fill="#1a1614" stroke="#fbfaf6" stroke-width="3"/>';
-  s+='<circle cx="'+hx+'" cy="'+headY+'" r="6.5" fill="#3FE3B2"/>';
+  var full=smoothMapPath(pts,0.7);
+  s+='<path d="'+full+'" fill="none" stroke="'+PAPER+'" stroke-opacity="0.9" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>';
+  s+='<path d="'+full+'" fill="none" stroke="'+INK+'" stroke-opacity="0.55" stroke-width="2.5" stroke-dasharray="1 9" stroke-linecap="round"/>';
+  if(wpts.length>1){ var wl=smoothMapPath(wpts,0.7);
+    s+='<path d="'+wl+'" fill="none" stroke="'+PAPER+'" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>';
+    s+='<path d="'+wl+'" fill="none" stroke="'+ACC+'" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>';
+  }
+  var tiers=[{y:30,side:1},{y:H-20,side:-1},{y:54,side:1},{y:H-44,side:-1}];
+  stops.forEach(function(st,idx){
+    var p=pts[idx], on=wMi>=st.mi-1e-6, isPass=(idx in passSet), isMP=idx===N-1;
+    if(campMi[st.mi]){ var tx=p.x, tb=p.y+18, col=on?DP:INK;
+      s+='<path d="M '+(tx-7)+' '+tb+' L '+tx+' '+(tb-11)+' L '+(tx+7)+' '+tb+' Z" fill="'+PAPER+'" stroke="'+col+'" stroke-width="1.6" stroke-linejoin="round"/>';
+      s+='<path d="M '+(tx-2.6)+' '+tb+' L '+tx+' '+(tb-6)+' L '+(tx+2.6)+' '+tb+' Z" fill="'+col+'"/>';
+      s+='<line x1="'+(tx-8.5)+'" y1="'+tb+'" x2="'+(tx+8.5)+'" y2="'+tb+'" stroke="'+col+'" stroke-width="1.6" stroke-linecap="round"/>';
+    }
+    s+='<circle cx="'+p.x+'" cy="'+p.y+'" r="'+((isMP?8:6)+3)+'" fill="'+PAPER+'" opacity="0.9"/>';
+    var fill=on?ACC:PAPER;
+    if(isPass){ var dd=7; s+='<rect x="'+(p.x-dd)+'" y="'+(p.y-dd)+'" width="'+(2*dd)+'" height="'+(2*dd)+'" rx="1.8" transform="rotate(45 '+p.x+' '+p.y+')" fill="'+fill+'" stroke="'+INK+'" stroke-width="2.5"/>'; }
+    else { s+='<circle cx="'+p.x+'" cy="'+p.y+'" r="'+(isMP?8:6)+'" fill="'+fill+'" stroke="'+INK+'" stroke-width="2.5"/>'; }
+    var T=tiers[idx%tiers.length], ly=T.y, anc='middle', lx=p.x;
+    if(p.x<padL+50){ anc='start'; lx=Math.max(6,p.x-4); } else if(p.x>W-padR-50){ anc='end'; lx=Math.min(W-6,p.x+4); }
+    var to=T.side>0?ly+4:ly-12;
+    s+='<line x1="'+p.x+'" y1="'+p.y+'" x2="'+p.x+'" y2="'+to+'" stroke="'+INK+'" stroke-opacity="0.30" stroke-width="1.3" stroke-dasharray="2 4"/>';
+    var nm=_esc(shortName(st.n));
+    var lc='x="'+lx+'" y="'+ly+'" text-anchor="'+anc+'" font-size="16" font-weight="800"';
+    s+='<text '+lc+' fill="none" stroke="'+PAPER+'" stroke-width="4" stroke-linejoin="round">'+nm+'</text>';
+    s+='<text '+lc+' fill="'+(on?DP:INK)+'">'+nm+'</text>';
+    if(isPass){ s+='<text x="'+lx+'" y="'+(ly+13)+'" text-anchor="'+anc+'" font-size="10" font-weight="700" fill="'+INK+'" fill-opacity="0.6">'+passSet[idx]+'</text>'; }
+  });
+  var hx=_round1(px), hy=_round1(py), headY=_round1(py-30);
+  s+='<circle cx="'+hx+'" cy="'+hy+'" r="9" fill="none" stroke="'+ACC+'" stroke-width="3"><animate attributeName="r" values="9;26;9" dur="1.9s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.75;0;0.75" dur="1.9s" repeatCount="indefinite"/></circle>';
+  s+='<circle cx="'+hx+'" cy="'+hy+'" r="3.5" fill="'+INK+'"/>';
+  s+='<path d="M '+(hx-8)+' '+(headY+9)+' L '+hx+' '+hy+' L '+(hx+8)+' '+(headY+9)+' Z" fill="'+INK+'" stroke="'+PAPER+'" stroke-width="2.5" stroke-linejoin="round"/>';
+  s+='<circle cx="'+hx+'" cy="'+headY+'" r="14" fill="'+INK+'" stroke="'+PAPER+'" stroke-width="3"/>';
+  s+='<circle cx="'+hx+'" cy="'+headY+'" r="6" fill="'+ACC+'"/>';
   svg.innerHTML=s;
-  // Zoom (~3×) + PATH-LOCK pan: a horizontal swipe scrubs along the trail and
-  // the camera follows its real shape (set t to the player's position on open).
   var wrap=svg.parentNode;
   if(wrap && wrap.classList && wrap.classList.contains('rm-zoomwrap')){
-    var arc=_aerArc(pts);
-    // player's fraction along the (polyline) trail
-    var pf=0;
-    if(reachedIdx>=0){
-      var c0=arc.cum[reachedIdx], c1=arc.cum[Math.min(reachedIdx+1,pts.length-1)];
-      var ff=(reachedIdx<N-1 && stops[reachedIdx+1].mi>stops[reachedIdx].mi)?((wMi-stops[reachedIdx].mi)/(stops[reachedIdx+1].mi-stops[reachedIdx].mi)):0;
-      pf=(c0+ff*(c1-c0))/arc.total;
-    }
-    _aer.pts=pts; _aer.cum=arc.cum; _aer.total=arc.total; _aer.svg=svg; _aer.wrap=wrap; _aer.VW=VW; _aer.VH=VH; _aer.t=pf; _aer.active=true;
+    _aer.active=false;
     svg.style.position='absolute'; svg.style.left='0'; svg.style.top='0'; svg.style.willChange='transform';
     requestAnimationFrame(function(){
-      var ww=wrap.clientWidth||340, ZOOM=3;
-      var winH=Math.min(Math.round(ww*0.9), Math.round((window.innerHeight||700)*0.5));
+      var ww=wrap.clientWidth||340;
+      var winH=Math.min(Math.round(ww*0.72), Math.round((window.innerHeight||700)*0.46));
       wrap.style.height=winH+'px';
-      _aer.svgW=Math.round(ww*ZOOM); _aer.svgH=Math.round(ww*ZOOM*(VH/VW));
-      svg.style.width=_aer.svgW+'px'; svg.style.height=_aer.svgH+'px';
-      _aerWire();
-      var sl=document.getElementById('aer-slider'); if(sl) sl.value=Math.round((1-_aer.t)*1000);
-      _aerCenter();
+      var svgPxW=Math.round(winH*(W/H)); if(svgPxW<ww) svgPxW=ww;
+      svg.style.height=winH+'px'; svg.style.width=svgPxW+'px';
+      var maxShift=Math.max(0, svgPxW-ww);
+      function panTo(t){ t=Math.max(0,Math.min(1,t)); svg.style.transform='translateX('+(-Math.round(t*maxShift))+'px)'; }
+      var sl=document.getElementById('aer-slider');
+      var pf=maxShift>0?Math.max(0,Math.min(1,((px/W)*svgPxW - ww/2)/maxShift)):0;
+      if(sl){ sl.value=Math.round(pf*1000); sl.oninput=function(){ panTo((parseFloat(sl.value)||0)/1000); }; }
+      panTo(pf);
     });
   }
 }
