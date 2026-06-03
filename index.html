@@ -1082,6 +1082,14 @@
     -webkit-mask-size:contain;mask-size:contain;
     -webkit-mask-mode:alpha;mask-mode:alpha;
   }
+  /* Animated alpaca walker (Inca route) — a 5-frame sprite strip cycled with
+     steps(5). Flipped to face the direction of travel (rightward). */
+  .pano-pl-hiker .alpaca-walk{
+    width:54px;height:54px;display:block;transform:scaleX(-1);
+    background:url('ui-icons/alpaca-walk.png') 0 0 / 270px 54px no-repeat;
+    animation:alpacaWalk .7s steps(5) infinite;
+  }
+  @keyframes alpacaWalk{ from{background-position-x:0} to{background-position-x:-270px} }
   /* Foreground prop sprites: sit on the same ground line as the avatar
      (bottom:13%), scale with band height (heightPct → height %), and live
      behind the avatar (z-index 5 vs avatar 10) so the avatar walks IN
@@ -1413,7 +1421,10 @@
       <span class="tab-lbl">Pasaporte</span>
     </button>
     <button class="tab-btn" type="button" data-tab="ajustes" aria-label="Ajustes">
-      <span class="tab-ico" style="-webkit-mask-image:url('ui-icons/ajustes.png');mask-image:url('ui-icons/ajustes.png')"></span>
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3 1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8 1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>
+      </svg>
       <span class="tab-lbl">Ajustes</span>
     </button>
   </nav>
@@ -1658,7 +1669,7 @@ function applyRouteTheme(){
 /* Each route has its OWN walking avatar — no user picker. Point a route at an
    image to use it; null → the route-coloured procedural walker. Drop art in,
    e.g. characters/inca.png, and set the path here. */
-var ROUTE_AVATAR = { inca:null, everest:null, cafe:null, santiago:null, cuba:null, ruta66:null };
+var ROUTE_AVATAR = { inca:'alpaca', everest:null, cafe:null, santiago:null, cuba:null, ruta66:null };
 function routeAvatar(id){ return (id && ROUTE_AVATAR[id]) || null; }
 
 /* ============================================================================
@@ -4114,7 +4125,7 @@ function renderAjustesTab(){
    Proof phase: only Wiñay Wayna exists, so we tile it across all 8 slots
    until the user generates the rest.
 ============================================================================ */
-var INCA_COMPOSITE_SEGMENTS = ['01','02','03','04','05','06']; // TEST: 6 stitched tiles (river→farmland). Expand toward 27 as more are generated.
+var INCA_COMPOSITE_SEGMENTS = ['01','02','03','04']; // flat-style tiles (Km 82 → Llaqtapata). Expand toward 27 as more are generated.
 var COMPOSITE_SEG_W = 2048;   // each segment PNG is 2048px wide (DALL-E native)
 var COMPOSITE_SEG_H = 768;    // each segment PNG is 768px tall
 
@@ -4367,8 +4378,9 @@ function _paintParallaxHiker(){
   var hk = document.getElementById('pano-pl-hiker');
   if(!hk) return;
   var av = routeAvatar(current);
-  if (av) {
-    // full avatar image; if the file is missing it just hides (no broken box)
+  if (av === 'alpaca') {
+    hk.innerHTML = '<span class="alpaca-walk"></span>';   // animated 5-frame walk cycle
+  } else if (av) {
     hk.innerHTML = '<img src="'+av+'" alt="" style="height:100%;display:block" onerror="this.style.display=\'none\'">';
   } else {
     hk.innerHTML = '<span style="width:14px;height:30px;background:var(--accent);border-radius:40% 40% 30% 30%;margin-bottom:8px;display:block"></span>';
