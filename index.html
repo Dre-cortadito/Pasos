@@ -594,8 +594,13 @@
   .trail{background:var(--paper);border:1px solid var(--ink-line);border-radius:16px;padding:14px 14px 8px;margin:12px 0}
   .trail svg{display:block;width:100%;height:auto}
   .trail-label{font-family:var(--font-ui);font-size:10.5px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:var(--ink-soft);text-align:center;margin-bottom:2px}
-  .trail-meta{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:12.5px;color:var(--ink-soft);margin-top:6px;padding:0 4px}
-  .trail-meta b{color:var(--ink);font-weight:600;font-family:var(--font-display)}
+  /* Route-progress bar — reuses the rank-bar's track/dot/bubble for a match */
+  .prog-track{position:relative;height:24px;margin:12px 8px 2px}
+  .trail-meta{display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--ink-soft);margin-top:12px;padding:0 2px}
+  .trail-meta .tm-row{display:flex;align-items:baseline;gap:8px;white-space:nowrap}
+  .trail-meta .tm-row > span{color:var(--ink-soft);flex:none;min-width:102px}
+  .trail-meta .tm-row > b{color:var(--ink);font-weight:700;font-family:var(--font-display);font-size:14px}
+  .trail-meta .tm-row > i{margin-left:auto;font-style:normal;color:var(--accent-deep);font-weight:700;font-variant-numeric:tabular-nums}
   .loc{font-size:14.5px;color:var(--ink);margin:6px 4px 12px;text-align:center;line-height:1.45}
   .loc b{color:var(--accent);font-weight:700}
 
@@ -2808,18 +2813,14 @@ function _trailMeta(j,walked){
   var done=walked>=j.total, next=null;
   for(var i=0;i<j.stops.length;i++){if(j.stops[i].mi>walked+0.001){next=j.stops[i];break;}}
   var fin=j.stops[j.stops.length-1];
-  var leftHTML, rightHTML;
+  var rows;
   if(done){
-    leftHTML='<span>¡Llegaste a <b>'+shortName(fin.n)+'</b>!</span>';
-    rightHTML='<span style="text-align:right">Recorrido total: <b>'+fmtMi(j.total)+'</b></span>';
-  } else if(next){
-    leftHTML='<span>Próxima parada: <b>'+shortName(next.n)+'</b> · '+fmtMi1(Math.max(0,next.mi-walked))+'</span>';
-    rightHTML='<span style="text-align:right">Destino: <b>'+shortName(fin.n)+'</b> · '+fmtMi1(Math.max(0,fin.mi-walked))+'</span>';
+    rows='<div class="tm-row"><span>¡Llegaste a</span><b>'+shortName(fin.n)+'</b><i>'+fmtMi(j.total)+'</i></div>';
   } else {
-    leftHTML='<span>Listo para salir</span>';
-    rightHTML='<span style="text-align:right">Destino: <b>'+shortName(fin.n)+'</b> · '+fmtMi(j.total)+'</span>';
+    var nrow = next ? '<div class="tm-row"><span>Próxima parada</span><b>'+shortName(next.n)+'</b><i>'+fmtMi1(Math.max(0,next.mi-walked))+'</i></div>' : '';
+    rows = nrow + '<div class="tm-row"><span>Destino</span><b>'+shortName(fin.n)+'</b><i>'+fmtMi1(Math.max(0,fin.mi-walked))+'</i></div>';
   }
-  return '<div class="trail-meta">'+leftHTML+rightHTML+'</div>';
+  return '<div class="trail-meta">'+rows+'</div>';
 }
 
 /* Choose the elevation profile when every stop has an `el`; otherwise the
@@ -2940,24 +2941,19 @@ function buildTrailProfile(j,walked){
 
 /* Simple flat progress bar — fallback for routes without elevation data. */
 function buildTrailBar(j,walked){
-  var cs=getComputedStyle(document.body);
-  var ACC=(cs.getPropertyValue('--accent')||'#10C896').trim();
-  var DP =(cs.getPropertyValue('--accent-deep')||'#0EA178').trim();
-  var LN =(cs.getPropertyValue('--ink-line')||'#ece7df').trim();
-  var BG =(cs.getPropertyValue('--bg')||'#fff').trim();
-  var W=1000,H=80,padL=24,padR=24,y=50,iw=W-padL-padR;
-  var frac=clamp(walked/j.total,0,1), fx=padL+frac*iw;
-  var s='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">';
-  s+='<line x1="'+padL+'" y1="'+y+'" x2="'+(W-padR)+'" y2="'+y+'" stroke="'+LN+'" stroke-width="8" stroke-linecap="round"/>';
-  s+='<line x1="'+padL+'" y1="'+y+'" x2="'+fx+'" y2="'+y+'" stroke="'+ACC+'" stroke-width="8" stroke-linecap="round"/>';
+  // Built with the SAME elements as the rank bar (3px line, 6px dots, 24px ball)
+  var frac=clamp(walked/j.total,0,1);
+  var h='<div class="prog-track">';
+  h+='<div class="rank-line"></div>';
+  h+='<div class="rank-line-fill" style="width:'+(frac*100)+'%"></div>';
   j.stops.forEach(function(st){
-    var sx=padL+(st.mi/j.total)*iw, on=walked>=st.mi-0.001;
-    s+='<circle cx="'+sx+'" cy="'+y+'" r="'+(on?8:6)+'" fill="'+(on?ACC:BG)+'" stroke="'+(on?DP:LN)+'" stroke-width="2.5"/>';
+    var on=walked>=st.mi-0.001;
+    h+='<div class="rank-dot'+(on?' passed':'')+'" style="left:'+((st.mi/j.total)*100)+'%"></div>';
   });
-  var chevY=y-15;
-  s+='<path d="M'+(fx-7)+' '+(chevY-6)+' L'+(fx+7)+' '+(chevY-6)+' L'+fx+' '+(chevY+5)+' Z" fill="'+ACC+'"/>';
-  s+='</svg>';
-  return s+_trailMeta(j,walked);
+  var lbl = walked>=j.total ? '✓' : String(Math.round(walked));
+  h+='<div class="rank-bubble" style="left:'+(frac*100)+'%">'+lbl+'</div>';
+  h+='</div>';
+  return h+_trailMeta(j,walked);
 }
 function currentLeg(j,walked){
   if(walked>=j.total)return{done:true};
@@ -3668,21 +3664,21 @@ var INCA_AERIAL = {
   // per-stop label offset [dx,dy,anchor] (image px) — fans names into the open
   // space around the trail so they don't pile up. s=start, e=end, m=middle.
   lab:[
-    [16,-34,'s'],  // 0 Km 82
-    [20,-2,'s'],   // 1 Llaqtapata
-    [22,16,'s'],   // 2 Wayllabamba
-    [16,48,'s'],   // 3 Ayapata
-    [26,40,'s'],   // 4 Llulluchapampa
-    [0,-46,'m'],   // 5 Warmiwañusca
-    [34,40,'s'],   // 6 Pacaymayo
-    [34,2,'s'],    // 7 Runkurakay
-    [-26,46,'e'],  // 8 Sayacmarca
-    [-30,30,'e'],  // 9 Chaquicocha
-    [-30,-22,'e'], //10 Phuyupatamarca
-    [-26,-6,'e'],  //11 Intipata
-    [-30,18,'e'],  //12 Wiñay Wayna
-    [26,-6,'s'],   //13 Inti Punku
-    [-12,-30,'e']  //14 Machu Picchu
+    [44,-34,'s'],  // 0 Km 82 — up-right (river side)
+    [48,-4,'s'],   // 1 Llaqtapata — right
+    [46,36,'s'],   // 2 Wayllabamba — below-right
+    [24,60,'s'],   // 3 Ayapata — below
+    [52,48,'s'],   // 4 Llulluchapampa — below-right
+    [-70,76,'e'],  // 5 Warmiwañusca — down-left into open
+    [56,56,'s'],   // 6 Pacaymayo — down-right (clear of Warmi)
+    [58,2,'s'],    // 7 Runkurakay — right
+    [-66,88,'e'],  // 8 Sayacmarca — down-left
+    [-108,26,'e'], // 9 Chaquicocha — far left
+    [-86,82,'e'],  //10 Phuyupatamarca — down-left
+    [-98,18,'e'],  //11 Intipata — far left
+    [-94,0,'e'],   //12 Wiñay Wayna — left
+    [54,-10,'s'],  //13 Inti Punku — right
+    [-22,-46,'e']  //14 Machu Picchu — up-left
   ],
   labelIdx:[0,5,7,9,12,14]  // (unused now — all stops are labelled)
 };
