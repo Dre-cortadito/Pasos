@@ -889,18 +889,25 @@
   /* Compact progress data */
   .tab-mapa-inner .rm-stat .v{font-family:var(--font-display);font-size:16px;font-weight:700;color:var(--ink);line-height:1}
   .tab-mapa-inner .rm-stat .l{font-size:9.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--ink-soft);margin-top:3px;font-weight:600}
-  /* Section rhythm — breathing room between progress / aerial / elevation */
-  .tab-mapa-inner > .rm-head{margin:26px 0 10px}
-  .tab-mapa-inner > .rm-head:first-child{margin-top:6px}
-  /* Slider to pan a map (used instead of trapping touch on the map itself) */
-  .rm-slider{-webkit-appearance:none;appearance:none;width:100%;height:26px;margin:10px 0 0;background:transparent;cursor:pointer;touch-action:none}
+  /* Each section is its own boxed card */
+  .map-card{background:var(--paper);border:1px solid var(--ink-line);border-radius:16px;padding:14px 14px 12px;margin:14px 0}
+  .tab-mapa-inner > .map-card:first-child{margin-top:6px}
+  .map-card > .rm-head{margin:0 0 10px}
+  .bar-wrap svg{display:block;width:100%;height:auto}
+  /* Elevation: clipped box panned only by its slider (no touch-scroll) */
+  .elev-clip{overflow:hidden;position:relative;border-radius:10px}
+  .elev-clip .elev-svg{display:block;height:auto;width:300%;min-width:980px;will-change:transform}
+  /* Slider row: arrows + range, with a hint under it */
+  .rm-slider-row{display:flex;align-items:center;gap:9px;margin-top:12px}
+  .rm-slider-row .rm-arrow{flex:none;color:var(--accent);font-size:17px;font-weight:800;line-height:1;user-select:none}
+  .rm-slider{-webkit-appearance:none;appearance:none;flex:1;height:26px;margin:0;background:transparent;cursor:pointer;touch-action:none}
   .rm-slider::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:var(--ink-line)}
   .rm-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;border-radius:50%;background:var(--accent);border:3px solid var(--bg);box-shadow:0 1px 5px rgba(0,0,0,.28);margin-top:-8px}
   .rm-slider::-moz-range-track{height:6px;border-radius:3px;background:var(--ink-line)}
   .rm-slider::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--accent);border:3px solid var(--bg)}
-  .rm-slider-hint{display:flex;justify-content:space-between;font-size:10px;color:var(--ink-soft);letter-spacing:.3px;margin:2px 4px 0}
+  .rm-slider-hint{text-align:center;font-size:11px;color:var(--ink-soft);letter-spacing:.3px;margin:6px 0 0}
   /* Map legend */
-  .map-legend{display:flex;flex-wrap:wrap;gap:13px;margin:12px 4px 0;font-family:var(--font-ui);font-size:11.5px;color:var(--ink-soft)}
+  .map-legend{display:flex;flex-wrap:wrap;gap:13px;margin:12px 2px 2px;font-family:var(--font-ui);font-size:11.5px;color:var(--ink-soft)}
   .map-legend span{display:inline-flex;align-items:center;gap:5px}
   .map-legend svg{flex:none}
 
@@ -1280,55 +1287,63 @@
   <!-- ====================== TAB: MAPA (route overview) ====================== -->
   <section class="tab-page tab-mapa hide">
     <div class="tab-mapa-inner">
-      <!-- 1) PROGRESS — its own title; the "Vas entre…" line is the subtitle -->
-      <div class="rm-head">
-        <div class="rm-titles">
+      <!-- 1) PROGRESS CARD — title, "Vas entre…", the bar, the stats, the ETAs -->
+      <div class="map-card">
+        <div class="rm-head"><div class="rm-titles">
           <div class="rm-title">Tu progreso en la ruta</div>
           <div class="rm-sub" id="loc">—</div>
+        </div></div>
+        <div class="bar-wrap" id="trail"></div>
+        <div class="rm-stats">
+          <div class="rm-stat"><div class="v" id="rm-stat-walked-tab">—</div><div class="l">recorrido</div></div>
+          <div class="rm-stat"><div class="v" id="rm-stat-left-tab">—</div><div class="l">restante</div></div>
+          <div class="rm-stat"><div class="v" id="rm-stat-pct-tab">—</div><div class="l">completado</div></div>
+        </div>
+        <div class="eta-card" style="margin-top:12px">
+          <div class="eta" id="eta-mine"><div class="v" id="eta-mine-v">—</div><div class="l" id="eta-mine-l">a tu ritmo</div></div>
+          <div class="eta healthy" id="eta-health"><div class="v" id="eta-health-v">—</div><div class="l" id="eta-health-l">al ritmo saludable</div></div>
         </div>
       </div>
-      <div class="trail" id="trail"></div>
-      <div class="rm-stats">
-        <div class="rm-stat"><div class="v" id="rm-stat-walked-tab">—</div><div class="l">recorrido</div></div>
-        <div class="rm-stat"><div class="v" id="rm-stat-left-tab">—</div><div class="l">restante</div></div>
-        <div class="rm-stat"><div class="v" id="rm-stat-pct-tab">—</div><div class="l">completado</div></div>
-      </div>
 
-      <!-- 2) AERIAL MAP — pan with the slider below it (map doesn't trap touch) -->
-      <div class="rm-head">
-        <div class="rm-titles">
+      <!-- 2) AERIAL MAP CARD -->
+      <div class="map-card">
+        <div class="rm-head"><div class="rm-titles">
           <div class="rm-title">Vista aérea del sendero</div>
           <div class="rm-sub" id="rm-sub-tab">—</div>
+        </div></div>
+        <div class="rm-zoomwrap" id="rm-zoomwrap">
+          <svg class="rm-svg" id="rm-svg-tab" viewBox="0 0 800 460" preserveAspectRatio="xMidYMid meet">
+            <path id="rm-trail-bg-tab" class="trail-bg"></path>
+            <path id="rm-trail-fg-tab" class="trail-fg"></path>
+            <g id="rm-waypoints-tab"></g>
+            <g id="rm-player-pin-tab"></g>
+          </svg>
         </div>
+        <div class="rm-slider-row">
+          <span class="rm-arrow">‹</span>
+          <input type="range" class="rm-slider" id="aer-slider" min="0" max="1000" value="0" aria-label="Recorrer el sendero">
+          <span class="rm-arrow">›</span>
+        </div>
+        <div class="rm-slider-hint">Desliza para recorrer el sendero</div>
       </div>
-      <div class="rm-zoomwrap" id="rm-zoomwrap">
-        <svg class="rm-svg" id="rm-svg-tab" viewBox="0 0 800 460" preserveAspectRatio="xMidYMid meet">
-          <path id="rm-trail-bg-tab" class="trail-bg"></path>
-          <path id="rm-trail-fg-tab" class="trail-fg"></path>
-          <g id="rm-waypoints-tab"></g>
-          <g id="rm-player-pin-tab"></g>
-        </svg>
-      </div>
-      <input type="range" class="rm-slider" id="aer-slider" min="0" max="1000" value="0" aria-label="Recorrer el sendero">
-      <div class="rm-slider-hint"><span>Inicio · Km 82</span><span>Machu Picchu</span></div>
 
-      <!-- 3) ELEVATION PROFILE -->
-      <div class="rm-head">
-        <div class="rm-titles">
+      <!-- 3) ELEVATION CARD -->
+      <div class="map-card">
+        <div class="rm-head"><div class="rm-titles">
           <div class="rm-title">Perfil de elevación</div>
           <div class="rm-sub">Altitud a lo largo del sendero</div>
+        </div></div>
+        <div class="elev-clip" id="elevprofile"></div>
+        <div class="rm-slider-row">
+          <span class="rm-arrow">‹</span>
+          <input type="range" class="rm-slider" id="elev-slider" min="0" max="1000" value="0" aria-label="Recorrer el perfil">
+          <span class="rm-arrow">›</span>
         </div>
+        <div class="rm-slider-hint">Desliza para recorrer el perfil</div>
+        <div class="map-legend" id="map-legend"></div>
       </div>
-      <div class="trail" id="elevprofile"></div>
-      <input type="range" class="rm-slider" id="elev-slider" min="0" max="1000" value="0" aria-label="Recorrer el perfil">
-      <div class="map-legend" id="map-legend"></div>
 
-      <!-- 4) ETAs + overview -->
-      <div class="eta-card">
-        <div class="eta" id="eta-mine"><div class="v" id="eta-mine-v">—</div><div class="l" id="eta-mine-l">a tu ritmo</div></div>
-        <div class="eta healthy" id="eta-health"><div class="v" id="eta-health-v">—</div><div class="l" id="eta-health-l">al ritmo saludable</div></div>
-      </div>
-      <button class="btn block sm" id="route-overview-btn" type="button" style="margin-top:16px;display:none">Ver resumen de la ruta</button>
+      <button class="btn block sm" id="route-overview-btn" type="button" style="margin-top:6px;display:none">Ver resumen de la ruta</button>
     </div>
   </section>
 
@@ -2842,6 +2857,7 @@ function buildTrailProfile(j,walked){
   var KM=function(mi){return Math.round(mi*1.60934);};
   var pts=stops.map(function(s){return {x:X(s.mi),y:Y(s.el)};});
   var px=X(Math.min(j.total,Math.max(0,walked)));
+  var pfx=_round1(px/W*1000)/1000;
   var reachedIdx=-1,i; for(i=0;i<N;i++){ if(stops[i].mi<=walked+1e-6) reachedIdx=i; }
   var py;
   if(reachedIdx<0) py=pts[0].y;
@@ -2857,7 +2873,7 @@ function buildTrailProfile(j,walked){
   var days=DAY_BOUNDS[j.id];
   var campMi={}; if(days){ for(i=0;i<days.length-1;i++) campMi[days[i].mi]=1; } // camp at each day's end (not the final)
 
-  var s='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">';
+  var s='<svg class="elev-svg" data-pfx="'+pfx+'" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">';
   // elevation gridlines (min + max) with left labels
   for(var gg=minE; gg<=maxE; gg+=1000){ var gy=Y(gg);
     s+='<line x1="'+padL+'" y1="'+gy+'" x2="'+(W-padR)+'" y2="'+gy+'" stroke="'+LN+'" stroke-width="1" stroke-dasharray="2 5"/>';
@@ -2903,8 +2919,7 @@ function buildTrailProfile(j,walked){
   s+='<circle cx="'+px+'" cy="'+py+'" r="8" fill="none" stroke="'+ACC+'" stroke-width="2" opacity="0.45"/>';
   s+='<circle cx="'+px+'" cy="'+py+'" r="5.5" fill="'+ACC+'" stroke="'+BG+'" stroke-width="2"/>';
   s+='</svg>';
-  var pfx=_round1(px/W*1000)/1000;
-  return '<div class="trail-scroll" data-pfx="'+pfx+'">'+s+'</div>';
+  return s;
 }
 
 /* Simple flat progress bar — fallback for routes without elevation data. */
@@ -3682,6 +3697,15 @@ function _centerScroll(wrap, fx, fy){
    path) instead of free 2D panning. Vertical follows the trail automatically.
 ============================================================================ */
 var _aer={t:0, cum:null, total:0, pts:null, svg:null, wrap:null, scroller:null, spacer:null, svgW:0, svgH:0, VW:0, VH:0, wired:false, active:false};
+
+/* Elevation chart pan — clipped box moved only by its slider (translateX), so
+   touching the chart never traps the page's vertical scroll. */
+var _elev={svg:null, clip:null, svgW:0, clipW:0, wired:false};
+function _elevPanTo(t){
+  if(!_elev.svg) return;
+  var shift=Math.max(0,(t*Math.max(0,_elev.svgW-_elev.clipW)));
+  _elev.svg.style.transform='translateX('+(-Math.round(shift))+'px)';
+}
 function _aerArc(pts){
   var cum=[0]; for(var i=1;i<pts.length;i++){ var dx=pts[i].x-pts[i-1].x, dy=pts[i].y-pts[i-1].y; cum.push(cum[i-1]+Math.sqrt(dx*dx+dy*dy)); }
   return {cum:cum, total:cum[cum.length-1]||1};
@@ -3817,17 +3841,22 @@ function renderMapaTab(){
     else ovBtn.style.display='none';
   }
 
-  // Centre the (zoomed) elevation profile scroll on the player's position,
-  // wire its slider, and fill the legend.
-  var tsc=document.querySelector('#elevprofile .trail-scroll');
-  if(tsc){ _centerScroll(tsc, parseFloat(tsc.getAttribute('data-pfx'))||0, null); }
+  // Elevation: pan via slider only (translateX); centre on the player on open.
+  var clip=document.getElementById('elevprofile');
+  var esvg=clip?clip.querySelector('.elev-svg'):null;
   var esl=document.getElementById('elev-slider');
-  if(esl){
-    if(tsc) esl.value=Math.round((parseFloat(tsc.getAttribute('data-pfx'))||0)*1000);
-    if(!esl._wired){ esl._wired=true; esl.addEventListener('input', function(){
-      var sc=document.querySelector('#elevprofile .trail-scroll'); if(!sc) return;
-      var max=sc.scrollWidth-sc.clientWidth; sc.scrollLeft=(parseFloat(esl.value)||0)/1000*max;
-    }); }
+  if(clip && esvg && esl){
+    var pfx=parseFloat(esvg.getAttribute('data-pfx'))||0;
+    if(!esl._wired){ esl._wired=true; esl.addEventListener('input', function(){ _elevPanTo((parseFloat(esl.value)||0)/1000); }); }
+    requestAnimationFrame(function(){
+      _elev.svg=esvg; _elev.clip=clip;
+      _elev.clipW=clip.clientWidth||340;
+      _elev.svgW=esvg.getBoundingClientRect().width || _elev.clipW*3;
+      var maxShift=Math.max(1,_elev.svgW-_elev.clipW);
+      var tc=Math.max(0,Math.min(1,(pfx*_elev.svgW - _elev.clipW/2)/maxShift));
+      esl.value=Math.round(tc*1000);
+      _elevPanTo(tc);
+    });
   }
   var lg=document.getElementById('map-legend');
   if(lg){
