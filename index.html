@@ -2846,7 +2846,9 @@ function buildTrailProfile(j,walked){
   var minE=Math.floor((dataMin-300)/500)*500;
   var maxE=Math.ceil((dataMax+250)/500)*500;
   var range=Math.max(1,maxE-minE);
-  function X(mi){return padL+(mi/j.total)*iw;}
+  // map distance with ~7% extra room past the end so Machu Picchu isn't on the edge
+  var xSpan=j.total*1.07;
+  function X(mi){return padL+(mi/xSpan)*iw;}
   function Y(el){return baseY-((el-minE)/range)*elevH;}
   var KM=function(mi){return Math.round(mi*1.60934);};
   var pts=stops.map(function(s){return {x:X(s.mi),y:Y(s.el)};});
@@ -2885,7 +2887,7 @@ function buildTrailProfile(j,walked){
   s+=_ridge(top+70, 9,  '#8fc4b0', 0.50, 1.9);   // near range — deeper sage-mint
   // elevation gridlines (min + max) with left labels
   for(var gg=minE; gg<=maxE; gg+=1000){ var gy=Y(gg);
-    s+='<line x1="'+padL+'" y1="'+gy+'" x2="'+(W-padR)+'" y2="'+gy+'" stroke="'+LN+'" stroke-width="1" stroke-dasharray="2 5"/>';
+    s+='<line x1="'+padL+'" y1="'+gy+'" x2="'+(W-padR)+'" y2="'+gy+'" stroke="'+INK+'" stroke-opacity="0.22" stroke-width="1" stroke-dasharray="3 6"/>';
     s+='<text x="'+(padL-8)+'" y="'+(gy+3)+'" text-anchor="end" font-size="11" fill="'+INK+'" fill-opacity="0.66">'+gg.toLocaleString('es')+' m</text>';
   }
   // day bands: separators + cumulative distance markers + per-day distance & hours
@@ -3817,8 +3819,8 @@ function renderIncaAerial(svg, walkedMi, totalMi){
       var lead=anc==='end'?lx+4:(anc==='start'?lx-4:lx);
       s+='<line x1="'+p.x+'" y1="'+p.y+'" x2="'+lead+'" y2="'+(ly-6)+'" stroke="#1a1614" stroke-opacity="0.28" stroke-width="1.5"/>';
       var nm=_esc(shortName(stops[idx].n));
-      var lc='x="'+lx+'" y="'+ly+'" text-anchor="'+anc+'" font-size="22" font-weight="800"';
-      s+='<text '+lc+' fill="none" stroke="#fbfaf6" stroke-width="5" stroke-linejoin="round">'+nm+'</text>';
+      var lc='x="'+lx+'" y="'+ly+'" text-anchor="'+anc+'" font-size="17" font-weight="800"';
+      s+='<text '+lc+' fill="none" stroke="#fbfaf6" stroke-width="4" stroke-linejoin="round">'+nm+'</text>';
       s+='<text '+lc+' fill="#1a1614">'+nm+'</text>';
     }
   });
