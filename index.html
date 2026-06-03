@@ -2866,7 +2866,7 @@ function buildTrailProfile(j,walked){
   var wpts=[]; for(i=0;i<=reachedIdx;i++) wpts.push(pts[i]);
   if(reachedIdx>=0 && reachedIdx<N-1 && walked>stops[reachedIdx].mi) wpts.push({x:px,y:py});
   if(reachedIdx<0) wpts=[{x:pts[0].x,y:pts[0].y}];
-  var line=smoothMapPath(pts);
+  var line=smoothMapPath(pts,0.42);   // sharper than the map (peaks spike)
   var isInca=(j.id==='inca');
   var passes=(typeof INCA_AERIAL!=='undefined' && isInca)?INCA_AERIAL.passes:[];
   var passTag={5:'1.er paso',7:'2.º paso',9:'3.er paso'};
@@ -2874,6 +2874,21 @@ function buildTrailProfile(j,walked){
   var campMi={}; if(days){ for(i=0;i<days.length-1;i++) campMi[days[i].mi]=1; } // camp at each day's end (not the final)
 
   var s='<svg class="elev-svg" data-pfx="'+pfx+'" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">';
+  // misty mountain backdrop — two jagged layers behind the curve (evokes the
+  // painted resumen). Deterministic, subtle.
+  function _ridge(yHi, peaksN, fill, op, ph){
+    var x0=padL, x1=W-padR, span=x1-x0, d='M '+x0+' '+baseY;
+    for(var ri=0;ri<=peaksN;ri++){
+      var rx=x0+span*(ri/peaksN);
+      var jag=(Math.sin(ri*1.9+ph)*0.5+0.5)*0.6 + (Math.sin(ri*4.7+ph*1.7)*0.5+0.5)*0.4;
+      var ry=baseY-(baseY-yHi)*(0.30+0.70*jag);
+      d+=' L '+rx.toFixed(1)+' '+ry.toFixed(1);
+    }
+    d+=' L '+x1+' '+baseY+' Z';
+    return '<path d="'+d+'" fill="'+fill+'" opacity="'+op+'"/>';
+  }
+  s+=_ridge(top+14, 13, SOFT, 0.10, 0.6);   // far range (higher, hazy)
+  s+=_ridge(top+70, 9,  INK,  0.07, 1.9);   // nearer range (lower, darker)
   // elevation gridlines (min + max) with left labels
   for(var gg=minE; gg<=maxE; gg+=1000){ var gy=Y(gg);
     s+='<line x1="'+padL+'" y1="'+gy+'" x2="'+(W-padR)+'" y2="'+gy+'" stroke="'+LN+'" stroke-width="1" stroke-dasharray="2 5"/>';
@@ -2892,10 +2907,10 @@ function buildTrailProfile(j,walked){
   }); }
   // areas
   s+='<path d="'+line+' L '+pts[N-1].x+' '+baseY+' L '+pts[0].x+' '+baseY+' Z" fill="'+INK+'" fill-opacity="0.07"/>';
-  if(wpts.length>1) s+='<path d="'+smoothMapPath(wpts)+' L '+px+' '+baseY+' L '+pts[0].x+' '+baseY+' Z" fill="'+ACC+'" fill-opacity="0.22"/>';
+  if(wpts.length>1) s+='<path d="'+smoothMapPath(wpts,0.42)+' L '+px+' '+baseY+' L '+pts[0].x+' '+baseY+' Z" fill="'+ACC+'" fill-opacity="0.22"/>';
   // lines — full route clearly visible (dark), walked portion in bold mint
   s+='<path d="'+line+'" fill="none" stroke="'+INK+'" stroke-opacity="0.55" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
-  if(wpts.length>1) s+='<path d="'+smoothMapPath(wpts)+'" fill="none" stroke="'+ACC+'" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>';
+  if(wpts.length>1) s+='<path d="'+smoothMapPath(wpts,0.42)+'" fill="none" stroke="'+ACC+'" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>';
   // stops — every stop labelled (angled), passes as diamonds, camps with a tent
   stops.forEach(function(st,idx){
     var on=walked>=st.mi-1e-6, p=pts[idx], isPass=passes.indexOf(idx)>=0;
@@ -3652,14 +3667,16 @@ var INCA_AERIAL = {
   labelIdx:[0,5,7,9,12,14]  // start, the 3 passes, Wiñay Wayna, Machu Picchu (+ current always)
 };
 function _round1(n){return Math.round(n*10)/10;}
-function smoothMapPath(p){
+function smoothMapPath(p,k){
+  // k = smoothing strength (1 = round, 0 = straight/sharp). Default 1.
+  k=(k==null)?1:k;
   if(!p||!p.length) return '';
   if(p.length===1) return 'M '+p[0].x+' '+p[0].y;
   var d='M '+_round1(p[0].x)+' '+_round1(p[0].y);
   for(var i=0;i<p.length-1;i++){
     var p0=p[i-1]||p[i], p1=p[i], p2=p[i+1], p3=p[i+2]||p2;
-    var c1x=p1.x+(p2.x-p0.x)/6, c1y=p1.y+(p2.y-p0.y)/6;
-    var c2x=p2.x-(p3.x-p1.x)/6, c2y=p2.y-(p3.y-p1.y)/6;
+    var c1x=p1.x+(p2.x-p0.x)/6*k, c1y=p1.y+(p2.y-p0.y)/6*k;
+    var c2x=p2.x-(p3.x-p1.x)/6*k, c2y=p2.y-(p3.y-p1.y)/6*k;
     d+=' C '+_round1(c1x)+' '+_round1(c1y)+' '+_round1(c2x)+' '+_round1(c2y)+' '+_round1(p2.x)+' '+_round1(p2.y);
   }
   return d;
