@@ -741,17 +741,18 @@
   .modal.celebrate .actions{display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap}
   .modal.celebrate .actions .btn{min-width:140px}
 
-  /* Rank list (Rangos modal) */
+  /* Rank list (Rangos modal) — scoped to .rank-list so it never touches the
+     in-game .rank-row (which was getting this padding and shifting the label). */
   .rank-list{margin:14px 0 4px}
-  .rank-row{display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:10px}
-  .rank-row.cur{background:var(--accent-soft)}
-  .rank-row.cur.is-top{background:var(--accent)}
-  .rank-row .ri{width:22px;text-align:right;font-size:12px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
-  .rank-row .rn{flex:1;font-family:var(--font-display);font-size:16px;color:var(--ink);font-weight:600}
-  .rank-row.is-top .rn{color:var(--accent);font-weight:700}
-  .rank-row.cur.is-top .rn{color:#fff}
-  .rank-row.cur.is-top .ri,.rank-row.cur.is-top .rs{color:#fff}
-  .rank-row .rs{font-size:12.5px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+  .rank-list .rank-row{display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:10px}
+  .rank-list .rank-row.cur{background:var(--accent-soft)}
+  .rank-list .rank-row.cur.is-top{background:var(--accent)}
+  .rank-list .rank-row .ri{width:22px;text-align:right;font-size:12px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+  .rank-list .rank-row .rn{flex:1;font-family:var(--font-display);font-size:16px;color:var(--ink);font-weight:600}
+  .rank-list .rank-row.is-top .rn{color:var(--accent);font-weight:700}
+  .rank-list .rank-row.cur.is-top .rn{color:#fff}
+  .rank-list .rank-row.cur.is-top .ri,.rank-list .rank-row.cur.is-top .rs{color:#fff}
+  .rank-list .rank-row .rs{font-size:12.5px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
 
   /* Stats grid */
   .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 6px}
