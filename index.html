@@ -1247,9 +1247,6 @@
     <!-- STEPS OF THE DAY — count shown small on the panorama; this panel is the
          goal bar + sync/log controls. -->
     <div class="day">
-      <div class="day-goalbar"><i id="day-fill"></i><span class="pin" id="pin-goal" data-l="tu meta"></span></div>
-      <div class="day-tiers" id="day-tiers"></div>
-
       <div class="day-sync">
         <button class="btn primary block" id="sync-btn">Sincronizar pasos</button>
         <div class="sync-sub">Apple Salud · Google Fit
@@ -1266,7 +1263,7 @@
       </details>
 
       <div class="day-meta">
-        <span>Tu meta: <a id="goal-link"></a> · Saludable: 8.000</span>
+        <span>Tu meta: <a id="goal-link"></a> · Recomendada: 8.000</span>
         <a id="undo-link" class="hide">Borrar pasos de hoy</a>
       </div>
     </div>
@@ -1296,7 +1293,7 @@
         </div>
         <div class="eta-card" style="margin-top:12px">
           <div class="eta" id="eta-mine"><div class="v" id="eta-mine-v">—</div><div class="l" id="eta-mine-l">a tu ritmo</div></div>
-          <div class="eta healthy" id="eta-health"><div class="v" id="eta-health-v">—</div><div class="l" id="eta-health-l">al ritmo saludable</div></div>
+          <div class="eta healthy" id="eta-health"><div class="v" id="eta-health-v">—</div><div class="l" id="eta-health-l">al ritmo recomendado</div></div>
         </div>
       </div>
 
@@ -1443,7 +1440,7 @@
 <div class="modal-overlay" id="ov-goal"><div class="modal">
   <button class="modal-close" data-close>×</button>
   <h2>Tu meta diaria</h2>
-  <p class="muted">¿Cuántos pasos quieres caminar cada día? La meta <b>saludable</b> de 8.000 pasos viene de la investigación; tu meta personal puede ser menor o mayor.</p>
+  <p class="muted">¿Cuántos pasos quieres caminar cada día? La meta <b>recomendada</b> de 8.000 pasos viene de la investigación; tu meta personal puede ser menor o mayor.</p>
   <div class="goal-list" id="goal-list"></div>
 </div></div>
 
@@ -1459,10 +1456,10 @@
 <div class="modal-overlay" id="ov-rangos"><div class="modal">
   <button class="modal-close" data-close>×</button>
   <h2>Rangos del día</h2>
-  <p class="muted">Tu rango se calcula con los <b>pasos de hoy</b> y se reinicia cada día. Llegar a la meta saludable te hace <b style="color:var(--accent)">Maestro/a</b>.</p>
+  <p class="muted">Tu rango se calcula con los <b>pasos de hoy</b> y se reinicia cada día. Llegar a la meta recomendada te hace <b style="color:var(--accent)">Maestro/a</b>.</p>
   <div class="rank-list" id="rank-list"></div>
   <hr>
-  <p class="muted">La meta saludable de <b>8.000 pasos</b> está basada en investigación: un metaanálisis de 2022 (Lancet Public Health, Paluch et al.) halló que el riesgo de mortalidad se estabiliza alrededor de 8.000–10.000 pasos diarios en adultos y de 6.000–8.000 en mayores de 60.</p>
+  <p class="muted">La meta recomendada de <b>8.000 pasos</b> está basada en investigación: un metaanálisis de 2022 (Lancet Public Health, Paluch et al.) halló que el riesgo de mortalidad se estabiliza alrededor de 8.000–10.000 pasos diarios en adultos y de 6.000–8.000 en mayores de 60.</p>
 </div></div>
 
 <!-- ============================================================== STATS MODAL -->
@@ -4446,7 +4443,7 @@ function render(){
   document.getElementById('eta-mine-v').textContent=done?'¡Listo!':nFmt(dMine);
   document.getElementById('eta-mine-l').innerHTML=done?'ruta completada':'días a tu ritmo<br>'+nFmt(state.goal)+'/día';
   document.getElementById('eta-health-v').textContent=done?'✓':nFmt(dHealth);
-  document.getElementById('eta-health-l').innerHTML=done?'¡bien hecho!':'días al ritmo saludable<br>'+nFmt(RECOMMENDED)+'/día';
+  document.getElementById('eta-health-l').innerHTML=done?'¡bien hecho!':'días al ritmo recomendado<br>'+nFmt(RECOMMENDED)+'/día';
 
   // stats row — only present in Estadísticas now; guard in case absent
   var pct=Math.min(100,Math.round(walked/j.total*100));
@@ -4463,16 +4460,16 @@ function render(){
   if(dayCountEl) dayCountEl.textContent=nFmt(ts);
   var dayRankEl=document.getElementById('day-rank');
   if(dayRankEl) dayRankEl.innerHTML='Rango de hoy: <b>'+RANKS[ri]+'</b>';
-  document.getElementById('day-fill').style.width=clamp(ts/RECOMMENDED,0,1)*100+'%';
+  // day goal bar + tiers were removed from the Camina view; guard if absent
+  var dayFillEl=document.getElementById('day-fill');
+  if(dayFillEl) dayFillEl.style.width=clamp(ts/RECOMMENDED,0,1)*100+'%';
   var pin=document.getElementById('pin-goal');
-  pin.style.left=clamp(state.goal/RECOMMENDED,0,1)*100+'%';
+  if(pin) pin.style.left=clamp(state.goal/RECOMMENDED,0,1)*100+'%';
   var hitGoal=ts>=state.goal, hitRec=ts>=RECOMMENDED;
-  // Day-tiers shows just Tu meta + Saludable. Tiers past Maestro (Plata 10k,
-  // Oro/Leyenda 12k) are SECRET achievements — they reveal as celebrations,
-  // not as visible thresholds on the bar.
-  document.getElementById('day-tiers').innerHTML=
+  var dayTiersEl=document.getElementById('day-tiers');
+  if(dayTiersEl) dayTiersEl.innerHTML=
     '<span class="'+(hitGoal?'hit':'')+'">'+(hitGoal?'✓ ':'')+'Tu meta<b>'+nFmt(state.goal)+'</b></span>'+
-    '<span class="'+(hitRec?'hit':'')+'" style="text-align:right">'+(hitRec?'✓ ':'')+'Saludable<b>'+nFmt(RECOMMENDED)+'</b></span>';
+    '<span class="'+(hitRec?'hit':'')+'" style="text-align:right">'+(hitRec?'✓ ':'')+'Recomendada<b>'+nFmt(RECOMMENDED)+'</b></span>';
 
   document.getElementById('goal-link').textContent=nFmt(state.goal)+' pasos';
   document.getElementById('undo-link').classList.toggle('hide',ts<=0);
@@ -4585,7 +4582,7 @@ function recordToday(newTotal){
     }
     celebrate(true,'¡Maestro/a del día!', msg);
   } else if(newMeta){
-    celebrate(false,'¡Buen trabajo!','Cumpliste tu meta de '+nFmt(state.goal)+' pasos. Vas por buen camino — la meta saludable está en '+nFmt(RECOMMENDED)+'.');
+    celebrate(false,'¡Buen trabajo!','Cumpliste tu meta de '+nFmt(state.goal)+' pasos. Vas por buen camino — la meta recomendada está en '+nFmt(RECOMMENDED)+'.');
   }
   // ---- Coach: pick a position-aware line, with milestone overrides --------
   // Detect crossing route-progress milestones (50%, 85%, finish) so the coach
@@ -4717,7 +4714,14 @@ function coachSay(key){
 
 // Called by openJourney once per session — primes the card with a greeting.
 function coachGreet(){
-  var cid = state.coach; if (!cid){
+  var cid = state.coach;
+  // No coach chosen yet → default to the first one so the coach window always
+  // shows (the player can change it in Ajustes).
+  if (!cid && typeof COACHES !== 'undefined' && COACHES.length){
+    cid = state.coach = COACHES[0].id;
+    try { save(); } catch(e){}
+  }
+  if (!cid){
     var card = document.getElementById('coach-card-game');
     if (card) card.classList.add('hide');
     return;
@@ -4825,7 +4829,7 @@ function showStats(){
     statTile(nFmt(ts),'Pasos hoy')+
     statTile(current?RANKS[rankIndex(todaySteps(current))]:RANKS[rankIndex(totals[todayISO()]||0)],'Rango de hoy')+
     statTile(streak+(streak===1?' día':' días'),'Racha (≥ tu meta)')+
-    statTile(recDays,'Días al nivel saludable')+
+    statTile(recDays,'Días al nivel recomendado')+
     statTile(fmtMi1(lifetimeMi),'Total recorrido')+
     statTile(finished,'Rutas completadas');
   // Medals — lifetime counts of secret achievements (only show once
@@ -4840,7 +4844,7 @@ function showStats(){
   }
   document.getElementById('stats-foot').textContent=
     daysPlayed+(daysPlayed===1?' día registrado en total.':' días registrados en total.')+
-    '  Tu meta: '+nFmt(state.goal)+' · Saludable: '+nFmt(RECOMMENDED)+' pasos.'+medalsFoot;
+    '  Tu meta: '+nFmt(state.goal)+' · Recomendada: '+nFmt(RECOMMENDED)+' pasos.'+medalsFoot;
   openOverlay('ov-stats');
 }
 
@@ -4891,13 +4895,13 @@ document.getElementById('rankbar').addEventListener('click',showRangos);
 ============================================================================ */
 var HOWTO=
   '<p>Elige una <b>ruta real</b> del mundo. La app cuenta los pasos que das cada día y <span style="color:var(--accent);font-weight:600">tu cortadito recorre la distancia</span> a tu lado. Cada <b>2.000 pasos ≈ 1 milla</b>.</p>'+
-  '<p>Tienes <b>dos metas cada día</b>: la <b>tuya</b> (la que tú fijas) y la <b>saludable</b> de 8.000 pasos, basada en la ciencia. Cumple la tuya y verás un "¡Buen trabajo!"; alcanza la saludable y llegas a <b style="color:var(--accent)">Maestro/a</b> del día. Pásate de los 12.000 y es <b>día de leyenda</b>.</p>'+
-  '<p>Al cruzar cada ciudad de la ruta ganas un <b>sello</b> en el pasaporte con un dato del lugar. La app te dice <b>cuántos días te faltan</b> para llegar: a tu ritmo y al ritmo saludable.</p>'+
+  '<p>Tienes <b>dos metas cada día</b>: la <b>tuya</b> (la que tú fijas) y la <b>recomendada</b> de 8.000 pasos, basada en la ciencia. Cumple la tuya y verás un "¡Buen trabajo!"; alcanza la recomendada y llegas a <b style="color:var(--accent)">Maestro/a</b> del día. Pásate de los 12.000 y es <b>día de leyenda</b>.</p>'+
+  '<p>Al cruzar cada ciudad de la ruta ganas un <b>sello</b> en el pasaporte con un dato del lugar. La app te dice <b>cuántos días te faltan</b> para llegar: a tu ritmo y al ritmo recomendado.</p>'+
   '<p class="muted">Una ruta gratis a la vez; con <b>Cortadito Club</b>, la biblioteca completa y varias rutas en marcha.</p>';
 
 var ABOUT=
   '<p><b>Pasos</b> convierte tus pasos en un viaje por rutas legendarias. Es parte de la familia diaria de <b>Cortadito News</b> — junto a Sudoku, Racimo y los demás juegos. <span style="color:var(--accent);font-weight:600">¡Lo esencial en un sorbo!</span></p>'+
-  '<p class="muted">La meta saludable de 8.000 pasos viene de la investigación: un metaanálisis de 2022 (Lancet Public Health) encontró que el beneficio para la salud se estabiliza alrededor de 8.000–10.000 pasos diarios en adultos.</p>'+
+  '<p class="muted">La meta recomendada de 8.000 pasos viene de la investigación: un metaanálisis de 2022 (Lancet Public Health) encontró que el beneficio para la salud se estabiliza alrededor de 8.000–10.000 pasos diarios en adultos.</p>'+
   '<p class="muted">En la app nativa los pasos se sincronizan solos desde Apple Salud o Google Fit. Aquí, en el prototipo, el botón <b>Sincronizar</b> simula esa lectura (o anótalos a mano). Sin anuncios, sin distracciones: solo tú, el cortadito y el camino.</p>';
 
 /* ============================================================================
