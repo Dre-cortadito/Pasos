@@ -1648,6 +1648,28 @@ var JOURNEYS=[
 ];
 function J(id){for(var i=0;i<JOURNEYS.length;i++)if(JOURNEYS[i].id===id)return JOURNEYS[i];return null;}
 
+/* Per-route accent palettes — each trail carries the colors of its real place,
+   so the whole app (bars, ruins, maps, accents) re-tints when you switch routes.
+   Two variants per route so it works in the light and the black theme.
+   {a:accent, d:accent-deep, s:accent-soft}. No match → fall back to brand mint. */
+var ROUTE_ACCENTS = {
+  inca:     {light:{a:'#149E74', d:'#0C7A57', s:'#D2EDE2'}, dark:{a:'#45D6A6', d:'#149E74', s:'#0E2C23'}}, // Andes / glacier-teal
+  everest:  {light:{a:'#2E7FB0', d:'#1C5A82', s:'#DBEAF4'}, dark:{a:'#5FB6E6', d:'#2E7FB0', s:'#0E2733'}}, // Himalayan ice-blue
+  cafe:     {light:{a:'#C07A2B', d:'#8F571A', s:'#F3E6D2'}, dark:{a:'#E6A85A', d:'#C07A2B', s:'#2E2113'}}, // coffee amber
+  santiago: {light:{a:'#C79A2E', d:'#94701A', s:'#F2E8CD'}, dark:{a:'#E6C86A', d:'#C79A2E', s:'#2C2611'}}, // Castilian wheat-gold
+  cuba:     {light:{a:'#119AA6', d:'#0C737B', s:'#D2EEF0'}, dark:{a:'#46D3DB', d:'#119AA6', s:'#0E2A2C'}}, // Caribbean turquoise
+  ruta66:   {light:{a:'#C0563E', d:'#8F3A28', s:'#F3DCD5'}, dark:{a:'#E5836A', d:'#C0563E', s:'#301812'}}  // Route-66 desert rust
+};
+function applyRouteTheme(){
+  var b=document.body, dark=b.getAttribute('data-theme')==='black';
+  var p=ROUTE_ACCENTS[current];
+  if(!p){ b.style.removeProperty('--accent'); b.style.removeProperty('--accent-deep'); b.style.removeProperty('--accent-soft'); return; }
+  var c=dark?p.dark:p.light;
+  b.style.setProperty('--accent',c.a);
+  b.style.setProperty('--accent-deep',c.d);
+  b.style.setProperty('--accent-soft',c.s);
+}
+
 /* ============================================================================
    State
    j[id] = { started:ISO, days:{ 'YYYY-MM-DD': steps } }  — per-day step totals.
@@ -2795,7 +2817,7 @@ function goHome(){
   document.body.classList.remove('game-active');
   document.body.classList.remove('in-journey');   // hide bottom tab bar on landing
   document.body.classList.remove('pano-full');   // landing never has panorama mode
-  current=null;renderLanding();window.scrollTo(0,0);
+  current=null;applyRouteTheme();renderLanding();window.scrollTo(0,0);
 }
 document.getElementById('header-home').onclick=goHome;
 
@@ -4408,6 +4430,7 @@ function buildRankTrack(ts){
 
 function render(){
   var j=J(current);if(!j)return;
+  applyRouteTheme();   // re-tint the app to this route's palette
   var walked=miles(current), done=walked>=j.total;
   var ts=todaySteps(current), ri=rankIndex(ts), atMaestro=ri>=RANKS.length-1;
 
