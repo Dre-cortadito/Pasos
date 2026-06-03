@@ -4374,7 +4374,8 @@ function updateIncaParallax(walked, totalMiles){
   var hk = document.getElementById('pano-pl-hiker');
   if (hk && totalMiles > 0) {
     var milesFrac = Math.max(0, Math.min(1, walked / totalMiles));
-    hk.style.left = (milesFrac * 100) + '%';
+    // keep the walker fully on-screen at the very start/end (don't clip on the edge)
+    hk.style.left = 'clamp(24px, '+(milesFrac * 100)+'%, calc(100% - 24px))';
     // Micro-step-up: avatar's bottom rises a few px as it crosses a
     // staircase/cairn/ruins sprite. Returns 0 elsewhere so the avatar
     // walks flat between climbable props.
