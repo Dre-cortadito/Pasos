@@ -2925,7 +2925,7 @@ function buildTrailProfile(j,walked){
     var anc='middle', lxx=p.x;
     if(p.x < padL+46){ anc='start'; lxx=padL-2; }
     else if(p.x > W-padR-46){ anc='end'; lxx=W-padR+2; }
-    s+='<line x1="'+p.x+'" y1="'+(tierY+5)+'" x2="'+p.x+'" y2="'+(p.y-5)+'" stroke="'+INK+'" stroke-opacity="0.16" stroke-width="0.8" stroke-dasharray="1 3"/>';
+    s+='<line x1="'+p.x+'" y1="'+(tierY+5)+'" x2="'+p.x+'" y2="'+(p.y-5)+'" stroke="'+INK+'" stroke-opacity="0.42" stroke-width="1.3" stroke-dasharray="2 4"/>';
     s+='<text x="'+lxx+'" y="'+tierY+'" text-anchor="'+anc+'" font-size="11" font-weight="700" fill="'+INK+'">'+nm+' <tspan font-size="9" font-weight="600" fill="'+INK+'" fill-opacity="0.6">'+elm+'</tspan></text>';
   });
   // player marker riding the profile
@@ -3663,7 +3663,26 @@ var INCA_AERIAL = {
     [0.1985,0.2110]  //14 Machu Picchu
   ],
   passes:[5,7,9],
-  labelIdx:[0,5,7,9,12,14]  // start, the 3 passes, Wiñay Wayna, Machu Picchu (+ current always)
+  // per-stop label offset [dx,dy,anchor] (image px) — fans names into the open
+  // space around the trail so they don't pile up. s=start, e=end, m=middle.
+  lab:[
+    [16,-34,'s'],  // 0 Km 82
+    [20,-2,'s'],   // 1 Llaqtapata
+    [22,16,'s'],   // 2 Wayllabamba
+    [16,48,'s'],   // 3 Ayapata
+    [26,40,'s'],   // 4 Llulluchapampa
+    [0,-46,'m'],   // 5 Warmiwañusca
+    [34,40,'s'],   // 6 Pacaymayo
+    [34,2,'s'],    // 7 Runkurakay
+    [-26,46,'e'],  // 8 Sayacmarca
+    [-30,30,'e'],  // 9 Chaquicocha
+    [-30,-22,'e'], //10 Phuyupatamarca
+    [-26,-6,'e'],  //11 Intipata
+    [-30,18,'e'],  //12 Wiñay Wayna
+    [26,-6,'s'],   //13 Inti Punku
+    [-12,-30,'e']  //14 Machu Picchu
+  ],
+  labelIdx:[0,5,7,9,12,14]  // (unused now — all stops are labelled)
 };
 function _round1(n){return Math.round(n*10)/10;}
 function smoothMapPath(p,k){
@@ -3791,13 +3810,16 @@ function renderIncaAerial(svg, walkedMi, totalMi){
     s+='<circle cx="'+p.x+'" cy="'+p.y+'" r="'+(r+3)+'" fill="#fbfaf6" opacity="0.9"/>'; // halo
     if(isPass){ var dd=10; s+='<rect x="'+(p.x-dd)+'" y="'+(p.y-dd)+'" width="'+(2*dd)+'" height="'+(2*dd)+'" rx="2" transform="rotate(45 '+p.x+' '+p.y+')" fill="'+fill+'" stroke="'+strk+'" stroke-width="3"/>'; }
     else { s+='<circle cx="'+p.x+'" cy="'+p.y+'" r="'+r+'" fill="'+fill+'" stroke="'+strk+'" stroke-width="3"/>'; }
-    { // label every stop (matches the elevation chart)
-      var anc='middle', lx=p.x, ly=p.y-22;
-      if(p.y<90) ly=p.y+38;
-      if(p.x<170){ anc='start'; lx=p.x+14; }
-      else if(p.x>VW-230){ anc='end'; lx=p.x-14; }
-      s+='<text x="'+lx+'" y="'+ly+'" text-anchor="'+anc+'" paint-order="stroke" stroke="#fbfaf6" stroke-width="5" stroke-linejoin="round" fill="#1a1614" font-size="23" font-weight="800">'+_esc(shortName(stops[idx].n))+'</text>';
-      if(stops[idx].el) s+='<text x="'+lx+'" y="'+(ly+22)+'" text-anchor="'+anc+'" paint-order="stroke" stroke="#fbfaf6" stroke-width="4" stroke-linejoin="round" fill="#5a544e" font-size="16" font-weight="600">'+stops[idx].el.toLocaleString('es')+' m</text>';
+    { // every stop labelled, fanned into open space with a leader line
+      var L=(A.lab&&A.lab[idx])||[16,-22,'s'];
+      var lx=p.x+L[0], ly=p.y+L[1], anc=L[2]==='s'?'start':(L[2]==='e'?'end':'middle');
+      // leader from the pin to the label
+      var lead=anc==='end'?lx+4:(anc==='start'?lx-4:lx);
+      s+='<line x1="'+p.x+'" y1="'+p.y+'" x2="'+lead+'" y2="'+(ly-6)+'" stroke="#1a1614" stroke-opacity="0.28" stroke-width="1.5"/>';
+      var nm=_esc(shortName(stops[idx].n));
+      var lc='x="'+lx+'" y="'+ly+'" text-anchor="'+anc+'" font-size="22" font-weight="800"';
+      s+='<text '+lc+' fill="none" stroke="#fbfaf6" stroke-width="5" stroke-linejoin="round">'+nm+'</text>';
+      s+='<text '+lc+' fill="#1a1614">'+nm+'</text>';
     }
   });
   // BOLD "you are here" pin — dark head + mint core + white outline, tip on the trail
