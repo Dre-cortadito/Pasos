@@ -1,0 +1,12 @@
+Drop your AI-generated Inca panorama tiles in THIS folder.
+
+Naming: 01.png, 02.png, 03.png … in trail order (zero-padded, two digits).
+They sort by name, so the numbers must be right.
+
+When they're all here, tell Claude "stitch the tiles" and it will:
+  1) crossfade-blend the overlaps into one seamless strip,
+  2) slice it back into 2048-wide game tiles,
+  3) copy them into ../composites/ (replacing the placeholders),
+  4) wire the count into index.html if it changed.
+
+You don't have to finish all 27 first — partial sets are fine to test.
