@@ -1073,7 +1073,7 @@
     /* Sits on the implied trail line: ~13% above the bottom of the band,
        which is roughly where the foreground silhouettes end in the Inca
        composites. Scales with viewport because it's percentage-based. */
-    position:absolute;bottom:13%;left:0;
+    position:absolute;bottom:10%;left:0;
     transform:translateX(-50%);
     pointer-events:none;z-index:10;
     display:flex;align-items:flex-end;justify-content:center;
@@ -1088,11 +1088,11 @@
   /* Animated alpaca walker (Inca route) — a 5-frame sprite strip cycled with
      steps(5). Flipped to face the direction of travel (rightward). */
   .pano-pl-hiker .alpaca-walk{
-    width:36px;height:40px;display:block;
-    background:url('ui-icons/alpaca-walk.png') 0 0 / 180px 40px no-repeat;
+    width:35px;height:40px;display:block;
+    background:url('ui-icons/alpaca-walk.png') 0 0 / 175px 40px no-repeat;
     animation:alpacaWalk .7s steps(5) infinite;
   }
-  @keyframes alpacaWalk{ from{background-position-x:0} to{background-position-x:-180px} }
+  @keyframes alpacaWalk{ from{background-position-x:0} to{background-position-x:-175px} }
   /* Foreground prop sprites: sit on the same ground line as the avatar
      (bottom:13%), scale with band height (heightPct → height %), and live
      behind the avatar (z-index 5 vs avatar 10) so the avatar walks IN
@@ -4380,7 +4380,7 @@ function updateIncaParallax(walked, totalMiles){
     // staircase/cairn/ruins sprite. Returns 0 elsewhere so the avatar
     // walks flat between climbable props.
     var stepPx = _stepUpForFrac(milesFrac);
-    hk.style.bottom = stepPx > 0 ? ('calc(13% + ' + stepPx + 'px)') : '13%';
+    hk.style.bottom = stepPx > 0 ? ('calc(10% + ' + stepPx + 'px)') : '10%';
   }
 }
 
