@@ -551,6 +551,9 @@
   .rank-dot.passed{background:var(--ink)}
   .rank-marker{position:absolute;top:50%;width:3px;height:26px;border-radius:2px;transform:translate(-50%,-50%);background:var(--accent);opacity:.95;z-index:2}
   .rank-marker.done{background:var(--success)}
+  /* "tu meta hoy" caption that rides with the goal marker */
+  .rank-marker-lbl{position:absolute;top:calc(50% + 15px);font-family:var(--font-ui);font-size:8px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--accent-deep);white-space:nowrap;z-index:2;pointer-events:none;line-height:1}
+  .rank-marker-lbl.done{color:var(--success)}
   .rank-bubble{
     position:absolute;top:50%;width:24px;height:24px;border-radius:50%;
     transform:translate(-50%,-50%);
@@ -1178,7 +1181,6 @@
       </div>
       <span class="rank-medals" id="rank-medals" aria-label="Logros de hoy"></span>
     </div>
-    <div class="rank-goal-note" id="rank-goal-note"></div>
 
     <div class="j-head">
       <div class="j-title" id="jtitle"></div>
@@ -4371,10 +4373,12 @@ function buildRankTrack(ts){
     var pct = (thr/max)*100;
     html+='<div class="rank-dot'+(passed?' passed':'')+'" style="left:'+pct+'%"></div>';
   });
-  // personal-goal marker ("tu meta")
+  // personal-goal marker ("tu meta") + a label that travels with it
   var gpos=clamp(state.goal/max,0,1);
   var gdone=ts>=state.goal;
   html+='<div class="rank-marker'+(gdone?' done':'')+'" style="left:'+(gpos*100)+'%" title="tu meta"></div>';
+  var gAnchor = gpos>0.82?'translateX(-100%)':(gpos<0.12?'translateX(0)':'translateX(-50%)');
+  html+='<div class="rank-marker-lbl'+(gdone?' done':'')+'" style="left:'+(gpos*100)+'%;transform:'+gAnchor+'">tu meta hoy</div>';
   // current bubble
   var lbl = ts>=1000 ? Math.round(ts/1000)+'k' : String(ts);
   html+='<div class="rank-bubble" style="left:'+(frac*100)+'%">'+lbl+'</div>';
@@ -4391,12 +4395,6 @@ function render(){
   var rl=document.getElementById('rank-label');
   rl.textContent=RANKS[ri];
   rl.classList.toggle('at-maestro',atMaestro);
-  // Daily-goal caption under the rank bar
-  var gn=document.getElementById('rank-goal-note');
-  if(gn){ var goalDone=ts>=state.goal;
-    gn.innerHTML='Tu meta hoy · <b>'+nFmt(state.goal)+' pasos</b>'+(goalDone?' ✓':'');
-    gn.classList.toggle('done',goalDone);
-  }
   // Secret-achievement medals — outside the bar, to the right of the chevron.
   // Only show when earned today; the sibling element hides via :empty otherwise.
   var medals='';
@@ -4451,9 +4449,10 @@ function render(){
   if(statsEl) statsEl.innerHTML=
     statTile(fmtMi1(walked),'Recorrido')+statTile(pct+'%','Completado')+statTile(fmtMi1(remainMi),'Faltan');
 
-  // pasos de hoy — shown small under the place name on the panorama
+  // pasos de hoy — shown small under the place name on the panorama as
+  // "steps / goal hoy" (e.g. 300 / 6.000 hoy)
   var stepsEl=document.getElementById('scene-steps');
-  if(stepsEl) stepsEl.textContent=nFmt(ts)+' pasos hoy · '+RANKS[ri];
+  if(stepsEl) stepsEl.textContent=nFmt(ts)+' / '+nFmt(state.goal)+' hoy';
 
   // day card (count/rank now live on the panorama; guard legacy nodes)
   var dayCountEl=document.getElementById('day-count');
