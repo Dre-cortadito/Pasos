@@ -596,11 +596,11 @@
   .trail-label{font-family:var(--font-ui);font-size:10.5px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:var(--ink-soft);text-align:center;margin-bottom:2px}
   /* Route-progress bar — reuses the rank-bar's track/dot/bubble for a match */
   .prog-track{position:relative;height:24px;margin:12px 8px 2px}
-  .trail-meta{display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--ink-soft);margin-top:12px;padding:0 2px}
-  .trail-meta .tm-row{display:flex;align-items:baseline;gap:8px;white-space:nowrap}
-  .trail-meta .tm-row > span{color:var(--ink-soft);flex:none;min-width:102px}
-  .trail-meta .tm-row > b{color:var(--ink);font-weight:700;font-family:var(--font-display);font-size:14px}
-  .trail-meta .tm-row > i{margin-left:auto;font-style:normal;color:var(--accent-deep);font-weight:700;font-variant-numeric:tabular-nums}
+  .trail-meta{display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--ink-soft);margin-top:16px}
+  .trail-meta .tm-row{display:flex;align-items:baseline;gap:10px;white-space:nowrap}
+  .trail-meta .tm-row > span{color:var(--ink-soft);flex:none;min-width:96px;font-size:12px;letter-spacing:.2px}
+  .trail-meta .tm-row > b{color:var(--ink);font-weight:700;font-family:var(--font-display);font-size:15px}
+  .trail-meta .tm-row > i{margin-left:auto;font-style:normal;color:var(--accent-deep);font-weight:700;font-variant-numeric:tabular-nums;font-size:14px}
   .loc{font-size:14.5px;color:var(--ink);margin:6px 4px 12px;text-align:center;line-height:1.45}
   .loc b{color:var(--accent);font-weight:700}
 
@@ -894,10 +894,10 @@
   .tab-mapa-inner .rm-svg .aer-el{fill:rgba(255,255,255,.5);font-family:var(--font-ui);font-size:9px;font-weight:600}
   .tab-mapa-inner .rm-svg .aer-compass{fill:rgba(255,255,255,.6)}
   .tab-mapa-inner .rm-svg .aer-legend-t{fill:rgba(255,255,255,.7);font-family:var(--font-ui);font-size:11px;font-weight:600}
-  .tab-mapa-inner .rm-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}
+  .tab-mapa-inner .rm-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:16px;padding-top:16px;border-top:1px solid var(--ink-line);text-align:center}
   /* Compact progress data */
-  .tab-mapa-inner .rm-stat .v{font-family:var(--font-display);font-size:16px;font-weight:700;color:var(--ink);line-height:1}
-  .tab-mapa-inner .rm-stat .l{font-size:9.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--ink-soft);margin-top:3px;font-weight:600}
+  .tab-mapa-inner .rm-stat .v{font-family:var(--font-display);font-size:20px;font-weight:700;color:var(--ink);line-height:1;font-variant-numeric:tabular-nums}
+  .tab-mapa-inner .rm-stat .l{font-size:10px;letter-spacing:.7px;text-transform:uppercase;color:var(--ink-soft);margin-top:5px;font-weight:600}
   /* Each section is its own boxed card */
   .map-card{background:var(--paper);border:1px solid var(--ink-line);border-radius:16px;padding:14px 14px 12px;margin:14px 0}
   .tab-mapa-inner > .map-card:first-child{margin-top:6px}
@@ -2818,7 +2818,7 @@ function _trailMeta(j,walked){
     rows='<div class="tm-row"><span>¡Llegaste a</span><b>'+shortName(fin.n)+'</b><i>'+fmtMi(j.total)+'</i></div>';
   } else {
     var nrow = next ? '<div class="tm-row"><span>Próxima parada</span><b>'+shortName(next.n)+'</b><i>'+fmtMi1(Math.max(0,next.mi-walked))+'</i></div>' : '';
-    rows = nrow + '<div class="tm-row"><span>Destino</span><b>'+shortName(fin.n)+'</b><i>'+fmtMi1(Math.max(0,fin.mi-walked))+'</i></div>';
+    rows = nrow + '<div class="tm-row"><span>Destino</span><b>'+shortName(fin.n)+'</b></div>';
   }
   return '<div class="trail-meta">'+rows+'</div>';
 }
