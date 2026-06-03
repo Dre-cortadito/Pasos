@@ -612,6 +612,10 @@
   .eta .v{font-family:var(--font-display);font-size:24px;font-weight:700;color:var(--ink);line-height:1}
   .eta.healthy .v{color:var(--accent)}
   .eta .l{font-size:10.5px;letter-spacing:.4px;color:var(--ink-soft);margin-top:5px;line-height:1.3}
+  .eta-finish{margin-top:10px;font-size:12.5px;line-height:1.45;color:var(--ink-soft);text-align:center}
+  .eta-finish:empty{display:none}
+  .eta-finish b{color:var(--ink);font-weight:700}
+  .eta-finish .ef-accent{color:var(--accent-deep);font-weight:700}
 
   .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}
   .stat{background:var(--paper);border:1px solid var(--ink-line);border-radius:13px;padding:13px 8px;text-align:center}
@@ -1302,6 +1306,7 @@
           <div class="eta" id="eta-mine"><div class="v" id="eta-mine-v">—</div><div class="l" id="eta-mine-l">a tu ritmo</div></div>
           <div class="eta healthy" id="eta-health"><div class="v" id="eta-health-v">—</div><div class="l" id="eta-health-l">al ritmo recomendado</div></div>
         </div>
+        <div class="eta-finish" id="eta-finish"></div>
       </div>
 
       <!-- 2) AERIAL MAP CARD -->
@@ -4494,14 +4499,43 @@ function render(){
   else if(walked<=0)locEl.innerHTML='Listo para salir desde <b>'+leg.from+'</b>.';
   else locEl.innerHTML='Vas entre <b>'+leg.from+'</b> y <b>'+leg.to+'</b>.';
 
-  // two ETAs
+  // two ETAs — both count DOWN as you travel (based on remaining distance).
+  // "tu ritmo" uses your REAL average: total steps on this route ÷ the days you
+  // actually walked it, so it adapts to how you've been doing (falls back to
+  // your goal before you've logged any steps).
   var remainMi=Math.max(0,j.total-walked), remainSteps=remainMi*STEPS_PER_MILE;
-  var dMine=done?0:Math.ceil(remainSteps/Math.max(1,state.goal));
+  var _dd=days(current), _act=0, _tot=0;
+  for(var _k in _dd){ if(_dd[_k]>0){ _act++; _tot+=_dd[_k]; } }
+  var avgPace = _act>0 ? Math.round(_tot/_act) : state.goal;   // your measured daily rhythm
+  var _capDays=function(n){ return n>999?'+999':nFmt(n); };
+  var dMine=done?0:Math.ceil(remainSteps/Math.max(1,avgPace));
   var dHealth=done?0:Math.ceil(remainSteps/RECOMMENDED);
-  document.getElementById('eta-mine-v').textContent=done?'¡Listo!':nFmt(dMine);
-  document.getElementById('eta-mine-l').innerHTML=done?'ruta completada':'días a tu ritmo<br>'+nFmt(state.goal)+'/día';
-  document.getElementById('eta-health-v').textContent=done?'✓':nFmt(dHealth);
+  document.getElementById('eta-mine-v').textContent=done?'¡Listo!':_capDays(dMine);
+  document.getElementById('eta-mine-l').innerHTML=done?'ruta completada':'días a tu ritmo<br>'+(_act>0?('media '+nFmt(avgPace)+'/día'):(nFmt(state.goal)+'/día'));
+  document.getElementById('eta-health-v').textContent=done?'✓':_capDays(dHealth);
   document.getElementById('eta-health-l').innerHTML=done?'¡bien hecho!':'días al ritmo recomendado<br>'+nFmt(RECOMMENDED)+'/día';
+  // Realistic finish projection — averages over EVERY calendar day since you
+  // started (so rest days count), then projects a likely arrival date.
+  var _fin=document.getElementById('eta-finish');
+  if(_fin){
+    var _elapsed=dayNum(current);                 // calendar days since start, incl today
+    var _avgCal=_elapsed>0?_tot/_elapsed:0;       // your true daily average, rest days included
+    if(done){
+      _fin.innerHTML='Ruta <span class="ef-accent">completada</span>. ¡Lo lograste!';
+    } else if(_act>0 && _avgCal>0){
+      var _real=Math.ceil(remainSteps/_avgCal);
+      if(_real>999){
+        _fin.innerHTML='Caminas <b>'+nFmt(Math.round(_avgCal))+'</b> pasos/día de media (con descansos). A esa cadencia, te faltan <b>+999</b> días.';
+      } else {
+        var _dt=new Date(); _dt.setHours(0,0,0,0); _dt.setDate(_dt.getDate()+_real);
+        var _sy=_dt.getFullYear()===new Date().getFullYear();
+        var _ds=_dt.toLocaleDateString('es', _sy?{day:'numeric',month:'long'}:{day:'numeric',month:'long',year:'numeric'});
+        _fin.innerHTML='Caminas <b>'+nFmt(Math.round(_avgCal))+'</b> pasos/día de media (con descansos). A esa cadencia te faltan <b>'+nFmt(_real)+'</b> días — llegarías <span class="ef-accent">~'+_ds+'</span>.';
+      }
+    } else {
+      _fin.innerHTML='Empieza a caminar y aquí verás cuándo llegarías a este ritmo.';
+    }
+  }
 
   // stats row — only present in Estadísticas now; guard in case absent
   var pct=Math.min(100,Math.round(walked/j.total*100));
@@ -4585,18 +4619,51 @@ function renderPasaporte(j, walked){
 }
 
 /* ============================================================================
-   Recording steps — sync (demo) + manual. Sets TODAY's total for current route.
+   Recording steps — ONE canonical write path so every source funnels through
+   the same place:
+     • setDaySteps(routeId, iso, total, source) — low-level: set a day's TOTAL
+       for a route (silent: no celebrations). The single source of truth.
+     • recordToday(total) — manual entry / demo sync: writes TODAY for the
+       current route, then runs the celebration + coach pipeline.
+     • applyHealthSteps(iso,total) / syncHealthSteps({iso:total,…}) — the hooks a
+       connected step counter (Apple Health via a wrapper/Shortcut, or Google
+       Fit / Fitbit / Garmin / Strava via OAuth) calls. Today on the active route
+       gets full celebrations; other days are silently back-filled.
+   Steps always apply to the ACTIVE route, exactly like manual entry today.
 ============================================================================ */
+function setDaySteps(routeId, iso, total, source){
+  routeId=routeId||current; iso=iso||todayISO();
+  var j=J(routeId); if(!j) return null;
+  total=Math.max(0,Math.round(total||0));
+  var p=state.j[routeId]||(state.j[routeId]={started:iso,days:{}});
+  p.days=p.days||{};
+  var prevTotal=p.days[iso]||0;
+  var beforeMi=cumSteps(routeId)/STEPS_PER_MILE;
+  p.days[iso]=total;
+  p.lastSource=source||'manual';
+  var afterMi=cumSteps(routeId)/STEPS_PER_MILE;
+  save(); if(routeId===current) render();
+  return {prevTotal:prevTotal,newTotal:total,beforeMi:beforeMi,afterMi:afterMi,iso:iso,routeId:routeId};
+}
+function applyHealthSteps(iso, total, routeId){
+  routeId=routeId||current; if(!routeId) return;
+  if(iso===todayISO() && routeId===current) recordToday(total);   // celebrate today
+  else setDaySteps(routeId, iso, total, 'health');                 // silent backfill
+}
+function syncHealthSteps(stepsByDate, routeId){
+  if(!stepsByDate) return 0; var n=0;
+  Object.keys(stepsByDate).sort().forEach(function(d){ applyHealthSteps(d, stepsByDate[d], routeId); n++; });
+  return n;
+}
+try{ window.Pasos=window.Pasos||{}; window.Pasos.setDaySteps=setDaySteps;
+     window.Pasos.applyHealthSteps=applyHealthSteps; window.Pasos.syncHealthSteps=syncHealthSteps; }catch(e){}
+
 function recordToday(newTotal){
   var j=J(current);if(!j)return;
-  newTotal=Math.max(0,Math.round(newTotal));
-  var p=state.j[current];p.days=p.days||{};
-  var iso=todayISO();
-  var prevToday=p.days[iso]||0;
-  var beforeMi=cumSteps(current)/STEPS_PER_MILE;
-  p.days[iso]=newTotal;
-  var afterMi=cumSteps(current)/STEPS_PER_MILE;
-  save();render();
+  var _r=setDaySteps(current, todayISO(), newTotal, 'manual');
+  if(!_r) return;
+  var iso=_r.iso, prevToday=_r.prevTotal, beforeMi=_r.beforeMi, afterMi=_r.afterMi;
+  newTotal=_r.newTotal;
 
   // ---- celebrations (show one modal, highest priority; gate the rest) ----
   // 1) route milestone / finish
