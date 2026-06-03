@@ -671,6 +671,32 @@
     .coach-card-game .ccg-name{font-size:14px}
     .coach-card-game .ccg-line{font-size:12.5px;padding:6px 9px}
   }
+  /* Close (×) on the coach card + the little "open coach" pill when it's hidden */
+  .coach-card-game .ccg-close{
+    position:absolute;top:3px;right:5px;width:22px;height:22px;border:0;padding:0;
+    background:transparent;color:var(--ink-soft);font-size:18px;line-height:20px;
+    cursor:pointer;border-radius:50%;text-align:center;z-index:2;
+  }
+  .coach-card-game .ccg-close:hover{background:var(--ink-line);color:var(--ink)}
+  .coach-open-pill{
+    align-self:center;margin:0 auto;border:1px solid var(--ink-line);
+    background:var(--paper);color:var(--accent-deep);font-weight:700;font-size:12.5px;
+    padding:6px 16px;border-radius:999px;cursor:pointer;flex:none;
+  }
+  .coach-open-pill:hover{background:var(--accent-soft);border-color:var(--accent)}
+  .coach-open-pill.hide{display:none}
+  /* CAMINA = a locked screen: fills the viewport, the panorama grows to fill the
+     space, and the coach (or its "abrir coach" pill) is pinned to the bottom edge.
+     No vertical page scroll here — only the panorama scrolls, horizontally. */
+  body.in-journey.on-camina main{overflow:hidden;padding-bottom:0}
+  body.in-journey.on-camina .tab-camina{
+    display:flex;flex-direction:column;padding-bottom:0;
+    height:calc(100dvh - var(--rank-top) - 64px - env(safe-area-inset-bottom,0px) - 8px);
+  }
+  body.in-journey.on-camina .tab-camina .panorama{
+    height:auto;flex:1 1 auto;min-height:0;margin:8px 0 8px;
+  }
+  body.in-journey.on-camina .tab-camina .coach-card-game{margin-bottom:0}
 
   .day{background:var(--paper);border:1px solid var(--ink-line);border-radius:16px;padding:16px;margin-bottom:14px}
   .day-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:4px}
@@ -1260,6 +1286,7 @@
     <!-- COACH PANEL — voice-of-your-coach. Thin, horizontal: small pose + line.
          Hidden until a coach is chosen. Updates on game-entry and on sync/log. -->
     <div class="coach-card-game hide" id="coach-card-game">
+      <button class="ccg-close" id="ccg-close" type="button" aria-label="Ocultar coach">×</button>
       <div class="ccg-pose"><img id="ccg-pose-img" alt=""></div>
       <div class="ccg-body">
         <div class="ccg-head">
@@ -1269,8 +1296,7 @@
         <div class="ccg-line" id="ccg-line">—</div>
       </div>
     </div>
-
-    <p class="credit"><small>2.000 pasos ≈ 1 milla · distancias reales aproximadas.</small></p>
+    <button class="coach-open-pill hide" id="coach-open-pill" type="button">▸ Abrir coach</button>
 
   </section>
   <!-- ====================== /TAB: CAMINA ==================================== -->
@@ -1336,6 +1362,8 @@
       </div>
 
       <button class="btn block sm" id="route-overview-btn" type="button" style="margin-top:6px;display:none">Ver resumen de la ruta</button>
+
+      <p class="credit"><small>2.000 pasos ≈ 1 milla · distancias reales aproximadas.</small></p>
     </div>
   </section>
 
@@ -3631,6 +3659,8 @@ function switchTab(name){
     b.classList.toggle('active', b.getAttribute('data-tab') === name);
   });
   _activeTab = name;
+  document.body.classList.toggle('on-camina', name === 'camina');  // lock layout on Camina
+  if (name === 'camina' && typeof applyCoachVisibility === 'function') applyCoachVisibility();
   // Render the tab's content on entry
   if (name === 'mapa')   renderMapaTab();
   if (name === 'pasaporte') renderPasaporte();
@@ -4766,11 +4796,21 @@ function coachPickLine(cid, frac, milestoneKey){
   return pool[Math.floor(Math.random()*pool.length)];
 }
 
+/* The user can hide the coach card (× ) and reopen it with the "abrir coach"
+   pill; the choice is remembered. applyCoachVisibility() is the single place
+   that decides whether the card or the pill is showing. */
+function applyCoachVisibility(){
+  var card = document.getElementById('coach-card-game');
+  var pill = document.getElementById('coach-open-pill');
+  var hidden = !!state.coachHidden;
+  if (card) card.classList.toggle('hide', hidden || !state.coach);
+  if (pill) pill.classList.toggle('hide', !hidden);
+}
 function updateCoachCard(coachId, line, opts){
   var card = document.getElementById('coach-card-game');
   if (!card) return;
-  if (!coachId || !line){ card.classList.add('hide'); return; }
-  card.classList.remove('hide');
+  if (!coachId || !line){ card.classList.add('hide'); applyCoachVisibility(); return; }
+  card.classList.toggle('hide', !!state.coachHidden);
   var poseId = (opts && opts.poseId) || coachPickPose(coachId);
   document.getElementById('ccg-pose-img').src = coachPoseFile(coachId, poseId);
   document.getElementById('ccg-name').textContent = COACH_NAMES[coachId] || coachId;
@@ -4782,6 +4822,7 @@ function updateCoachCard(coachId, line, opts){
   card.classList.add('flash');
   clearTimeout(updateCoachCard._t);
   updateCoachCard._t = setTimeout(function(){card.classList.remove('flash');}, 700);
+  applyCoachVisibility();
 }
 
 function coachJourneyFrac(){
@@ -4998,6 +5039,11 @@ var _logBtn=document.getElementById('log-btn'); if(_logBtn) _logBtn.onclick=func
 };
 var _stepsIn=document.getElementById('steps-in'); if(_stepsIn) _stepsIn.addEventListener('keydown',function(e){if(e.key==='Enter'){var lb=document.getElementById('log-btn'); if(lb) lb.click();}});
 document.getElementById('rankbar').addEventListener('click',showRangos);
+// Coach card: hide with ×, reopen with the "abrir coach" pill (remembered).
+var _ccgClose=document.getElementById('ccg-close');
+if(_ccgClose) _ccgClose.onclick=function(){ state.coachHidden=true; save(); applyCoachVisibility(); };
+var _coachPill=document.getElementById('coach-open-pill');
+if(_coachPill) _coachPill.onclick=function(){ state.coachHidden=false; save(); coachGreet(); applyCoachVisibility(); };
 
 /* ============================================================================
    Content
