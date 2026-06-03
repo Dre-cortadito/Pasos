@@ -3814,8 +3814,11 @@ function renderIncaAerial(svg, walkedMi, totalMi){
   var wpts=[]; for(i=0;i<=reachedIdx;i++) wpts.push(pts[i]);
   if(reachedIdx>=0 && reachedIdx<N-1 && wMi>stops[reachedIdx].mi) wpts.push(playerPt);
   if(reachedIdx<0){ playerPt=pts[0]; wpts=[pts[0]]; }
-  var s='<image href="'+A.img+'" x="0" y="0" width="'+VW+'" height="'+VH+'" preserveAspectRatio="xMidYMid slice"/>';
-  s+='<rect x="0" y="0" width="'+VW+'" height="'+VH+'" fill="#fbfaf6" opacity="0.30"/>';
+  // Desaturate the painted basemap to neutral grey so its teal rivers stop
+  // clashing with the mint route line — mint stays the only saturated colour.
+  var s='<defs><filter id="aerGray" x="0" y="0" width="100%" height="100%"><feColorMatrix type="saturate" values="0.12"/></filter></defs>';
+  s+='<image href="'+A.img+'" x="0" y="0" width="'+VW+'" height="'+VH+'" preserveAspectRatio="xMidYMid slice" filter="url(#aerGray)"/>';
+  s+='<rect x="0" y="0" width="'+VW+'" height="'+VH+'" fill="#fbfaf6" opacity="0.34"/>';
   var full=smoothMapPath(pts);
   s+='<path d="'+full+'" fill="none" stroke="#fbfaf6" stroke-opacity="0.85" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>';
   s+='<path d="'+full+'" fill="none" stroke="#1a1614" stroke-opacity="0.55" stroke-width="3" stroke-dasharray="1 10" stroke-linecap="round"/>';
