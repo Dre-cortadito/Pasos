@@ -728,6 +728,9 @@
   .pp-locked.next{border-style:solid;border-color:var(--accent-soft);opacity:1}
   .pp-lock-ico{font-size:17px;flex:none;width:22px;text-align:center;color:var(--ink-soft)}
   .pp-locked.next .pp-lock-ico{color:var(--accent)}
+  .pp-lock-ico.pp-lock-img{background:currentColor;width:18px;height:18px;font-size:0;
+    -webkit-mask-size:contain;mask-size:contain;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
+    -webkit-mask-position:center;mask-position:center}
   .pp-lock-body{flex:1;min-width:0}
   .pp-lock-nm{font-family:var(--font-display);font-weight:700;font-size:15px;color:var(--ink)}
   .pp-lock-ft{font-size:12.5px;color:var(--ink-soft);margin-top:1px}
@@ -1085,11 +1088,11 @@
   /* Animated alpaca walker (Inca route) — a 5-frame sprite strip cycled with
      steps(5). Flipped to face the direction of travel (rightward). */
   .pano-pl-hiker .alpaca-walk{
-    width:54px;height:54px;display:block;transform:scaleX(-1);
-    background:url('ui-icons/alpaca-walk.png') 0 0 / 270px 54px no-repeat;
+    width:36px;height:40px;display:block;
+    background:url('ui-icons/alpaca-walk.png') 0 0 / 180px 40px no-repeat;
     animation:alpacaWalk .7s steps(5) infinite;
   }
-  @keyframes alpacaWalk{ from{background-position-x:0} to{background-position-x:-270px} }
+  @keyframes alpacaWalk{ from{background-position-x:0} to{background-position-x:-180px} }
   /* Foreground prop sprites: sit on the same ground line as the avatar
      (bottom:13%), scale with band height (heightPct → height %), and live
      behind the avatar (z-index 5 vs avatar 10) so the avatar walks IN
@@ -1266,26 +1269,6 @@
         <div class="ccg-line" id="ccg-line">—</div>
       </div>
     </div>
-
-    <!-- STEPS OF THE DAY — count shown small on the panorama; this panel is the
-         goal bar + sync/log controls. -->
-    <div class="day">
-      <details class="manual">
-        <summary>Anotar mis pasos a mano</summary>
-        <div class="manual-row">
-          <input id="steps-in" type="number" inputmode="numeric" placeholder="p. ej. 8.000" min="0">
-          <button class="btn primary sm" id="log-btn">Guardar</button>
-        </div>
-      </details>
-
-      <div class="day-meta">
-        <span>Tu meta: <a id="goal-link"></a> · Recomendada: 8.000</span>
-        <a id="undo-link" class="hide">Borrar pasos de hoy</a>
-      </div>
-    </div>
-
-
-    <button class="btn block sm" id="reset-btn" style="margin-top:6px">Reiniciar esta ruta</button>
 
     <p class="credit"><small>2.000 pasos ≈ 1 milla · distancias reales aproximadas.</small></p>
 
@@ -2840,7 +2823,7 @@ function _trailMeta(j,walked){
   if(done){
     rows='<div class="tm-row"><span>¡Llegaste a</span><b>'+shortName(fin.n)+'</b><i>'+fmtMi(j.total)+'</i></div>';
   } else {
-    var nrow = next ? '<div class="tm-row"><span>Próxima parada</span><b>'+shortName(next.n)+'</b><i>'+fmtMi1(Math.max(0,next.mi-walked))+'</i></div>' : '';
+    var nrow = next ? '<div class="tm-row"><span>Próxima parada</span><b>→ '+shortName(next.n)+'</b><i>'+fmtMi1(Math.max(0,next.mi-walked))+'</i></div>' : '';
     rows = nrow + '<div class="tm-row"><span>Destino</span><b>'+shortName(fin.n)+'</b></div>';
   }
   return '<div class="trail-meta">'+rows+'</div>';
@@ -4109,10 +4092,7 @@ function renderAjustesTab(){
     renderAjustesTab();
   };
   var reset = byId('ajustes-reset');
-  if (reset) reset.onclick = function(){
-    var rbtn = byId('reset-btn');
-    if (rbtn) rbtn.click();
-  };
+  if (reset) reset.onclick = function(){ if (typeof resetRoute === 'function') resetRoute(); };
 })();
 
 /* ============================================================================
@@ -4557,8 +4537,8 @@ function render(){
     '<span class="'+(hitGoal?'hit':'')+'">'+(hitGoal?'✓ ':'')+'Tu meta<b>'+nFmt(state.goal)+'</b></span>'+
     '<span class="'+(hitRec?'hit':'')+'" style="text-align:right">'+(hitRec?'✓ ':'')+'Recomendada<b>'+nFmt(RECOMMENDED)+'</b></span>';
 
-  document.getElementById('goal-link').textContent=nFmt(state.goal)+' pasos';
-  document.getElementById('undo-link').classList.toggle('hide',ts<=0);
+  var _gl=document.getElementById('goal-link'); if(_gl) _gl.textContent=nFmt(state.goal)+' pasos';
+  var _ul=document.getElementById('undo-link'); if(_ul) _ul.classList.toggle('hide',ts<=0);
 
   // passport — rendered as a banner feed in the Pasaporte tab
   renderPasaporte(j, walked);
@@ -4600,7 +4580,9 @@ function renderPasaporte(j, walked){
     var st=o.st, isNext=(idx===0);
     var foot=isNext?('Próxima parada — a '+fmtMi1(Math.max(0,st.mi-walked))+'.'):'Bloqueado — sigue caminando.';
     html+='<div class="pp-locked'+(isNext?' next':'')+'">'
-      +'<span class="pp-lock-ico">'+(isNext?'◷':'🔒')+'</span>'
+      +(isNext
+          ? '<span class="pp-lock-ico">→</span>'
+          : '<span class="pp-lock-ico pp-lock-img" style="-webkit-mask-image:url(\'ui-icons/lock.png\');mask-image:url(\'ui-icons/lock.png\')"></span>')
       +'<div class="pp-lock-body"><div class="pp-lock-nm">'+st.n+'</div><div class="pp-lock-ft">'+foot+'</div></div>'
       +'<span class="pp-lock-mi">'+fmtMi(st.mi)+'</span></div>';
   });
@@ -4998,19 +4980,22 @@ function fallback(txt){try{prompt('Copia tu resultado:',txt);}catch(e){}}
 /* ============================================================================
    Goal editor + clear-today + reset + manual entry
 ============================================================================ */
-document.getElementById('goal-link').onclick=showGoalPicker;   // same modal as the landing's Meta selector
-document.getElementById('undo-link').onclick=function(){
+// Reset the active route (used by the Ajustes "Reiniciar esta ruta" row).
+function resetRoute(){
+  if(!current) return;
+  if(confirm('¿Reiniciar esta ruta desde cero?')){ state.j[current]={started:todayISO(),days:{}}; save(); render(); }
+}
+// The manual-entry / day-meta box was removed from Camina; guard any leftovers.
+var _gLink=document.getElementById('goal-link'); if(_gLink) _gLink.onclick=showGoalPicker;
+var _uLink=document.getElementById('undo-link'); if(_uLink) _uLink.onclick=function(){
   var p=state.j[current];if(!p||!p.days)return;delete p.days[todayISO()];save();render();
 };
-document.getElementById('reset-btn').onclick=function(){
-  if(confirm('¿Reiniciar esta ruta desde cero?')){state.j[current]={started:todayISO(),days:{}};save();render();}
-};
 var _legacySync=document.getElementById('sync-btn'); if(_legacySync) _legacySync.onclick=syncSteps;
-document.getElementById('log-btn').onclick=function(){
+var _logBtn=document.getElementById('log-btn'); if(_logBtn) _logBtn.onclick=function(){
   var inp=document.getElementById('steps-in');var n=parseInt(inp.value,10);
   if(n>=0)recordToday(n);inp.value='';
 };
-document.getElementById('steps-in').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('log-btn').click();});
+var _stepsIn=document.getElementById('steps-in'); if(_stepsIn) _stepsIn.addEventListener('keydown',function(e){if(e.key==='Enter'){var lb=document.getElementById('log-btn'); if(lb) lb.click();}});
 document.getElementById('rankbar').addEventListener('click',showRangos);
 
 /* ============================================================================
