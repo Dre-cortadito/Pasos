@@ -286,10 +286,10 @@
   .route-item .ri-meta{font-size:11.5px;color:var(--ink-soft);margin-top:6px;letter-spacing:.2px}
   .route-item .ri-right{flex:none;text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
   .ri-tag{font-size:9.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;padding:3px 8px;border-radius:999px;border:1px solid var(--ink-line);color:var(--ink-soft);white-space:nowrap}
-  .ri-tag.free{color:var(--success);border-color:var(--success)}
+  .ri-tag.free{color:var(--accent-deep);border-color:var(--accent-deep)}
   .ri-tag.club{color:var(--accent);border-color:var(--accent)}
   .ri-status{font-size:11px;font-weight:700;color:var(--accent);white-space:nowrap}
-  .ri-status.activa{color:var(--success)}
+  .ri-status.activa{color:var(--accent-deep)}
 
   /* Goal picker rows — preset step targets + custom */
   .goal-list{display:flex;flex-direction:column;gap:10px;margin:14px 0 4px}
@@ -4633,7 +4633,7 @@ function renderPasaporte(j, walked){
     var foot=isNext?('Próxima parada — a '+fmtMi1(Math.max(0,st.mi-walked))+'.'):'Bloqueado — sigue caminando.';
     html+='<div class="pp-locked'+(isNext?' next':'')+'">'
       +(isNext
-          ? '<span class="pp-lock-ico">→</span>'
+          ? '<span class="pp-lock-ico pp-arrow"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h13"/><path d="M13 6l7 6-7 6"/></svg></span>'
           : '<span class="pp-lock-ico pp-lock-img" style="-webkit-mask-image:url(\'ui-icons/lock.png\');mask-image:url(\'ui-icons/lock.png\')"></span>')
       +'<div class="pp-lock-body"><div class="pp-lock-nm">'+st.n+'</div><div class="pp-lock-ft">'+foot+'</div></div>'
       +'<span class="pp-lock-mi">'+fmtMi(st.mi)+'</span></div>';
