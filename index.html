@@ -3453,13 +3453,28 @@ function buildPanorama(j,walked,c){
   s+='</svg>';return s;
 }
 
+// Total scrollable width of whatever panorama is showing (the image-tile band
+// for Inca, the procedural SVG for the other routes). Used to map scroll
+// position ⇄ miles so the location label and auto-scroll follow the player.
+function panoBandWidth(){
+  var ps=document.getElementById('pano-scroll'); if(!ps) return 1;
+  if(current==='inca' && typeof INCA_COMPOSITE_SEGMENTS!=='undefined'){
+    return INCA_COMPOSITE_SEGMENTS.length * ps.clientHeight * (COMPOSITE_SEG_W/COMPOSITE_SEG_H);
+  }
+  return ps.scrollWidth || 1;
+}
 function updatePanoOverlay(){
   var jj=J(current); if(!jj) return;
   var ps=document.getElementById('pano-scroll'); if(!ps) return;
-  var pxR=ps.clientHeight/PANO_H;
-  var centerI=(ps.scrollLeft+ps.clientWidth/2)/pxR;
-  var innerW=PANO_W-PANO_PADL-PANO_PADR;
-  var milesAt=clamp((centerI-PANO_PADL)/innerW,0,1)*jj.total;
+  var milesAt;
+  if(current==='inca' && typeof INCA_COMPOSITE_SEGMENTS!=='undefined'){
+    milesAt=clamp((ps.scrollLeft+ps.clientWidth/2)/panoBandWidth(),0,1)*jj.total;
+  } else {
+    var pxR=ps.clientHeight/PANO_H;
+    var centerI=(ps.scrollLeft+ps.clientWidth/2)/pxR;
+    var innerW=PANO_W-PANO_PADL-PANO_PADR;
+    milesAt=clamp((centerI-PANO_PADL)/innerW,0,1)*jj.total;
+  }
 
   // figure out which section (between which two stops) we're in
   var sectionI=jj.stops.length-1;
