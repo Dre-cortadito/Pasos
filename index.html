@@ -950,7 +950,7 @@
   .elev-clip .elev-svg{display:block;height:auto;width:300%;min-width:980px;will-change:transform}
   /* Slider row: arrows + range, with a hint under it */
   .rm-slider-row{display:flex;align-items:center;gap:9px;margin-top:12px}
-  .rm-slider-row .rm-arrow{flex:none;color:var(--accent);font-size:17px;font-weight:800;line-height:1;user-select:none}
+  .rm-slider-row .rm-arrow{flex:none;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--accent-soft);color:var(--accent-deep);font-size:15px;font-weight:800;line-height:1;user-select:none}
   .rm-slider{-webkit-appearance:none;appearance:none;flex:1;height:26px;margin:0;background:transparent;cursor:pointer;touch-action:none}
   .rm-slider::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:var(--ink-line)}
   .rm-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;border-radius:50%;background:var(--accent);border:3px solid var(--bg);box-shadow:0 1px 5px rgba(0,0,0,.28);margin-top:-8px}
@@ -2936,7 +2936,7 @@ function buildTrailProfile(j,walked){
   }); }
   // areas
   s+='<path d="'+line+' L '+pts[N-1].x+' '+baseY+' L '+pts[0].x+' '+baseY+' Z" fill="'+INK+'" fill-opacity="0.07"/>';
-  if(wpts.length>1) s+='<path d="'+smoothMapPath(wpts,0.42)+' L '+px+' '+baseY+' L '+pts[0].x+' '+baseY+' Z" fill="'+ACC+'" fill-opacity="0.22"/>';
+  if(wpts.length>1) s+='<path d="'+smoothMapPath(wpts,0.42)+' L '+px+' '+baseY+' L '+pts[0].x+' '+baseY+' Z" fill="'+ACC+'" fill-opacity="0.42"/>';
   // lines — full route clearly visible (dark), walked portion in bold mint
   s+='<path d="'+line+'" fill="none" stroke="'+INK+'" stroke-opacity="0.55" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
   if(wpts.length>1) s+='<path d="'+smoothMapPath(wpts,0.42)+'" fill="none" stroke="'+ACC+'" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>';
@@ -3647,6 +3647,20 @@ function renderRouteMap(){
    BOTTOM TAB BAR — switches between Camina / Mapa / Logros / Ajustes
 ============================================================================ */
 var _activeTab = 'camina';
+/* Size the Camina screen to exactly fill the viewport (header → tab bar) so the
+   panorama grows to fill the space and the coach sits at the bottom edge. Set in
+   JS because a CSS calc(100dvh …) doesn't always apply on iOS. */
+function fitCamina(){
+  if(!document.body.classList.contains('on-camina')) return;
+  var el=document.querySelector('#journey .tab-camina'); if(!el) return;
+  var bar=document.getElementById('tab-bar');
+  var barH=(bar && document.body.classList.contains('in-journey')) ? bar.getBoundingClientRect().height : 64;
+  var vh=(window.visualViewport && window.visualViewport.height) ? window.visualViewport.height : window.innerHeight;
+  el.style.height=Math.max(360, Math.round(vh - 66 - barH - 4))+'px';
+}
+window.addEventListener('resize', function(){ requestAnimationFrame(fitCamina); });
+if(window.visualViewport) window.visualViewport.addEventListener('resize', function(){ requestAnimationFrame(fitCamina); });
+
 function switchTab(name){
   var pages = document.querySelectorAll('#journey > .tab-page');
   pages.forEach(function(p){
@@ -3658,6 +3672,7 @@ function switchTab(name){
   });
   _activeTab = name;
   document.body.classList.toggle('on-camina', name === 'camina');  // lock layout on Camina
+  requestAnimationFrame(fitCamina);
   if (name === 'camina' && typeof applyCoachVisibility === 'function') applyCoachVisibility();
   // Render the tab's content on entry
   if (name === 'mapa')   renderMapaTab();
@@ -4454,6 +4469,7 @@ function buildRankTrack(ts){
 function render(){
   var j=J(current);if(!j)return;
   applyRouteTheme();   // re-tint the app to this route's palette
+  fitCamina();         // make the Camina panorama fill the screen before it renders
   var walked=miles(current), done=walked>=j.total;
   var ts=todaySteps(current), ri=rankIndex(ts), atMaestro=ri>=RANKS.length-1;
 
@@ -4527,12 +4543,12 @@ function render(){
     } else if(_act>0 && _avgCal>0){
       var _real=Math.ceil(remainSteps/_avgCal);
       if(_real>999){
-        _fin.innerHTML='Caminas <b>'+nFmt(Math.round(_avgCal))+'</b> pasos/día de media (con descansos). A esa cadencia, te faltan <b>+999</b> días.';
+        _fin.innerHTML='A tu cadencia actual (con descansos) llegarías en <b>+999</b> días.';
       } else {
         var _dt=new Date(); _dt.setHours(0,0,0,0); _dt.setDate(_dt.getDate()+_real);
         var _sy=_dt.getFullYear()===new Date().getFullYear();
         var _ds=_dt.toLocaleDateString('es', _sy?{day:'numeric',month:'long'}:{day:'numeric',month:'long',year:'numeric'});
-        _fin.innerHTML='Caminas <b>'+nFmt(Math.round(_avgCal))+'</b> pasos/día de media (con descansos). A esa cadencia te faltan <b>'+nFmt(_real)+'</b> días — llegarías <span class="ef-accent">~'+_ds+'</span>.';
+        _fin.innerHTML='A tu cadencia actual (con descansos) llegarías alrededor del <span class="ef-accent">'+_ds+'</span>.';
       }
     } else {
       _fin.innerHTML='Empieza a caminar y aquí verás cuándo llegarías a este ritmo.';
