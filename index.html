@@ -630,12 +630,12 @@
      mint border flash to signal "new". */
   .coach-card-game{
     display:flex;align-items:center;gap:10px;
-    background:var(--paper);border:1px solid var(--ink-line);border-radius:14px;
+    background:var(--accent);border:1px solid var(--accent-deep);border-radius:14px;
     padding:8px 12px 8px 8px;margin-bottom:12px;
     transition:box-shadow .25s,border-color .25s;
     position:relative;
   }
-  .coach-card-game.flash{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .coach-card-game.flash{border-color:var(--accent-deep);box-shadow:0 0 0 3px rgba(255,255,255,.5)}
   .coach-card-game .ccg-pose{
     flex:none;width:64px;height:64px;
     border-radius:10px;background:var(--bg);border:1px solid var(--ink-line);
@@ -650,22 +650,22 @@
   .coach-card-game .ccg-head{display:flex;align-items:baseline;gap:6px;line-height:1}
   .coach-card-game .ccg-label{
     font-size:9.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;
-    color:var(--accent-deep);
+    color:#0a2e23;
   }
   .coach-card-game .ccg-name{
     font-family:var(--font-display);font-weight:700;font-style:italic;
-    font-size:15px;line-height:1;color:var(--ink);
+    font-size:15px;line-height:1;color:#08251c;
   }
   .coach-card-game .ccg-line{
     font-size:13px;color:var(--ink);line-height:1.35;
-    position:relative;background:var(--accent-soft);border-radius:10px;padding:7px 10px;
+    position:relative;background:var(--paper);border-radius:10px;padding:7px 10px;
   }
   /* Speech-bubble tail pointing at the pose */
   .coach-card-game .ccg-line::before{
     content:'';position:absolute;left:-6px;top:9px;
     width:0;height:0;
     border-top:5px solid transparent;border-bottom:6px solid transparent;
-    border-right:7px solid var(--accent-soft);
+    border-right:7px solid var(--paper);
   }
   @media (max-width:380px){
     .coach-card-game{padding:7px 10px 7px 7px;gap:9px;border-radius:13px}
@@ -673,20 +673,6 @@
     .coach-card-game .ccg-name{font-size:14px}
     .coach-card-game .ccg-line{font-size:12.5px;padding:6px 9px}
   }
-  /* Close (×) on the coach card + the little "open coach" pill when it's hidden */
-  .coach-card-game .ccg-close{
-    position:absolute;top:3px;right:5px;width:22px;height:22px;border:0;padding:0;
-    background:transparent;color:var(--ink-soft);font-size:18px;line-height:20px;
-    cursor:pointer;border-radius:50%;text-align:center;z-index:2;
-  }
-  .coach-card-game .ccg-close:hover{background:var(--ink-line);color:var(--ink)}
-  .coach-open-pill{
-    align-self:center;margin:0 auto;border:1px solid var(--ink-line);
-    background:var(--paper);color:var(--accent-deep);font-weight:700;font-size:12.5px;
-    padding:6px 16px;border-radius:999px;cursor:pointer;flex:none;
-  }
-  .coach-open-pill:hover{background:var(--accent-soft);border-color:var(--accent)}
-  .coach-open-pill.hide{display:none}
   /* CAMINA = a locked screen: fills the viewport, the panorama grows to fill the
      space, and the coach (or its "abrir coach" pill) is pinned to the bottom edge.
      No vertical page scroll here — only the panorama scrolls, horizontally. */
@@ -940,6 +926,14 @@
   .tab-mapa-inner .rm-stat .l{font-size:10px;letter-spacing:.7px;text-transform:uppercase;color:var(--ink-soft);margin-top:5px;font-weight:600}
   /* Each section is its own boxed card */
   .map-card{background:var(--paper);border:1px solid var(--ink-line);border-radius:16px;padding:14px 14px 12px;margin:14px 0}
+  /* Inverted "feature" box: mint frame, content sits inside like the coach card */
+  .map-card.aerial{background:var(--accent);border-color:var(--accent-deep)}
+  .map-card.aerial .rm-title{color:#08251c}
+  .map-card.aerial .rm-sub{color:#0a3327}
+  .map-card.aerial .rm-arrow{color:#08251c}
+  .map-card.aerial .rm-slider-hint{color:#0a3327}
+  .map-card.aerial .rm-slider::-webkit-slider-runnable-track{background:rgba(0,0,0,.18)}
+  .map-card.aerial .rm-slider::-moz-range-track{background:rgba(0,0,0,.18)}
   .tab-mapa-inner > .map-card:first-child{margin-top:6px}
   .map-card > .rm-head{margin:0 0 10px}
   .bar-wrap svg{display:block;width:100%;height:auto}
@@ -1284,7 +1278,6 @@
     <!-- COACH PANEL — voice-of-your-coach. Thin, horizontal: small pose + line.
          Hidden until a coach is chosen. Updates on game-entry and on sync/log. -->
     <div class="coach-card-game hide" id="coach-card-game">
-      <button class="ccg-close" id="ccg-close" type="button" aria-label="Ocultar coach">×</button>
       <div class="ccg-pose"><img id="ccg-pose-img" alt=""></div>
       <div class="ccg-body">
         <div class="ccg-head">
@@ -1294,7 +1287,6 @@
         <div class="ccg-line" id="ccg-line">—</div>
       </div>
     </div>
-    <button class="coach-open-pill hide" id="coach-open-pill" type="button">▸ Abrir coach</button>
 
   </section>
   <!-- ====================== /TAB: CAMINA ==================================== -->
@@ -1322,7 +1314,7 @@
       </div>
 
       <!-- 2) AERIAL MAP CARD -->
-      <div class="map-card">
+      <div class="map-card aerial">
         <div class="rm-head"><div class="rm-titles">
           <div class="rm-title">Vista aérea del sendero</div>
           <div class="rm-sub" id="rm-sub-tab">—</div>
@@ -3459,7 +3451,9 @@ function buildPanorama(j,walked,c){
 function panoBandWidth(){
   var ps=document.getElementById('pano-scroll'); if(!ps) return 1;
   if(current==='inca' && typeof INCA_COMPOSITE_SEGMENTS!=='undefined'){
-    return INCA_COMPOSITE_SEGMENTS.length * ps.clientHeight * (COMPOSITE_SEG_W/COMPOSITE_SEG_H);
+    var computed=INCA_COMPOSITE_SEGMENTS.length * ps.clientHeight * (COMPOSITE_SEG_W/COMPOSITE_SEG_H);
+    var measured=ps.scrollWidth;                       // real rendered band width once the tiles load
+    return (measured > computed*0.5) ? measured : computed;   // fall back to computed before images lay out
   }
   return ps.scrollWidth || 1;
 }
@@ -3672,10 +3666,8 @@ function fitCamina(){
   var vh=(window.visualViewport && window.visualViewport.height) ? window.visualViewport.height : window.innerHeight;
   var panoTop=pano.getBoundingClientRect().top;                 // below the rank bar + title
   var coach=document.getElementById('coach-card-game');
-  var pill=document.getElementById('coach-open-pill');
-  var below=0;                                                  // space the coach / pill needs under the image
+  var below=0;                                                  // space the coach card needs under the image
   if(coach && !coach.classList.contains('hide')) below=coach.getBoundingClientRect().height+10;
-  else if(pill && !pill.classList.contains('hide')) below=pill.getBoundingClientRect().height+10;
   var h=vh - barH - panoTop - below - 8;
   pano.style.height=Math.max(220, Math.round(h))+'px';          // image grows to fill the screen
 }
@@ -4452,12 +4444,23 @@ function _onParallaxScroll(){
   // No-op now — the band scrolls natively with the host, no transform math.
 }
 function autoScrollPanoIfNeeded(j,walked){
-  if(_panoAutoScrolled)return;
   var ps=document.getElementById('pano-scroll'); if(!ps)return;
-  var pxR=ps.clientHeight/PANO_H;
-  var innerW=PANO_W-PANO_PADL-PANO_PADR;
-  var hxPx=(PANO_PADL+(walked/j.total)*innerW)*pxR;
-  setTimeout(function(){ps.scrollLeft=Math.max(0,hxPx-ps.clientWidth/2); _panoAutoScrolled=true; updatePanoOverlay();},10);
+  var isInca=(current==='inca' && typeof INCA_COMPOSITE_SEGMENTS!=='undefined');
+  if(!isInca && _panoAutoScrolled)return;   // procedural routes: centre once per open
+  var hxPx;
+  if(isInca){
+    hxPx=(walked/j.total)*panoBandWidth();   // Inca: re-centre on the walker each render so it follows progress
+  } else {
+    var pxR=ps.clientHeight/PANO_H;
+    var innerW=PANO_W-PANO_PADL-PANO_PADR;
+    hxPx=(PANO_PADL+(walked/j.total)*innerW)*pxR;
+  }
+  setTimeout(function(){
+    var band=isInca?panoBandWidth():ps.scrollWidth;
+    var max=Math.max(0, band-ps.clientWidth);
+    ps.scrollLeft=Math.max(0, Math.min(hxPx-ps.clientWidth/2, max));
+    _panoAutoScrolled=true; updatePanoOverlay();
+  },10);
 }
 
 /* ----- Daily rank track ----- */
@@ -4828,17 +4831,14 @@ function coachPickLine(cid, frac, milestoneKey){
    that decides whether the card or the pill is showing. */
 function applyCoachVisibility(){
   var card = document.getElementById('coach-card-game');
-  var pill = document.getElementById('coach-open-pill');
-  var hidden = !!state.coachHidden;
-  if (card) card.classList.toggle('hide', hidden || !state.coach);
-  if (pill) pill.classList.toggle('hide', !hidden);
-  requestAnimationFrame(fitCamina);   // re-grow the panorama once the coach/pill state is set
+  if (card) card.classList.toggle('hide', !state.coach);   // always visible once a coach is chosen
+  requestAnimationFrame(fitCamina);
 }
 function updateCoachCard(coachId, line, opts){
   var card = document.getElementById('coach-card-game');
   if (!card) return;
   if (!coachId || !line){ card.classList.add('hide'); applyCoachVisibility(); return; }
-  card.classList.toggle('hide', !!state.coachHidden);
+  card.classList.remove('hide');
   var poseId = (opts && opts.poseId) || coachPickPose(coachId);
   document.getElementById('ccg-pose-img').src = coachPoseFile(coachId, poseId);
   document.getElementById('ccg-name').textContent = COACH_NAMES[coachId] || coachId;
@@ -5094,11 +5094,6 @@ var _logBtn=document.getElementById('log-btn'); if(_logBtn) _logBtn.onclick=func
 };
 var _stepsIn=document.getElementById('steps-in'); if(_stepsIn) _stepsIn.addEventListener('keydown',function(e){if(e.key==='Enter'){var lb=document.getElementById('log-btn'); if(lb) lb.click();}});
 document.getElementById('rankbar').addEventListener('click',showRangos);
-// Coach card: hide with ×, reopen with the "abrir coach" pill (remembered).
-var _ccgClose=document.getElementById('ccg-close');
-if(_ccgClose) _ccgClose.onclick=function(){ state.coachHidden=true; save(); applyCoachVisibility(); };
-var _coachPill=document.getElementById('coach-open-pill');
-if(_coachPill) _coachPill.onclick=function(){ state.coachHidden=false; save(); coachGreet(); applyCoachVisibility(); };
 
 /* ============================================================================
    Content
