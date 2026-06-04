@@ -927,6 +927,8 @@
   .map-card{background:var(--paper);border:1px solid var(--ink-line);border-radius:16px;padding:14px 14px 12px;margin:14px 0}
   /* Soft-mint "feature" box (same light mint as the recommended-pace tile) */
   .map-card.aerial{background:var(--accent-soft);border-color:var(--accent-soft)}
+  .map-card.aerial .rm-slider::-webkit-slider-runnable-track{background:#fff}
+  .map-card.aerial .rm-slider::-moz-range-track{background:#fff}
   .tab-mapa-inner > .map-card:first-child{margin-top:6px}
   .map-card > .rm-head{margin:0 0 10px}
   .bar-wrap svg{display:block;width:100%;height:auto}
@@ -2832,8 +2834,8 @@ function _trailMeta(j,walked){
   if(done){
     rows='<div class="tm-row"><span>¡Llegaste a</span><b>'+shortName(fin.n)+'</b><i>'+fmtMi(j.total)+'</i></div>';
   } else {
-    var nrow = next ? '<div class="tm-row"><span>Próxima parada</span><b>'+shortName(next.n)+'</b><i>'+fmtMi1(Math.max(0,next.mi-walked))+'</i></div>' : '';
-    rows = nrow + '<div class="tm-row"><span>Destino</span><b>'+shortName(fin.n)+'</b></div>';
+    var nrow = next ? '<div class="tm-row"><span>Próxima parada</span><b>'+shortName(next.n)+'</b><i>a '+fmtMi1(Math.max(0,next.mi-walked))+'</i></div>' : '';
+    rows = nrow + '<div class="tm-row"><span>Destino</span><b>'+shortName(fin.n)+'</b><i>a '+fmtMi1(Math.max(0,j.total-walked))+'</i></div>';
   }
   return '<div class="trail-meta">'+rows+'</div>';
 }
@@ -4703,8 +4705,8 @@ function recordToday(newTotal){
   j.stops.forEach(function(st){if(st.mi>0 && beforeMi<st.mi-0.001 && afterMi>=st.mi-0.001)reached=st;});
 
   // 2) daily tiers (gate per date so they fire once a day)
-  var iso2=iso, gMeta='pasos-meta-'+iso2, gRec='pasos-rec-'+iso2,
-      gSilver='pasos-silver-'+iso2, gLey='pasos-ley-'+iso2;
+  var iso2=iso, gMeta='pasos-meta-'+current+'-'+iso2, gRec='pasos-rec-'+current+'-'+iso2,
+      gSilver='pasos-silver-'+current+'-'+iso2, gLey='pasos-ley-'+current+'-'+iso2;
   var newMeta   = newTotal>=state.goal   && prevToday<state.goal   && !LS.getItem(gMeta);
   var newRec    = newTotal>=RECOMMENDED  && prevToday<RECOMMENDED  && !LS.getItem(gRec);
   var newSilver = newTotal>=SILVER       && prevToday<SILVER       && !LS.getItem(gSilver);
@@ -5072,7 +5074,14 @@ function fallback(txt){try{prompt('Copia tu resultado:',txt);}catch(e){}}
 // Reset the active route (used by the Ajustes "Reiniciar esta ruta" row).
 function resetRoute(){
   if(!current) return;
-  if(confirm('¿Reiniciar esta ruta desde cero?')){ state.j[current]={started:todayISO(),days:{}}; save(); render(); }
+  if(confirm('¿Reiniciar esta ruta desde cero?')){
+    var iso=todayISO();
+    // clear today's achievement gates + this route's milestone gates so the
+    // meta / 10k / 12k / 50% / 85% notifications can fire again on a fresh run
+    ['meta','rec','silver','ley'].forEach(function(k){ LS.removeItem('pasos-'+k+'-'+current+'-'+iso); });
+    ['half','almost','finish'].forEach(function(k){ LS.removeItem('pasos-ms-'+current+'-'+k); });
+    state.j[current]={started:iso,days:{}}; save(); render();
+  }
 }
 // The manual-entry / day-meta box was removed from Camina; guard any leftovers.
 var _gLink=document.getElementById('goal-link'); if(_gLink) _gLink.onclick=showGoalPicker;
