@@ -689,13 +689,9 @@
      space, and the coach (or its "abrir coach" pill) is pinned to the bottom edge.
      No vertical page scroll here — only the panorama scrolls, horizontally. */
   body.in-journey.on-camina main{overflow:hidden;padding-bottom:0}
-  body.in-journey.on-camina .tab-camina{
-    display:flex;flex-direction:column;padding-bottom:0;
-    height:calc(100dvh - var(--rank-top) - 64px - env(safe-area-inset-bottom,0px) - 8px);
-  }
-  body.in-journey.on-camina .tab-camina .panorama{
-    height:auto;flex:1 1 auto;min-height:0;margin:8px 0 8px;
-  }
+  body.in-journey.on-camina .tab-camina{padding-bottom:0}
+  /* panorama height is set explicitly by fitCamina() so it always fills the screen */
+  body.in-journey.on-camina .tab-camina .panorama{margin:8px 0 8px}
   body.in-journey.on-camina .tab-camina .coach-card-game{margin-bottom:0}
 
   .day{background:var(--paper);border:1px solid var(--ink-line);border-radius:16px;padding:16px;margin-bottom:14px}
@@ -856,7 +852,7 @@
     display:none;align-items:stretch;justify-content:space-around;
     height:64px;
     padding-bottom:env(safe-area-inset-bottom,0);
-    background:rgba(12,11,9,.97);
+    background:#000;
     backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
     border-top:1px solid rgba(63,227,178,.20);
     box-shadow:0 -8px 24px rgba(0,0,0,.28);
@@ -950,7 +946,7 @@
   .elev-clip .elev-svg{display:block;height:auto;width:300%;min-width:980px;will-change:transform}
   /* Slider row: arrows + range, with a hint under it */
   .rm-slider-row{display:flex;align-items:center;gap:9px;margin-top:12px}
-  .rm-slider-row .rm-arrow{flex:none;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--accent-soft);color:var(--accent-deep);font-size:15px;font-weight:800;line-height:1;user-select:none}
+  .rm-slider-row .rm-arrow{flex:none;color:var(--accent-deep);font-size:24px;font-weight:900;line-height:1;user-select:none}
   .rm-slider{-webkit-appearance:none;appearance:none;flex:1;height:26px;margin:0;background:transparent;cursor:pointer;touch-action:none}
   .rm-slider::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:var(--ink-line)}
   .rm-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;border-radius:50%;background:var(--accent);border:3px solid var(--bg);box-shadow:0 1px 5px rgba(0,0,0,.28);margin-top:-8px}
@@ -1338,9 +1334,9 @@
           </svg>
         </div>
         <div class="rm-slider-row">
-          <span class="rm-arrow">‹</span>
+          <span class="rm-arrow">❮</span>
           <input type="range" class="rm-slider" id="aer-slider" min="0" max="1000" value="0" aria-label="Recorrer el sendero">
-          <span class="rm-arrow">›</span>
+          <span class="rm-arrow">❯</span>
         </div>
         <div class="rm-slider-hint">Desliza para recorrer el sendero</div>
       </div>
@@ -1353,9 +1349,9 @@
         </div></div>
         <div class="elev-clip" id="elevprofile"></div>
         <div class="rm-slider-row">
-          <span class="rm-arrow">‹</span>
+          <span class="rm-arrow">❮</span>
           <input type="range" class="rm-slider" id="elev-slider" min="0" max="1000" value="0" aria-label="Recorrer el perfil">
-          <span class="rm-arrow">›</span>
+          <span class="rm-arrow">❯</span>
         </div>
         <div class="rm-slider-hint">Desliza para recorrer el perfil</div>
         <div class="map-legend" id="map-legend"></div>
@@ -3652,11 +3648,19 @@ var _activeTab = 'camina';
    JS because a CSS calc(100dvh …) doesn't always apply on iOS. */
 function fitCamina(){
   if(!document.body.classList.contains('on-camina')) return;
-  var el=document.querySelector('#journey .tab-camina'); if(!el) return;
+  var cam=document.querySelector('#journey .tab-camina'); if(!cam) return;
+  var pano=cam.querySelector('.panorama'); if(!pano) return;
   var bar=document.getElementById('tab-bar');
   var barH=(bar && document.body.classList.contains('in-journey')) ? bar.getBoundingClientRect().height : 64;
   var vh=(window.visualViewport && window.visualViewport.height) ? window.visualViewport.height : window.innerHeight;
-  el.style.height=Math.max(360, Math.round(vh - 66 - barH - 4))+'px';
+  var panoTop=pano.getBoundingClientRect().top;                 // below the rank bar + title
+  var coach=document.getElementById('coach-card-game');
+  var pill=document.getElementById('coach-open-pill');
+  var below=0;                                                  // space the coach / pill needs under the image
+  if(coach && !coach.classList.contains('hide')) below=coach.getBoundingClientRect().height+10;
+  else if(pill && !pill.classList.contains('hide')) below=pill.getBoundingClientRect().height+10;
+  var h=vh - barH - panoTop - below - 8;
+  pano.style.height=Math.max(220, Math.round(h))+'px';          // image grows to fill the screen
 }
 window.addEventListener('resize', function(){ requestAnimationFrame(fitCamina); });
 if(window.visualViewport) window.visualViewport.addEventListener('resize', function(){ requestAnimationFrame(fitCamina); });
