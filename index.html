@@ -4482,12 +4482,8 @@ function render(){
   var rl=document.getElementById('rank-label');
   rl.textContent=RANKS[ri];
   rl.classList.toggle('at-maestro',atMaestro);
-  // Secret-achievement medals — outside the bar, to the right of the chevron.
-  // Only show when earned today; the sibling element hides via :empty otherwise.
-  var medals='';
-  if(ts>=SILVER)  medals += '<span title="Medalla de Plata · 10.000">🥈</span>';
-  if(ts>=LEYENDA) medals += '<span title="Día de Leyenda · 12.000">🥇</span>';
-  document.getElementById('rank-medals').innerHTML=medals;
+  // Medals removed — the 10k/12k achievements are announced by your coach instead.
+  var _rm=document.getElementById('rank-medals'); if(_rm) _rm.innerHTML='';
 
   document.getElementById('jtitle').innerHTML=j.name+'<small>'+j.sub+'</small>';
   document.getElementById('trail').innerHTML=buildTrailBar(j,walked);
@@ -4714,23 +4710,18 @@ function recordToday(newTotal){
   // Highest-tier-wins ordering so big moments don't get swallowed by smaller ones.
   // Route stop / finish first, then the secret tiers (Oro > Plata), then Maestro,
   // then personal goal.
+  var coachHandled=false;
   if(finished){
     var last=j.stops[j.stops.length-1];
     celebrate(true,'¡Llegaste a '+shortName(last.n)+'!','¡Ruta completada! Recorriste '+fmtMi(j.total)+'. '+last.f);
   } else if(reached){
     celebrate(false,'Sello: '+shortName(reached.n),reached.f);
   } else if(newLey){
-    celebrate(true,'🥇 Día de Leyenda','Logro desbloqueado. Superaste los '+nFmt(LEYENDA)+' pasos en un día. Pocos llegan tan lejos.');
+    coachAchievement('leyenda'); coachHandled=true;   // tu coach celebra el día de 12.000, a su manera
   } else if(newSilver){
-    celebrate(true,'🥈 Medalla de Plata','Logro desbloqueado. Cruzaste los '+nFmt(SILVER)+' pasos en un día. Sigue así.');
+    coachAchievement('silver'); coachHandled=true;    // tu coach celebra el día de 10.000, a su manera
   } else if(newRec){
-    // First-EVER Maestro reveals the existence of two secret achievements
-    // past this tier. Only fires once in the player's lifetime.
-    var msg = 'Alcanzaste los '+nFmt(RECOMMENDED)+' pasos que recomienda la ciencia. Hoy llegas a lo más alto del rango.';
-    if(firstEverMaestro){
-      msg += '\n\n✨ Hay dos logros secretos esperándote más allá. Sigue caminando.';
-    }
-    celebrate(true,'¡Maestro/a del día!', msg);
+    celebrate(true,'¡Maestro/a del día!','Alcanzaste los '+nFmt(RECOMMENDED)+' pasos que recomienda la ciencia. Hoy llegas a lo más alto del rango.');
   } else if(newMeta){
     celebrate(false,'¡Buen trabajo!','Cumpliste tu meta de '+nFmt(state.goal)+' pasos. Vas por buen camino — la meta recomendada está en '+nFmt(RECOMMENDED)+'.');
   }
@@ -4752,7 +4743,7 @@ function recordToday(newTotal){
   if (finished)            milestoneKey = 'finish';
   else if (_msFire('almost', 0.85)) milestoneKey = 'almostThere';
   else if (_msFire('half',   0.50)) milestoneKey = 'halfway';
-  coachSay(milestoneKey);
+  if (!coachHandled) coachSay(milestoneKey);   // don't overwrite a fresh achievement line
 }
 
 /* ============================================================================
@@ -4871,6 +4862,33 @@ function coachSay(key){
     t.classList.remove('open');
     t.setAttribute('aria-hidden','true');
   }, 5200);
+}
+
+/* Per-coach, in-character congratulations for the big-day achievements
+   (10.000 = silver, 12.000 = leyenda). Replaces the old medals — your coach
+   simply tells you, in their own voice. */
+var COACH_ACHV={
+  ristretto:{silver:'¡10.000! Eso es nivel atleta. Hoy jugaste en otra liga.',          leyenda:'¡12.000 pasos! Rompiste el marcador. Pocos llegan ahí, campeón.'},
+  puchi:    {silver:'¡10.000 pasitos! Estoy súper orgullosa de ti. Lo hiciste con ganas.', leyenda:'¡12.000! Ay, qué máquina de constancia y cariño. ¡Te luciste hoy!'},
+  togo:     {silver:'10.000 pasos, puro ritmo. Hoy tu beat no paró ni un segundo.',        leyenda:'12.000… eso ya es un álbum entero. Hoy sonaste a leyenda.'},
+  granito:  {silver:'¡Guau, 10.000! Cuánta energía la tuya, ¡qué montón de pasitos!',      leyenda:'¡12.000! Eres enorme aunque yo sea el chiquito. ¡Increíble!'},
+  moka:     {silver:'10.000 pasos. Foco, fuerza y cumplido. Así se avanza.',               leyenda:'12.000. Te lo propusiste y lo lograste. Eso es carácter.'},
+  franco:   {silver:'10.000 pasos. Paso a paso, con calma, llegaste lejos. Bien hecho.',   leyenda:'12.000. La constancia tranquila también deja huella. Estoy orgulloso.'},
+  nata:     {silver:'10.000 pasos, sin prisa y en equilibrio. Respira: te lo ganaste.',    leyenda:'12.000 pasos en armonía. Cuidaste tu ritmo y floreciste hoy.'}
+};
+function coachAchievement(kind){
+  var cid=state.coach || (COACHES[0] && COACHES[0].id); if(!cid) return;
+  var set=COACH_ACHV[cid]||COACH_ACHV.ristretto, line=set&&set[kind];
+  if(!line) return;
+  updateCoachCard(cid, line);
+  var card=document.getElementById('coach-card-game'); if(card) card.classList.add('flash');
+  if(state.coachMuted || document.querySelector('.modal-overlay.open')) return;
+  var t=document.getElementById('coach-toast'); if(!t) return;
+  document.getElementById('ct-name').textContent=(COACH_NAMES[cid]||cid)+':';
+  document.getElementById('ct-line').textContent=line;
+  t.setAttribute('aria-hidden','false'); t.classList.add('open');
+  clearTimeout(_coachToastT);
+  _coachToastT=setTimeout(function(){ t.classList.remove('open'); t.setAttribute('aria-hidden','true'); }, 6000);
 }
 
 // Called by openJourney once per session — primes the card with a greeting.
@@ -4997,19 +5015,18 @@ function showStats(){
     statTile(recDays,'Días al nivel recomendado')+
     statTile(fmtMi1(lifetimeMi),'Total recorrido')+
     statTile(finished,'Rutas completadas');
-  // Medals — lifetime counts of secret achievements (only show once
-  // the player has unlocked at least one, to keep them secret otherwise).
+  // Lifetime big-day counts (no medals — just a quiet tally).
   var sd = state.silverDays||0, gd = state.goldDays||0;
-  var medalsFoot = '';
+  var bigFoot = '';
   if (sd > 0 || gd > 0) {
     var parts = [];
-    if (sd > 0) parts.push('🥈 ×'+sd);
-    if (gd > 0) parts.push('🥇 ×'+gd);
-    medalsFoot = '  Medallas: '+parts.join(' · ')+'.';
+    if (sd > 0) parts.push('10.000+ ×'+sd);
+    if (gd > 0) parts.push('12.000+ ×'+gd);
+    bigFoot = '  Días grandes: '+parts.join(' · ')+'.';
   }
   document.getElementById('stats-foot').textContent=
     daysPlayed+(daysPlayed===1?' día registrado en total.':' días registrados en total.')+
-    '  Tu meta: '+nFmt(state.goal)+' · Recomendada: '+nFmt(RECOMMENDED)+' pasos.'+medalsFoot;
+    '  Tu meta: '+nFmt(state.goal)+' · Recomendada: '+nFmt(RECOMMENDED)+' pasos.'+bigFoot;
   openOverlay('ov-stats');
 }
 
