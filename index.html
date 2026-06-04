@@ -4716,6 +4716,7 @@ function recordToday(newTotal){
     celebrate(true,'¡Llegaste a '+shortName(last.n)+'!','¡Ruta completada! Recorriste '+fmtMi(j.total)+'. '+last.f);
   } else if(reached){
     celebrate(false,'Sello: '+shortName(reached.n),reached.f);
+    coachReached(reached.n); coachHandled=true;   // tu coach también comenta la llegada
   } else if(newLey){
     coachAchievement('leyenda'); coachHandled=true;   // tu coach celebra el día de 12.000, a su manera
   } else if(newSilver){
@@ -4876,19 +4877,38 @@ var COACH_ACHV={
   franco:   {silver:'10.000 pasos. Paso a paso, con calma, llegaste lejos. Bien hecho.',   leyenda:'12.000. La constancia tranquila también deja huella. Estoy orgulloso.'},
   nata:     {silver:'10.000 pasos, sin prisa y en equilibrio. Respira: te lo ganaste.',    leyenda:'12.000 pasos en armonía. Cuidaste tu ritmo y floreciste hoy.'}
 };
-function coachAchievement(kind){
-  var cid=state.coach || (COACHES[0] && COACHES[0].id); if(!cid) return;
-  var set=COACH_ACHV[cid]||COACH_ACHV.ristretto, line=set&&set[kind];
-  if(!line) return;
+/* Per-coach, in-character line when you reach a new stop. {p} = place name. */
+var COACH_ARRIVE={
+  ristretto:'¡Llegamos a {p}! Buen ritmo — ahora vamos por la siguiente.',
+  puchi:'¡Llegaste a {p}! Qué orgullo, sigue así de lindo.',
+  togo:'{p} en el mapa. Tu paso suena a hit, no pares.',
+  granito:'¡Uy, {p}! ¿Viste cuánto avanzaste? ¡Vamos por más!',
+  moka:'{p}, conquistado. Punto y seguimos, con foco.',
+  franco:'Llegaste a {p}. Paso a paso, justo como debe ser. Bien.',
+  nata:'{p}. Respira y disfrútalo: lo caminaste con calma.'
+};
+// Shared: drop a line into the coach card (flash) + the floating toast.
+function _coachShow(cid, line){
+  if(!cid || !line) return;
   updateCoachCard(cid, line);
   var card=document.getElementById('coach-card-game'); if(card) card.classList.add('flash');
-  if(state.coachMuted || document.querySelector('.modal-overlay.open')) return;
+  if(state.coachMuted) return;   // event lines (arrival/achievement) DO show over a modal
   var t=document.getElementById('coach-toast'); if(!t) return;
   document.getElementById('ct-name').textContent=(COACH_NAMES[cid]||cid)+':';
   document.getElementById('ct-line').textContent=line;
   t.setAttribute('aria-hidden','false'); t.classList.add('open');
   clearTimeout(_coachToastT);
   _coachToastT=setTimeout(function(){ t.classList.remove('open'); t.setAttribute('aria-hidden','true'); }, 6000);
+}
+function coachAchievement(kind){
+  var cid=state.coach || (COACHES[0] && COACHES[0].id);
+  var set=COACH_ACHV[cid]||COACH_ACHV.ristretto;
+  if(set) _coachShow(cid, set[kind]);
+}
+function coachReached(place){
+  var cid=state.coach || (COACHES[0] && COACHES[0].id);
+  var tmpl=COACH_ARRIVE[cid]||COACH_ARRIVE.ristretto;
+  if(tmpl) _coachShow(cid, tmpl.replace('{p}', shortName(place)));
 }
 
 // Called by openJourney once per session — primes the card with a greeting.
