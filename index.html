@@ -113,19 +113,19 @@
   .header-nav .more svg,.header-nav .more *{pointer-events:none}
   .more-menu{
     position:absolute;top:44px;right:0;z-index:45;
-    background:var(--paper);border:1px solid var(--ink-line);
-    border-radius:12px;padding:6px;min-width:208px;
-    box-shadow:0 14px 40px rgba(0,0,0,.18);
+    background:var(--paper);border:1.5px solid var(--ink-line);
+    border-radius:12px;padding:6px;min-width:240px;
+    box-shadow:0 14px 44px rgba(0,0,0,.20),0 4px 12px rgba(0,0,0,.08);
     display:none;flex-direction:column;text-align:left;
   }
   .more-menu.open{display:flex}
   .more-menu button{
-    background:none;border:0;text-align:left;padding:10px 12px;border-radius:8px;
-    font-size:14px;color:var(--ink);font-family:var(--font-ui);cursor:pointer;
+    background:none;border:0;text-align:left;padding:10px 14px;border-radius:8px;
+    font-size:14px;font-weight:500;color:var(--ink);font-family:var(--font-ui);cursor:pointer;
     display:flex;justify-content:space-between;gap:12px;align-items:center;
   }
   .more-menu .more-theme-name{color:var(--ink-soft);font-weight:600}
-  .more-menu .more-item-cta{color:var(--accent);font-weight:700}
+  .more-menu .more-item-cta{color:var(--accent);font-weight:700;border-top:1px solid var(--ink-line);border-radius:0 0 8px 8px;margin-top:4px;padding-top:12px}
   @media (hover:hover){
     .header-home:hover{background:var(--paper);color:var(--accent);border-color:var(--ink-soft)}
     .header-nav a:hover{color:var(--accent)}
