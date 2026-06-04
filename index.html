@@ -4616,8 +4616,8 @@ function renderPasaporte(j, walked){
   var intro=document.getElementById('pp-intro');
   if(intro) intro.textContent='Has sellado '+reached.length+' de '+j.stops.length+' paradas'+(j.name?' en '+j.name:'')+'.';
   var html='';
-  // reached → banner cards, most recent (furthest) first
-  reached.slice().reverse().forEach(function(o){
+  // reached → banner cards, in order: the first stays at the top, newer ones open below it
+  reached.forEach(function(o){
     var st=o.st, i=o.i, s3=sceneOf(j.id,st,i,j.stops.length);
     var label=(i===0?'Salida':fmtMi(st.mi)+' desde la salida');
     html+='<article class="pp-card on" data-i="'+i+'">'
