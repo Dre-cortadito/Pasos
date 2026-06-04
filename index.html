@@ -4817,6 +4817,7 @@ function applyCoachVisibility(){
   var hidden = !!state.coachHidden;
   if (card) card.classList.toggle('hide', hidden || !state.coach);
   if (pill) pill.classList.toggle('hide', !hidden);
+  requestAnimationFrame(fitCamina);   // re-grow the panorama once the coach/pill state is set
 }
 function updateCoachCard(coachId, line, opts){
   var card = document.getElementById('coach-card-game');
@@ -4850,21 +4851,7 @@ function coachSay(key){
   var frac = coachJourneyFrac();
   var line = coachPickLine(cid, frac, key);
   if (!line) return;
-  // Skip the floating toast if a celebration modal is up OR coach is muted —
-  // but ALWAYS refresh the in-game coach card so the line is preserved.
-  updateCoachCard(cid, line);
-  if (state.coachMuted) return;
-  if (document.querySelector('.modal-overlay.open')) return;
-  var t = document.getElementById('coach-toast'); if (!t) return;
-  document.getElementById('ct-name').textContent = (COACH_NAMES[cid]||cid)+':';
-  document.getElementById('ct-line').textContent = line;
-  t.setAttribute('aria-hidden','false');
-  t.classList.add('open');
-  clearTimeout(_coachToastT);
-  _coachToastT = setTimeout(function(){
-    t.classList.remove('open');
-    t.setAttribute('aria-hidden','true');
-  }, 5200);
+  updateCoachCard(cid, line);   // the coach speaks through the card at the bottom (no floating toast)
 }
 
 /* Per-coach, in-character congratulations for the big-day achievements
@@ -4889,18 +4876,11 @@ var COACH_ARRIVE={
   franco:'Llegaste a {p}. Paso a paso, justo como debe ser. Bien.',
   nata:'{p}. Respira y disfrútalo: lo caminaste con calma.'
 };
-// Shared: drop a line into the coach card (flash) + the floating toast.
+// Shared: drop an event line into the coach card (with a flash). No floating toast.
 function _coachShow(cid, line){
   if(!cid || !line) return;
   updateCoachCard(cid, line);
   var card=document.getElementById('coach-card-game'); if(card) card.classList.add('flash');
-  if(state.coachMuted) return;   // event lines (arrival/achievement) DO show over a modal
-  var t=document.getElementById('coach-toast'); if(!t) return;
-  document.getElementById('ct-name').textContent=(COACH_NAMES[cid]||cid)+':';
-  document.getElementById('ct-line').textContent=line;
-  t.setAttribute('aria-hidden','false'); t.classList.add('open');
-  clearTimeout(_coachToastT);
-  _coachToastT=setTimeout(function(){ t.classList.remove('open'); t.setAttribute('aria-hidden','true'); }, 6000);
 }
 function coachAchievement(kind){
   var cid=state.coach || (COACHES[0] && COACHES[0].id);
@@ -4983,7 +4963,10 @@ document.querySelectorAll('[data-close]').forEach(function(b){b.onclick=closeAll
 document.querySelectorAll('.modal-overlay').forEach(function(o){o.addEventListener('click',function(e){if(e.target===o)closeAll();});});
 
 function celebrate(accentTitle,t,b){
-  document.getElementById('cel-mk').src=WALKER;
+  var _cid=state.coach||(COACHES[0]&&COACHES[0].id);
+  var _mk=document.getElementById('cel-mk');
+  _mk.src=_cid?('coaches/'+_cid+'.png'):WALKER;        // celebrate with your coach
+  _mk.onerror=function(){ this.onerror=null; this.src=WALKER; };
   var h=document.getElementById('cel-title');h.textContent=t;h.classList.toggle('accent',!!accentTitle);
   document.getElementById('cel-body').textContent=b;
   openOverlay('ov-cel');
