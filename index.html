@@ -322,7 +322,7 @@
   .coach-grid{
     display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;
     margin:12px 0 4px;
-    max-height:68vh;overflow-y:auto;overflow-x:hidden;
+    max-height:56vh;overflow-y:auto;overflow-x:hidden;
     padding:8px;box-sizing:border-box;
     border:1px solid var(--ink-line);border-radius:14px;
     -webkit-overflow-scrolling:touch;overscroll-behavior:contain;
@@ -330,8 +330,8 @@
   .coach-grid::-webkit-scrollbar{width:6px}
   .coach-grid::-webkit-scrollbar-thumb{background:var(--ink-line);border-radius:3px}
   .coach-grid-hint{
-    text-align:center;font-size:11.5px;color:var(--ink-soft);
-    margin:4px 0 2px;font-family:var(--font-ui);letter-spacing:.2px;
+    text-align:center;font-size:12.5px;color:var(--accent-deep);font-weight:700;
+    margin:10px 0 2px;font-family:var(--font-ui);letter-spacing:.2px;
   }
   .coach-card{
     display:flex;flex-direction:column;align-items:center;
@@ -550,10 +550,10 @@
   .rank-dot{position:absolute;top:50%;width:6px;height:6px;border-radius:50%;transform:translate(-50%,-50%);background:var(--ink-soft);z-index:3}
   .rank-dot.passed{background:var(--ink)}
   .rank-marker{position:absolute;top:50%;width:3px;height:26px;border-radius:2px;transform:translate(-50%,-50%);background:var(--accent);opacity:.95;z-index:2}
-  .rank-marker.done{background:var(--success)}
+  .rank-marker.done{background:var(--ink)}
   /* "tu meta hoy" caption that rides with the goal marker */
   .rank-marker-lbl{position:absolute;top:calc(50% + 15px);font-family:var(--font-ui);font-size:8px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--accent-deep);white-space:nowrap;z-index:2;pointer-events:none;line-height:1}
-  .rank-marker-lbl.done{color:var(--success)}
+  .rank-marker-lbl.done{color:var(--ink)}
   .rank-bubble{
     position:absolute;top:50%;width:24px;height:24px;border-radius:50%;
     transform:translate(-50%,-50%);
@@ -600,7 +600,8 @@
   .trail-meta .tm-row{display:flex;align-items:baseline;gap:7px;white-space:nowrap}
   .trail-meta .tm-row > span{color:var(--ink-soft);flex:none;font-size:12px;letter-spacing:.2px}
   .trail-meta .tm-row > b{color:var(--ink);font-weight:700;font-family:var(--font-display);font-size:15px}
-  .trail-meta .tm-row > i{margin-left:auto;font-style:normal;color:var(--accent-deep);font-weight:700;font-variant-numeric:tabular-nums;font-size:14px}
+  .trail-meta .tm-row > i{font-style:normal;color:var(--accent-deep);font-weight:700;font-variant-numeric:tabular-nums;font-size:14px}
+  .trail-meta .tm-row > i::before{content:'·';color:var(--ink-soft);margin:0 4px 0 1px;font-weight:400}
   .loc{font-size:14.5px;color:var(--ink);margin:6px 4px 12px;text-align:center;line-height:1.45}
   .loc b{color:var(--accent);font-weight:700}
 
@@ -933,8 +934,9 @@
   .map-card > .rm-head{margin:0 0 10px}
   .bar-wrap svg{display:block;width:100%;height:auto}
   /* Elevation: clipped box panned only by its slider (no touch-scroll) */
-  .elev-clip{overflow:hidden;position:relative;border-radius:10px}
-  .elev-clip .elev-svg{display:block;height:auto;width:300%;min-width:980px;will-change:transform}
+  .elev-clip{overflow-x:auto;overflow-y:hidden;position:relative;border-radius:10px;-webkit-overflow-scrolling:touch;touch-action:pan-x}
+  .elev-clip::-webkit-scrollbar{height:0;width:0}
+  .elev-clip .elev-svg{display:block;height:auto;width:300%;min-width:980px}
   /* Slider row: arrows + range, with a hint under it */
   .rm-slider-row{display:flex;align-items:center;gap:9px;margin-top:12px}
   .rm-slider-row .rm-arrow{flex:none;color:var(--accent-deep);font-size:24px;font-weight:900;line-height:1;user-select:none}
@@ -1387,9 +1389,9 @@
           <span class="ajustes-value" id="ajustes-mute-val">—</span>
         </button>
         <button class="ajustes-row" id="ajustes-reset" type="button">
-          <span class="ajustes-icon" style="color:var(--accent-deep,#10C896)"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-4"/></svg></span>
+          <span class="ajustes-ico" style="-webkit-mask-image:url('ui-icons/redo.png');mask-image:url('ui-icons/redo.png')"></span>
           <span class="ajustes-label">Reiniciar esta ruta</span>
-          <span class="ajustes-value">→</span>
+          <span class="ajustes-value">Desde cero</span>
         </button>
       </div>
     </div>
@@ -2856,7 +2858,7 @@ function buildTrailProfile(j,walked){
   var ACC=V('--accent','#10C896'), DP=V('--accent-deep','#0EA178');
   var LN=V('--ink-line','#ece7df'), LNS=V('--ink-line-strong','#c9c2b3');
   var INK=V('--ink','#1a1614'), SOFT=V('--ink-soft','#8a847f'), BG=V('--bg','#fff'), PAPER=V('--paper','#fbfaf6');
-  var W=1180,H=320, padL=54,padR=30, top=128, baseY=250, iw=W-padL-padR, elevH=baseY-top;
+  var W=1180,H=264, padL=54,padR=30, top=128, baseY=250, iw=W-padL-padR, elevH=baseY-top;
   var stops=j.stops, N=stops.length;
   // Y-domain with a baseline well below the lowest stop, so a 2.700 m start
   // sits visibly up the chart (not at "sea level"), plus headroom above the peak.
@@ -2884,8 +2886,7 @@ function buildTrailProfile(j,walked){
   var isInca=(j.id==='inca');
   var passes=(typeof INCA_AERIAL!=='undefined' && isInca)?INCA_AERIAL.passes:[];
   var passTag={5:'1.er paso',7:'2.º paso',10:'3.er paso'};
-  var days=DAY_BOUNDS[j.id];
-  var campMi={}; if(days){ for(i=0;i<days.length-1;i++) campMi[days[i].mi]=1; } // camp at each day's end (not the final)
+  var campMi={};   // multi-day trek "días/campamentos" don't apply to a personal step tracker
 
   var s='<svg class="elev-svg" data-pfx="'+pfx+'" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">';
   // misty mountain backdrop — two jagged mint-toned terrain layers (the sky
@@ -2908,17 +2909,6 @@ function buildTrailProfile(j,walked){
     s+='<line x1="'+padL+'" y1="'+gy+'" x2="'+(W-padR)+'" y2="'+gy+'" stroke="'+INK+'" stroke-opacity="0.22" stroke-width="1" stroke-dasharray="3 6"/>';
     s+='<text x="'+(padL-8)+'" y="'+(gy+3)+'" text-anchor="end" font-size="11" fill="'+INK+'" fill-opacity="0.66">'+gg.toLocaleString('es')+' m</text>';
   }
-  // day bands: separators + cumulative distance markers + per-day distance & hours
-  if(days){ var prev=0; days.forEach(function(d,di){ var dx=X(d.mi);
-    if(di<days.length-1){
-      s+='<line x1="'+dx+'" y1="'+top+'" x2="'+dx+'" y2="'+(baseY+6)+'" stroke="'+LN+'" stroke-width="1" stroke-dasharray="3 4"/>';
-      s+='<text x="'+dx+'" y="'+(baseY+18)+'" text-anchor="middle" font-size="9.5" font-weight="600" fill="'+INK+'" fill-opacity="0.66">'+KM(d.mi)+' km</text>';
-    }
-    var midx=X((prev+d.mi)/2);
-    s+='<text x="'+midx+'" y="'+(H-18)+'" text-anchor="middle" font-size="11" font-weight="800" fill="'+INK+'" fill-opacity="0.66">'+d.d+'</text>';
-    s+='<text x="'+midx+'" y="'+(H-5)+'" text-anchor="middle" font-size="10" font-weight="600" fill="'+INK+'" fill-opacity="0.66">'+KM(d.mi-prev)+' km · '+(d.h||'')+'</text>';
-    prev=d.mi;
-  }); }
   // areas
   s+='<path d="'+line+' L '+pts[N-1].x+' '+baseY+' L '+pts[0].x+' '+baseY+' Z" fill="'+INK+'" fill-opacity="0.07"/>';
   if(wpts.length>1) s+='<path d="'+smoothMapPath(wpts,0.42)+' L '+px+' '+baseY+' L '+pts[0].x+' '+baseY+' Z" fill="'+ACC+'" fill-opacity="0.42"/>';
@@ -3792,9 +3782,9 @@ var _aer={t:0, cum:null, total:0, pts:null, svg:null, wrap:null, scroller:null, 
    touching the chart never traps the page's vertical scroll. */
 var _elev={svg:null, clip:null, svgW:0, clipW:0, wired:false};
 function _elevPanTo(t){
-  if(!_elev.svg) return;
-  var shift=Math.max(0,(t*Math.max(0,_elev.svgW-_elev.clipW)));
-  _elev.svg.style.transform='translateX('+(-Math.round(shift))+'px)';
+  if(!_elev.clip) return;
+  var max=Math.max(0,_elev.clip.scrollWidth-_elev.clip.clientWidth);
+  _elev.clip.scrollLeft=Math.round(t*max);
 }
 function _aerArc(pts){
   var cum=[0]; for(var i=1;i<pts.length;i++){ var dx=pts[i].x-pts[i-1].x, dy=pts[i].y-pts[i-1].y; cum.push(cum[i-1]+Math.sqrt(dx*dx+dy*dy)); }
@@ -3959,13 +3949,17 @@ function renderMapaTab(){
   var esl=document.getElementById('elev-slider');
   if(clip && esvg && esl){
     var pfx=parseFloat(esvg.getAttribute('data-pfx'))||0;
+    _elev.svg=esvg; _elev.clip=clip;
+    // slider drives the scroll; native swipe drives the slider — both stay in sync
     if(!esl._wired){ esl._wired=true; esl.addEventListener('input', function(){ _elevPanTo((parseFloat(esl.value)||0)/1000); }); }
+    if(!clip._wired){ clip._wired=true; clip.addEventListener('scroll', function(){
+      var mx=Math.max(1,clip.scrollWidth-clip.clientWidth);
+      esl.value=Math.round(clip.scrollLeft/mx*1000);
+    }); }
     requestAnimationFrame(function(){
-      _elev.svg=esvg; _elev.clip=clip;
-      _elev.clipW=clip.clientWidth||340;
-      _elev.svgW=esvg.getBoundingClientRect().width || _elev.clipW*3;
-      var maxShift=Math.max(1,_elev.svgW-_elev.clipW);
-      var tc=Math.max(0,Math.min(1,(pfx*_elev.svgW - _elev.clipW/2)/maxShift));
+      var sw=esvg.getBoundingClientRect().width || clip.clientWidth*3;
+      var maxShift=Math.max(1, sw - clip.clientWidth);
+      var tc=Math.max(0,Math.min(1,(pfx*sw - clip.clientWidth/2)/maxShift));   // centre on the player
       esl.value=Math.round(tc*1000);
       _elevPanTo(tc);
     });
@@ -3978,7 +3972,6 @@ function renderMapaTab(){
        +'<span>'+_lgIcon('rest')+'por recorrer</span>'
        +'<span>'+_lgIcon('dot')+'parada</span>'
        +'<span>'+_lgIcon('diamond')+'paso de montaña</span>'
-       +'<span>'+_lgIcon('tent')+'campamento</span>'
       : '';
   }
 
@@ -4725,20 +4718,29 @@ function recordToday(newTotal){
   // Route stop / finish first, then the secret tiers (Oro > Plata), then Maestro,
   // then personal goal.
   var coachHandled=false;
+  var _cid=state.coach||(COACHES[0]&&COACHES[0].id);
+  function _achvLine(kind,fallback){ var set=COACH_ACHV[_cid]||COACH_ACHV.ristretto; return (set&&set[kind])||fallback; }
+  // (1) route event — finish or a new stop (at most one)
   if(finished){
     var last=j.stops[j.stops.length-1];
-    celebrate(true,'¡Llegaste a '+shortName(last.n)+'!','¡Ruta completada! Recorriste '+fmtMi(j.total)+'. '+last.f);
+    queueCeleb(true,'¡Llegaste a '+shortName(last.n)+'!','¡Ruta completada! Recorriste '+fmtMi(j.total)+'. '+last.f);
   } else if(reached){
-    celebrate(false,'Sello: '+shortName(reached.n),reached.f);
+    queueCeleb(false,'Sello: '+shortName(reached.n),reached.f);
     coachReached(reached.n); coachHandled=true;   // tu coach también comenta la llegada
-  } else if(newLey){
-    coachAchievement('leyenda'); coachHandled=true;   // tu coach celebra el día de 12.000, a su manera
+  }
+  // (2) daily step goal — independent, so it never gets swallowed by a route stop.
+  //     10k / 12k are delivered in the coach's own voice (the prompt the user wanted).
+  if(newLey){
+    queueCeleb(true,'¡Día de Leyenda! '+nFmt(LEYENDA)+' pasos',_achvLine('leyenda','¡Cruzaste los '+nFmt(LEYENDA)+' pasos! Día de leyenda.'));
+    coachAchievement('leyenda'); coachHandled=true;
   } else if(newSilver){
-    coachAchievement('silver'); coachHandled=true;    // tu coach celebra el día de 10.000, a su manera
+    queueCeleb(true,'¡'+nFmt(SILVER)+' pasos!',_achvLine('silver','¡Llegaste a los '+nFmt(SILVER)+' pasos! Tremendo día.'));
+    coachAchievement('silver'); coachHandled=true;
   } else if(newRec){
-    celebrate(true,'¡Maestro/a del día!','Alcanzaste los '+nFmt(RECOMMENDED)+' pasos que recomienda la ciencia. Hoy llegas a lo más alto del rango.');
+    queueCeleb(true,'¡Maestro/a del día!','Alcanzaste los '+nFmt(RECOMMENDED)+' pasos que recomienda la ciencia. Hoy llegas a lo más alto del rango.');
+    coachHandled=true;
   } else if(newMeta){
-    celebrate(false,'¡Buen trabajo!','Cumpliste tu meta de '+nFmt(state.goal)+' pasos. Vas por buen camino — la meta recomendada está en '+nFmt(RECOMMENDED)+'.');
+    queueCeleb(false,'¡Buen trabajo!','Cumpliste tu meta de '+nFmt(state.goal)+' pasos. Vas por buen camino — la meta recomendada está en '+nFmt(RECOMMENDED)+'.');
   }
   // ---- Coach: pick a position-aware line, with milestone overrides --------
   // Detect crossing route-progress milestones (50%, 85%, finish) so the coach
@@ -4967,6 +4969,7 @@ function closeAll(){
   var menu=document.getElementById('more-menu');if(menu)menu.classList.remove('open');
   document.body.style.overflow=''; var m=document.querySelector('main');
   window.scrollTo(0,0);document.documentElement.scrollTop=0;document.body.scrollTop=0;if(m)m.scrollTop=m.scrollTop;
+  if(_celebQueue && _celebQueue.length) setTimeout(_playNextCeleb,260);   // show the next queued prompt
 }
 document.querySelectorAll('[data-close]').forEach(function(b){b.onclick=closeAll;});
 document.querySelectorAll('.modal-overlay').forEach(function(o){o.addEventListener('click',function(e){if(e.target===o)closeAll();});});
@@ -4979,6 +4982,15 @@ function celebrate(accentTitle,t,b){
   var h=document.getElementById('cel-title');h.textContent=t;h.classList.toggle('accent',!!accentTitle);
   document.getElementById('cel-body').textContent=b;
   openOverlay('ov-cel');
+}
+/* Celebration queue — lets several prompts (e.g. a route stop AND a 10k day)
+   show one after another instead of one swallowing the others. */
+var _celebQueue=[];
+function _playNextCeleb(){ if(_celebQueue.length){ var c=_celebQueue.shift(); celebrate(c.a,c.t,c.b); } }
+function queueCeleb(a,t,b){
+  _celebQueue.push({a:a,t:t,b:b});
+  var ov=document.getElementById('ov-cel');
+  if(!ov || !ov.classList.contains('open')) _playNextCeleb();
 }
 function showInfo(title,html){document.getElementById('info-title').textContent=title;document.getElementById('info-body').innerHTML=html;openOverlay('ov-info');}
 /* Static trail-overview infographics (one full-look image per route). */
