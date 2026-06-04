@@ -562,8 +562,6 @@
     font-family:var(--font-ui);font-size:11px;font-weight:700;letter-spacing:-.2px;
     z-index:4;
   }
-  /* Progress-bar bubble shows % completed, so it's a wider pill (not a 24px disc) */
-  .prog-track .rank-bubble{width:auto;min-width:30px;height:25px;border-radius:999px;padding:0 9px;font-size:12px;letter-spacing:0}
   .rank-chev{color:var(--ink);font-size:14px;flex:none;font-family:var(--font-ui);font-weight:500;transition:color .15s,transform .2s}
   /* Row that contains the rank-bar + the secret-achievement medals to its
      right. The rank-bar itself stays exactly like Sudoku/Racimo; the medals
@@ -630,12 +628,12 @@
      mint border flash to signal "new". */
   .coach-card-game{
     display:flex;align-items:center;gap:10px;
-    background:var(--accent);border:1px solid var(--accent-deep);border-radius:14px;
+    background:var(--accent-soft);border:1px solid var(--accent-soft);border-radius:14px;
     padding:8px 12px 8px 8px;margin-bottom:12px;
     transition:box-shadow .25s,border-color .25s;
     position:relative;
   }
-  .coach-card-game.flash{border-color:var(--accent-deep);box-shadow:0 0 0 3px rgba(255,255,255,.5)}
+  .coach-card-game.flash{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
   .coach-card-game .ccg-pose{
     flex:none;width:64px;height:64px;
     border-radius:10px;background:var(--bg);border:1px solid var(--ink-line);
@@ -650,11 +648,11 @@
   .coach-card-game .ccg-head{display:flex;align-items:baseline;gap:6px;line-height:1}
   .coach-card-game .ccg-label{
     font-size:9.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;
-    color:#0a2e23;
+    color:var(--accent-deep);
   }
   .coach-card-game .ccg-name{
     font-family:var(--font-display);font-weight:700;font-style:italic;
-    font-size:15px;line-height:1;color:#08251c;
+    font-size:15px;line-height:1;color:var(--ink);
   }
   .coach-card-game .ccg-line{
     font-size:13px;color:var(--ink);line-height:1.35;
@@ -923,17 +921,12 @@
   .tab-mapa-inner .rm-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:16px;padding-top:16px;border-top:1px solid var(--ink-line);text-align:center}
   /* Compact progress data */
   .tab-mapa-inner .rm-stat .v{font-family:var(--font-display);font-size:20px;font-weight:700;color:var(--ink);line-height:1;font-variant-numeric:tabular-nums}
+  #rm-stat-pct, #rm-stat-pct-tab{color:var(--accent)}   /* % completado in mint */
   .tab-mapa-inner .rm-stat .l{font-size:10px;letter-spacing:.7px;text-transform:uppercase;color:var(--ink-soft);margin-top:5px;font-weight:600}
   /* Each section is its own boxed card */
   .map-card{background:var(--paper);border:1px solid var(--ink-line);border-radius:16px;padding:14px 14px 12px;margin:14px 0}
-  /* Inverted "feature" box: mint frame, content sits inside like the coach card */
-  .map-card.aerial{background:var(--accent);border-color:var(--accent-deep)}
-  .map-card.aerial .rm-title{color:#08251c}
-  .map-card.aerial .rm-sub{color:#0a3327}
-  .map-card.aerial .rm-arrow{color:#08251c}
-  .map-card.aerial .rm-slider-hint{color:#0a3327}
-  .map-card.aerial .rm-slider::-webkit-slider-runnable-track{background:rgba(0,0,0,.18)}
-  .map-card.aerial .rm-slider::-moz-range-track{background:rgba(0,0,0,.18)}
+  /* Soft-mint "feature" box (same light mint as the recommended-pace tile) */
+  .map-card.aerial{background:var(--accent-soft);border-color:var(--accent-soft)}
   .tab-mapa-inner > .map-card:first-child{margin-top:6px}
   .map-card > .rm-head{margin:0 0 10px}
   .bar-wrap svg{display:block;width:100%;height:auto}
@@ -2972,8 +2965,7 @@ function buildTrailBar(j,walked){
     var on=walked>=st.mi-0.001;
     h+='<div class="rank-dot'+(on?' passed':'')+'" style="left:'+((st.mi/j.total)*100)+'%"></div>';
   });
-  var lbl = walked>=j.total ? '✓' : Math.round(frac*100)+'%';
-  h+='<div class="rank-bubble" style="left:'+(frac*100)+'%">'+lbl+'</div>';
+  h+='<div class="rank-bubble" style="left:'+(frac*100)+'%"></div>';   // plain marker — % is shown in the stats below
   h+='</div>';
   return h+_trailMeta(j,walked);
 }
