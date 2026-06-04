@@ -562,6 +562,8 @@
     font-family:var(--font-ui);font-size:11px;font-weight:700;letter-spacing:-.2px;
     z-index:4;
   }
+  /* Progress-bar bubble shows % completed, so it's a wider pill (not a 24px disc) */
+  .prog-track .rank-bubble{width:auto;min-width:30px;height:25px;border-radius:999px;padding:0 9px;font-size:12px;letter-spacing:0}
   .rank-chev{color:var(--ink);font-size:14px;flex:none;font-family:var(--font-ui);font-weight:500;transition:color .15s,transform .2s}
   /* Row that contains the rank-bar + the secret-achievement medals to its
      right. The rank-bar itself stays exactly like Sudoku/Racimo; the medals
@@ -597,8 +599,8 @@
   /* Route-progress bar — reuses the rank-bar's track/dot/bubble for a match */
   .prog-track{position:relative;height:24px;margin:12px 8px 2px}
   .trail-meta{display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--ink-soft);margin-top:16px}
-  .trail-meta .tm-row{display:flex;align-items:baseline;gap:10px;white-space:nowrap}
-  .trail-meta .tm-row > span{color:var(--ink-soft);flex:none;min-width:96px;font-size:12px;letter-spacing:.2px}
+  .trail-meta .tm-row{display:flex;align-items:baseline;gap:7px;white-space:nowrap}
+  .trail-meta .tm-row > span{color:var(--ink-soft);flex:none;font-size:12px;letter-spacing:.2px}
   .trail-meta .tm-row > b{color:var(--ink);font-weight:700;font-family:var(--font-display);font-size:15px}
   .trail-meta .tm-row > i{margin-left:auto;font-style:normal;color:var(--accent-deep);font-weight:700;font-variant-numeric:tabular-nums;font-size:14px}
   .loc{font-size:14.5px;color:var(--ink);margin:6px 4px 12px;text-align:center;line-height:1.45}
@@ -615,7 +617,7 @@
   .eta-finish{margin-top:10px;font-size:12.5px;line-height:1.45;color:var(--ink-soft);text-align:center}
   .eta-finish:empty{display:none}
   .eta-finish b{color:var(--ink);font-weight:700}
-  .eta-finish .ef-accent{color:var(--accent-deep);font-weight:700}
+  .eta-finish .ef-accent{color:var(--accent-deep);font-weight:700;white-space:nowrap}
 
   .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}
   .stat{background:var(--paper);border:1px solid var(--ink-line);border-radius:13px;padding:13px 8px;text-align:center}
@@ -2845,7 +2847,7 @@ function _trailMeta(j,walked){
   if(done){
     rows='<div class="tm-row"><span>¡Llegaste a</span><b>'+shortName(fin.n)+'</b><i>'+fmtMi(j.total)+'</i></div>';
   } else {
-    var nrow = next ? '<div class="tm-row"><span>Próxima parada</span><b>→ '+shortName(next.n)+'</b><i>'+fmtMi1(Math.max(0,next.mi-walked))+'</i></div>' : '';
+    var nrow = next ? '<div class="tm-row"><span>Próxima parada</span><b>'+shortName(next.n)+'</b><i>'+fmtMi1(Math.max(0,next.mi-walked))+'</i></div>' : '';
     rows = nrow + '<div class="tm-row"><span>Destino</span><b>'+shortName(fin.n)+'</b></div>';
   }
   return '<div class="trail-meta">'+rows+'</div>';
@@ -2978,7 +2980,7 @@ function buildTrailBar(j,walked){
     var on=walked>=st.mi-0.001;
     h+='<div class="rank-dot'+(on?' passed':'')+'" style="left:'+((st.mi/j.total)*100)+'%"></div>';
   });
-  var lbl = walked>=j.total ? '✓' : String(Math.round(walked));
+  var lbl = walked>=j.total ? '✓' : Math.round(frac*100)+'%';
   h+='<div class="rank-bubble" style="left:'+(frac*100)+'%">'+lbl+'</div>';
   h+='</div>';
   return h+_trailMeta(j,walked);
