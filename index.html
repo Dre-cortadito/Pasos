@@ -785,6 +785,15 @@
   .stats-grid .stat{padding:11px 12px;text-align:left}
   .stats-grid .stat .l{margin-top:4px;text-align:left;text-transform:none;letter-spacing:.2px}
   .stats-grid .stat .v{font-size:22px;text-align:left}
+  /* Estadísticas — Racimo-style sections + stat cards */
+  #ov-stats h3{margin:22px 0 12px;padding-top:18px;border-top:1px solid var(--ink-line);font-size:11px;font-weight:800;color:var(--ink);text-transform:uppercase;letter-spacing:2px;display:flex;align-items:center;gap:10px}
+  #ov-stats h3::before{content:"";width:6px;height:6px;background:var(--accent);border-radius:50%;flex-shrink:0}
+  #ov-stats h3:first-of-type{margin-top:8px;padding-top:0;border-top:none}
+  #ov-stats .stats-row{display:flex;gap:32px;flex-wrap:wrap;align-items:baseline;margin:2px 0 0}
+  #ov-stats .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:16px 28px;margin:2px 0 0}
+  #ov-stats .stat-value{font-family:var(--font-display);font-size:28px;font-weight:800;letter-spacing:-0.5px;color:var(--ink);line-height:1.05}
+  #ov-stats .stat-value.accent{color:var(--accent)}
+  #ov-stats .stat-label{font-size:11px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;color:var(--ink-soft);margin-top:6px}
 
   /* ===== Scenes — on-brand two-tone silhouettes, theme-aware (read live tokens) ===== */
   .scene-art{display:block;width:100%;line-height:0}
@@ -1467,10 +1476,13 @@
 <div class="modal-overlay" id="ov-stats"><div class="modal">
   <button class="modal-close" data-close>×</button>
   <h2>Estadísticas</h2>
-  <p class="muted">Tu día de hoy y tu recorrido total con Pasos.</p>
-  <div class="stats-grid" id="stats-grid"></div>
-  <hr>
-  <p class="muted" id="stats-foot"></p>
+  <h3>Hoy</h3>
+  <div class="stats-row" id="st-hoy"></div>
+  <h3>Récord general</h3>
+  <div class="stats-grid" id="st-overall"></div>
+  <h3>Rachas</h3>
+  <div class="stats-grid" id="st-streaks"></div>
+  <p class="muted" id="stats-foot" style="margin-top:18px"></p>
 </div></div>
 
 <!-- ============================================================== CELEBRATION -->
@@ -5040,13 +5052,11 @@ function showStats(){
   var streak=Math.max(streakFrom(0),(totals[todayISO()]||0)>=state.goal?0:streakFrom(1));
   var ts=current?todaySteps(current):(totals[todayISO()]||0);
 
-  document.getElementById('stats-grid').innerHTML=
-    statTile(nFmt(ts),'Pasos hoy')+
-    statTile(current?RANKS[rankIndex(todaySteps(current))]:RANKS[rankIndex(totals[todayISO()]||0)],'Rango de hoy')+
-    statTile(streak+(streak===1?' día':' días'),'Racha (≥ tu meta)')+
-    statTile(recDays,'Días al nivel recomendado')+
-    statTile(fmtMi1(lifetimeMi),'Total recorrido')+
-    statTile(finished,'Rutas completadas');
+  var SB=function(v,l,a){return '<div class="stat-block"><div class="stat-value'+(a?' accent':'')+'">'+v+'</div><div class="stat-label">'+l+'</div></div>';};
+  var rangoHoy=current?RANKS[rankIndex(todaySteps(current))]:RANKS[rankIndex(totals[todayISO()]||0)];
+  document.getElementById('st-hoy').innerHTML=SB(nFmt(ts),'Pasos hoy')+SB(rangoHoy,'Rango de hoy',1);
+  document.getElementById('st-overall').innerHTML=SB(fmtMi1(lifetimeMi),'Total recorrido')+SB(finished,'Rutas completadas')+SB(daysPlayed,'Días registrados')+SB(recDays,'Días recomendados');
+  document.getElementById('st-streaks').innerHTML=SB(streak+(streak===1?' día':' días'),'Racha (≥ tu meta)',1);
   // Lifetime big-day counts (no medals — just a quiet tally).
   var sd = state.silverDays||0, gd = state.goldDays||0;
   var bigFoot = '';
