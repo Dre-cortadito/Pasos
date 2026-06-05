@@ -794,6 +794,8 @@
   #ov-stats .stat-value{font-family:var(--font-display);font-size:28px;font-weight:800;letter-spacing:-0.5px;color:var(--ink);line-height:1.05}
   #ov-stats .stat-value.accent{color:var(--accent)}
   #ov-stats .stat-label{font-size:11px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;color:var(--ink-soft);margin-top:6px}
+  #ov-stats .stats-footer2{margin:20px 0 0;font-size:12px;color:var(--ink-soft);font-style:italic;line-height:1.55}
+  #ov-stats .stats-footer2 strong{color:var(--accent);font-weight:700}
 
   /* ===== Scenes — on-brand two-tone silhouettes, theme-aware (read live tokens) ===== */
   .scene-art{display:block;width:100%;line-height:0}
@@ -1483,6 +1485,7 @@
   <h3>Rachas</h3>
   <div class="stats-grid" id="st-streaks"></div>
   <p class="muted" id="stats-foot" style="margin-top:18px"></p>
+  <p class="stats-footer2">Tus estadísticas se guardan <strong>solo en este navegador</strong>. Nada se envía a Cortadito ni a ningún servidor. Si limpias los datos del navegador, las cookies o el historial del sitio, <strong>tus estadísticas se borrarán</strong>. Tampoco se sincronizan entre dispositivos: cada navegador tiene su propio registro.</p>
 </div></div>
 
 <!-- ============================================================== CELEBRATION -->
@@ -5076,7 +5079,8 @@ function showStats(){
    Share (design §4.2)
 ============================================================================ */
 function sharePasos(){
-  var L=[];L.push('Pasos · '+prettyDate());L.push('');
+  var L=[];var _sd;try{var _d=new Date();_sd=cap(_d.toLocaleDateString('es-ES',{weekday:'long'}))+', '+_d.getDate()+' de '+_d.toLocaleDateString('es-ES',{month:'long'})+' de '+_d.getFullYear();}catch(e){_sd=prettyDate();}
+  L.push(_sd);L.push('');L.push('🧩 Pasos');L.push('');
   if(current){
     var j=J(current),w=miles(current),done=w>=j.total,ts=todaySteps(current),ri=rankIndex(ts),pct=Math.min(100,Math.round(w/j.total*100));
     if(done){L.push('🏁 ¡Completada! '+j.name);L.push('   '+fmtMi(j.total)+' recorridas.');}
@@ -5086,7 +5090,7 @@ function sharePasos(){
     if(ri>=RANKS.length-1)L.push('👑 ¡Maestro/a del día!');
     else L.push('🏆 Rango: '+RANKS[ri]);
   }else{
-    L.push('🥾 Pasos — mejorando tu salud paso a paso.');L.push('   Mínima recomendada: '+nFmt(RECOMMENDED)+' pasos.');
+    L.push('Mejorando tu salud paso a paso.');L.push('   Mínima recomendada: '+nFmt(RECOMMENDED)+' pasos.');
   }
   L.push('');L.push('https://cortadito.news');
   var txt=L.join('\n');
