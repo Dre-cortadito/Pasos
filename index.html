@@ -758,7 +758,7 @@
   .modal p{color:var(--ink);line-height:1.55;font-size:14.5px;margin:8px 0}
   .modal .muted{color:var(--ink-soft);font-size:13.5px}
   .modal hr{border:0;border-top:1px solid var(--ink-line);margin:16px 0}
-  .modal-close{position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:50%;border:1px solid var(--ink-line);background:var(--bg);color:var(--ink);font-size:18px;line-height:1;cursor:pointer;touch-action:manipulation}
+  .modal-close{position:absolute;top:14px;right:14px;width:36px;height:36px;border:none;background:transparent;color:var(--ink-soft);font-size:22px;line-height:1;cursor:pointer;touch-action:manipulation}
   .modal.celebrate{text-align:center;background:#ffffff;color:#1a1614}
   .modal.celebrate h2{color:#1a1614}
   .modal.celebrate h2.accent{color:var(--accent)}
@@ -794,6 +794,14 @@
   #ov-stats .stat-value{font-family:var(--font-display);font-size:28px;font-weight:800;letter-spacing:-0.5px;color:var(--ink);line-height:1.05}
   #ov-stats .stat-value.accent{color:var(--accent)}
   #ov-stats .stat-label{font-size:11px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;color:var(--ink-soft);margin-top:6px}
+  #ov-stats .stats-rank-row{display:flex;align-items:center;gap:12px;font-size:13px;margin-bottom:4px}
+  #ov-stats .stats-rank-row .name{width:78px;color:var(--ink);flex-shrink:0}
+  #ov-stats .stats-rank-row .bar{flex:1;height:22px;background:var(--ink-line);border-radius:6px;overflow:hidden}
+  #ov-stats .stats-rank-row .bar-fill{display:block;height:100%;background:var(--accent);border-radius:6px;min-width:0;transition:width .4s ease}
+  #ov-stats .stats-rank-row .count{width:56px;text-align:right;color:var(--ink);font-feature-settings:"tnum";flex-shrink:0;font-size:12px}
+  #ov-stats .stats-rank-row .count .pct{color:var(--ink-soft)}
+  #ov-stats .stats-rank-row.empty .name,#ov-stats .stats-rank-row.empty .count{opacity:.5}
+  #ov-stats .stats-note{margin:-2px 0 10px;font-size:12px;color:var(--ink-soft);font-style:italic}
   #ov-stats .stats-footer2{margin:20px 0 0;font-size:12px;color:var(--ink-soft);font-style:italic;line-height:1.55}
   #ov-stats .stats-footer2 strong{color:var(--accent);font-weight:700}
 
@@ -1484,6 +1492,9 @@
   <div class="stats-grid" id="st-overall"></div>
   <h3>Rachas</h3>
   <div class="stats-grid" id="st-streaks"></div>
+  <h3>Distribución de rangos</h3>
+  <p class="stats-note">Cuenta solo el rango con el que terminaste cada día.</p>
+  <div id="st-rankdist"></div>
   <p class="muted" id="stats-foot" style="margin-top:18px"></p>
   <p class="stats-footer2">Tus estadísticas se guardan <strong>solo en este navegador</strong>. Nada se envía a Cortadito ni a ningún servidor. Si limpias los datos del navegador, las cookies o el historial del sitio, <strong>tus estadísticas se borrarán</strong>. Tampoco se sincronizan entre dispositivos: cada navegador tiene su propio registro.</p>
 </div></div>
@@ -5045,21 +5056,39 @@ function showStats(){
   var recDays=0;dayKeys.forEach(function(k){if(totals[k]>=RECOMMENDED)recDays++;});
   var finished=0;Object.keys(state.j).forEach(function(id){var jj=J(id);if(jj&&cumSteps(id)/STEPS_PER_MILE>=jj.total)finished++;});
 
-  // streak: consecutive days (ending today or yesterday) meeting personal goal
-  function streakFrom(startOffset){
-    var n=0,d=new Date();d.setDate(d.getDate()-startOffset);
-    while(true){var iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-      if((totals[iso]||0)>=state.goal){n++;d.setDate(d.getDate()-1);}else break;}
-    return n;
+  function _iso(dt){return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');}
+  function streakInfo(meets){
+    var set={}; for(var k in totals){ if(meets(totals[k]||0)) set[k]=1; }
+    function back(off){var n=0,dd=new Date();dd.setDate(dd.getDate()-off);while(set[_iso(dd)]){n++;dd.setDate(dd.getDate()-1);}return n;}
+    var cur=Math.max(back(0), set[_iso(new Date())]?0:back(1));
+    var keys=Object.keys(set).sort(), longest=0, run=0, prev=null;
+    for(var j=0;j<keys.length;j++){ if(prev){var pd=new Date(prev);pd.setDate(pd.getDate()+1);run=(_iso(pd)===keys[j])?run+1:1;}else{run=1;} if(run>longest)longest=run; prev=keys[j]; }
+    return {cur:cur,longest:longest};
   }
-  var streak=Math.max(streakFrom(0),(totals[todayISO()]||0)>=state.goal?0:streakFrom(1));
+  var playS=streakInfo(function(v){return v>0;});
+  var retoS=streakInfo(function(v){return v>=state.goal;});
   var ts=current?todaySteps(current):(totals[todayISO()]||0);
 
   var SB=function(v,l,a){return '<div class="stat-block"><div class="stat-value'+(a?' accent':'')+'">'+v+'</div><div class="stat-label">'+l+'</div></div>';};
   var rangoHoy=current?RANKS[rankIndex(todaySteps(current))]:RANKS[rankIndex(totals[todayISO()]||0)];
   document.getElementById('st-hoy').innerHTML=SB(nFmt(ts),'Pasos hoy')+SB(rangoHoy,'Rango de hoy',1);
   document.getElementById('st-overall').innerHTML=SB(fmtMi1(lifetimeMi),'Total recorrido')+SB(finished,'Rutas completadas')+SB(daysPlayed,'Días registrados')+SB(recDays,'Días recomendados');
-  document.getElementById('st-streaks').innerHTML=SB(streak+(streak===1?' día':' días'),'Racha (≥ tu meta)',1);
+  document.getElementById('st-streaks').innerHTML=
+    SB(playS.cur,'Racha de juego',1)+SB(retoS.cur,'Racha de reto',1)+
+    SB(playS.longest,'Mejor de juego')+SB(retoS.longest,'Mejor de reto');
+  (function(){
+    var ranks=[]; for(var z=0;z<RANKS.length;z++)ranks.push(0);
+    for(var k in totals){ if((totals[k]||0)>0) ranks[rankIndex(totals[k])]++; }
+    var totalRanked=0; for(var z2=0;z2<ranks.length;z2++)totalRanked+=ranks[z2];
+    var maxc=Math.max.apply(null,ranks.concat([1]));
+    var todayR=((totals[todayISO()]||0)>0)?rankIndex(totals[todayISO()]):-1;
+    var dh='';
+    for(var i=RANKS.length-1;i>=0;i--){ var c=ranks[i]||0; var bp=(c/maxc)*100; var tp=totalRanked?(c/totalRanked)*100:0;
+      var pl=tp>=10?Math.round(tp)+'%':(tp>0?tp.toFixed(1)+'%':'—');
+      dh+='<div class="stats-rank-row'+(i===todayR?' best':'')+(c===0?' empty':'')+'"><span class="name">'+RANKS[i]+'</span><span class="bar"><span class="bar-fill" style="width:'+bp.toFixed(1)+'%"></span></span><span class="count">'+c+' <span class="pct">('+pl+')</span></span></div>';
+    }
+    var el=document.getElementById('st-rankdist'); if(el) el.innerHTML=dh;
+  })();
   // Lifetime big-day counts (no medals — just a quiet tally).
   var sd = state.silverDays||0, gd = state.goldDays||0;
   var bigFoot = '';
