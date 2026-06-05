@@ -541,6 +541,10 @@
     color:var(--ink);white-space:nowrap;flex:none;min-width:88px;
     text-transform:uppercase;letter-spacing:1.8px;
     transition:color .15s;
+    /* iOS: all-caps glyphs ride high in the default line box, so the label
+       looked higher than the track line. Pin it to the track height (22px)
+       and flex-center so the word sits exactly on the bar on Safari too. */
+    display:flex;align-items:center;height:22px;line-height:1;
   }
   .rank-label.at-maestro{color:var(--accent)}
   .rank-track{
@@ -564,7 +568,7 @@
     font-family:var(--font-ui);font-size:11px;font-weight:700;letter-spacing:-.2px;
     z-index:4;
   }
-  .rank-chev{color:var(--ink);font-size:14px;flex:none;font-family:var(--font-ui);font-weight:500;transition:color .15s,transform .2s}
+  .rank-chev{color:var(--ink);font-size:14px;flex:none;font-family:var(--font-ui);font-weight:500;transition:color .15s,transform .2s;display:flex;align-items:center;height:22px;line-height:1}
   /* Row that contains the rank-bar + the secret-achievement medals to its
      right. The rank-bar itself stays exactly like Sudoku/Racimo; the medals
      sit OUTSIDE it as a sibling, only visible when earned today. */
