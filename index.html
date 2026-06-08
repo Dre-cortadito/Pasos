@@ -4123,7 +4123,8 @@ function renderLogrosTab(){
   var ranksEl = document.getElementById('logros-ranks');
   if (ranksEl && typeof RANKS !== 'undefined') {
     var stepsToday = (typeof todaySteps === 'function') ? todaySteps() : 0;
-    ranksEl.innerHTML = RANKS.map(function(r){
+    // STANDARD: Maestro/a at the top, Debutante at the bottom
+    ranksEl.innerHTML = RANKS.slice().reverse().map(function(r){
       var achieved = stepsToday >= r.steps;
       return '<div class="lr-row' + (achieved ? ' achieved' : '') + '">' +
                '<span>' + r.name + '</span>' +
@@ -5125,7 +5126,7 @@ function sharePasos(){
   }else{
     L.push('Mejorando tu salud paso a paso.');L.push('   Mínima recomendada: '+nFmt(RECOMMENDED)+' pasos.');
   }
-  L.push('');L.push('https://cortadito.news');
+  L.push('');L.push('https://pasos.dre-c8f.workers.dev/');
   var txt=L.join('\n');
   if(navigator.share){navigator.share({text:txt}).catch(function(){});}
   else if(navigator.clipboard){navigator.clipboard.writeText(txt).then(function(){showInfo('Copiado','<p>Resultado copiado al portapapeles. ¡Compártelo donde quieras!</p>');},function(){fallback(txt);});}
