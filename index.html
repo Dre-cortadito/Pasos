@@ -531,7 +531,7 @@
      rank is a fixed 24px accent circle.                                     */
   .rank-bar{
     display:flex;align-items:center;gap:10px;
-    width:100%;max-width:560px;margin:0 auto 8px;
+    width:100%;max-width:none;margin:0 auto 8px;   /* STANDARD: the bar spans its container column exactly (was 560px — narrower than the content) */
     padding:6px 0;background:transparent;border-radius:999px;   /* STANDARD (2026-07-08): zero side padding — rank-bar content spans exactly the board width */
     cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;
     box-sizing:border-box;
