@@ -1219,7 +1219,7 @@
         <button data-act="rangos">Rangos del día</button>
         <button data-act="howto">Cómo funciona</button>
         <button data-act="share">Compartir resultado</button>
-        <button data-act="about">Sobre Pasos</button>
+        <button data-act="about">Sobre el juego</button>
         <button data-act="news" class="more-item-cta">Suscribirse al boletín</button>
       </div>
     </span>
@@ -1279,7 +1279,7 @@
          live OUTSIDE the bar as a sibling, sitting to its right after the
          chevron — only visible when earned today. -->
     <div class="rank-row">
-      <div class="rank-bar" id="rankbar" role="button" aria-label="Rangos del día">
+      <div class="rank-bar" id="rank-bar" role="button" tabindex="0" aria-label="Ver rangos">
         <span class="rank-label" id="rank-label">Debutante</span>
         <div class="rank-track" id="rank-track"></div>
         <span class="rank-chev">▾</span>
@@ -1520,7 +1520,7 @@
 <!-- ============================================================== RANGOS MODAL -->
 <div class="modal-overlay" id="ov-rangos"><div class="modal">
   <button class="modal-close" data-close>×</button>
-  <h2>Rangos del día</h2>
+  <h2>Rangos</h2>
   <p class="muted">Tu rango se calcula con los <b>pasos de hoy</b> y se reinicia cada día. Llegar a la meta recomendada te hace <b style="color:var(--accent)">Maestro/a</b>.</p>
   <div class="rank-list" id="rank-list"></div>
   <hr>
@@ -5158,7 +5158,7 @@ function sharePasos(){
   L.push(_sd);L.push('');L.push('🧩 Pasos');L.push('');
   if(current){
     var j=J(current),w=miles(current),done=w>=j.total,ts=todaySteps(current),ri=rankIndex(ts),pct=Math.min(100,Math.round(w/j.total*100));
-    if(done){L.push('🏁 ¡Completada! '+j.name);L.push('   '+fmtMi(j.total)+' recorridas.');}
+    if(done){L.push('🎯 ¡Completada! '+j.name);L.push('   '+fmtMi(j.total)+' recorridas.');}
     else if(w<=0){L.push('🥾 '+j.name);L.push('   Lista para salir desde '+shortName(j.stops[0].n)+'.');}
     else{var leg=currentLeg(j,w);L.push('🥾 '+j.name+' · '+pct+'%');L.push('   '+fmtMi1(w)+' de '+fmtMi(j.total)+' (entre '+leg.from+' y '+leg.to+')');}
     L.push('👟 '+nFmt(ts)+' pasos hoy');
@@ -5201,7 +5201,7 @@ var _logBtn=document.getElementById('log-btn'); if(_logBtn) _logBtn.onclick=func
   if(n>=0)recordToday(n);inp.value='';
 };
 var _stepsIn=document.getElementById('steps-in'); if(_stepsIn) _stepsIn.addEventListener('keydown',function(e){if(e.key==='Enter'){var lb=document.getElementById('log-btn'); if(lb) lb.click();}});
-document.getElementById('rankbar').addEventListener('click',showRangos);
+document.getElementById('rank-bar').addEventListener('click',showRangos);
 
 /* ============================================================================
    Content
@@ -5226,7 +5226,7 @@ document.addEventListener('click',function(){moreMenu.classList.remove('open');}
 
 function navAction(act){
   if(act==='howto')showInfo('Cómo funciona',HOWTO);
-  else if(act==='about')showInfo('Sobre Pasos',ABOUT);
+  else if(act==='about')showInfo('Sobre el juego',ABOUT);
   else if(act==='rangos')showRangos();
   else if(act==='stats')showStats();
   else if(act==='goal')showGoalPicker();
