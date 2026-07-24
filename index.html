@@ -232,7 +232,7 @@
     max-width:320px;line-height:1.35;
     font-family:var(--font-display);font-style:italic;font-weight:400;
   }
-  .landing-date{margin:0;color:var(--ink);font-size:14px;text-transform:capitalize;font-feature-settings:"tnum"}
+  .landing-date{margin:0;color:var(--ink);font-size:14px;font-feature-settings:"tnum"}
   .landing-reto{margin:0;display:inline-flex;align-items:baseline;justify-content:center;gap:8px;letter-spacing:.3px}
   .landing-reto-label{color:var(--ink-soft);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.8px}
   .landing-reto-value{font-family:var(--font-display);color:var(--accent);font-size:17px;font-weight:700}
@@ -561,10 +561,10 @@
   .rank-dot{position:absolute;top:50%;width:6px;height:6px;border-radius:50%;transform:translate(-50%,-50%);background:var(--ink-soft);z-index:3}
   .rank-dot.passed{background:var(--ink)}
   .rank-marker{position:absolute;top:50%;width:3px;height:26px;border-radius:2px;transform:translate(-50%,-50%);background:var(--accent);opacity:.95;z-index:2}
-  .rank-marker.done{background:var(--ink)}
+  .rank-marker.done{background:var(--success)}
   /* "tu meta hoy" caption that rides with the goal marker */
   .rank-marker-lbl{position:absolute;top:calc(50% + 15px);font-family:var(--font-ui);font-size:8px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--accent-deep);white-space:nowrap;z-index:2;pointer-events:none;line-height:1}
-  .rank-marker-lbl.done{color:var(--ink)}
+  .rank-marker-lbl.done{color:var(--success)}
   .rank-bubble{
     position:absolute;top:50%;width:24px;height:24px;border-radius:50%;
     transform:translate(-50%,-50%);
@@ -769,13 +769,33 @@
   .modal .muted{color:var(--ink-soft);font-size:13.5px}
   .modal hr{border:0;border-top:1px solid var(--ink-line);margin:16px 0}
   .modal-close{position:absolute;top:14px;right:14px;width:36px;height:36px;border:none;background:transparent;color:var(--ink-soft);font-size:22px;line-height:1;cursor:pointer;touch-action:manipulation}
-  .modal.celebrate{text-align:center;background:#ffffff;color:#1a1614}
+  .modal.celebrate{text-align:center;background:#ffffff;color:#1a1614;
+    /* forced-light palette: re-declare the live vars locally so inner .btn /
+       .mk stay light in dark theme (Racimo .goal-panel.open pattern, §1.3) */
+    --bg:#ffffff; --ink:#1a1614; --ink-soft:#6b6660; --paper:#ffffff; --ink-line:#ece7df;}
   .modal.celebrate h2{color:#1a1614}
   .modal.celebrate h2.accent{color:var(--accent)}
   .modal.celebrate p{color:#5a544e}
   .modal.celebrate .mk{width:104px;height:104px;margin:0 auto 8px;display:block;border-radius:50%;background:var(--accent-soft);padding:8px;object-fit:contain}
   .modal.celebrate .actions{display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap}
   .modal.celebrate .actions .btn{min-width:140px}
+  /* Open-ended game (game-shape ruling): the keep-going button gets the accent
+     fill (Racimo's "Seguir jugando"); Compartir stays outlined. Scoped here so
+     the landing's ink-filled .btn.primary is untouched. */
+  .modal.celebrate .actions .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+
+  /* Celebration confetti burst (family standard, canvas, no libs — Racimo/Cascada) */
+  .confetti-box{position:fixed;inset:0;pointer-events:none;z-index:2600}
+
+  /* Share feedback toast — bare text above the bottom bar, auto-hide 1400ms */
+  .share-toast{
+    position:fixed;left:50%;bottom:calc(78px + env(safe-area-inset-bottom,0));
+    transform:translateX(-50%);z-index:2600;
+    font-family:var(--font-ui);font-size:15px;font-weight:800;color:var(--accent);
+    text-align:center;white-space:nowrap;
+    opacity:0;pointer-events:none;transition:opacity .18s;
+  }
+  .share-toast.show{opacity:1}
 
   /* Rank list (Rangos modal) — scoped to .rank-list so it never touches the
      in-game .rank-row (which was getting this padding and shifting the label). */
@@ -1558,8 +1578,8 @@
   <h2 id="cel-title"></h2>
   <p id="cel-body"></p>
   <div class="actions">
-    <button class="btn primary" id="cel-share">Compartir</button>
-    <button class="btn" data-close>Seguir caminando</button>
+    <button class="btn" id="cel-share">Compartir</button>
+    <button class="btn primary" data-close>Seguir caminando</button>
   </div>
 </div></div>
 
@@ -4813,10 +4833,10 @@ function recordToday(newTotal){
     queueCeleb(true,'¡'+nFmt(SILVER)+' pasos!',_achvLine('silver','¡Llegaste a los '+nFmt(SILVER)+' pasos! Tremendo día.'));
     coachAchievement('silver'); coachHandled=true;
   } else if(newRec){
-    queueCeleb(true,'¡Maestro/a del día!','Alcanzaste los '+nFmt(RECOMMENDED)+' pasos que recomienda la ciencia. Hoy llegas a lo más alto del rango.');
+    queueCeleb(true,'¡Maestro/a del camino!','Alcanzaste los '+nFmt(RECOMMENDED)+' pasos que recomienda la ciencia. Hoy llegas a lo más alto del rango.',130);
     coachHandled=true;
   } else if(newMeta){
-    queueCeleb(false,'¡Buen trabajo!','Cumpliste tu meta de '+nFmt(state.goal)+' pasos. Vas por buen camino — la meta recomendada está en '+nFmt(RECOMMENDED)+'.');
+    queueCeleb(false,'¡Buen sorbo!','Cumpliste tu meta de '+nFmt(state.goal)+' pasos. Vas por buen camino — la meta recomendada está en '+nFmt(RECOMMENDED)+'.',90);
   }
   // ---- Coach: pick a position-aware line, with milestone overrides --------
   // Detect crossing route-progress milestones (50%, 85%, finish) so the coach
@@ -5050,7 +5070,37 @@ function closeAll(){
 document.querySelectorAll('[data-close]').forEach(function(b){b.onclick=closeAll;});
 document.querySelectorAll('.modal-overlay').forEach(function(o){o.addEventListener('click',function(e){if(e.target===o)closeAll();});});
 
-function celebrate(accentTitle,t,b){
+/* Confetti burst — family standard (copied from Cascada's launchConfetti;
+   canvas, no libs, reduced-motion guard). Colors adapted to Pasos' accent set,
+   read live so the per-route tint carries through. */
+function launchConfetti(n){
+  if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  n=n||90;
+  var _cs=getComputedStyle(document.body);
+  function _tok(name,fb){var v=(_cs.getPropertyValue(name)||'').trim();return v||fb;}
+  var colors=[_tok('--accent','#10C896'),_tok('--accent-deep','#0EA178'),_tok('--accent-soft','#CFF1E2'),'#3FE3B2'];
+  var cv=document.createElement('canvas'); cv.className='confetti-box';
+  var W=window.innerWidth, Hh=window.innerHeight, dpr=Math.min(2, window.devicePixelRatio||1);
+  cv.width=W*dpr; cv.height=Hh*dpr; cv.style.width=W+'px'; cv.style.height=Hh+'px';
+  document.body.appendChild(cv);
+  var ctx=cv.getContext('2d'); ctx.scale(dpr,dpr);
+  var P=[];
+  for(var i=0;i<n;i++) P.push({ x:Math.random()*W, y:-20-Math.random()*Hh*0.3,
+    w:5+Math.random()*5, h:8+Math.random()*8, vx:(Math.random()-0.5)*1.6,
+    vy:2.2+Math.random()*3, rot:Math.random()*6.28, vr:(Math.random()-0.5)*0.32,
+    c:colors[(Math.random()*colors.length)|0] });
+  var t0=performance.now(), raf;
+  (function frame(t){
+    var dt=t-t0; ctx.clearRect(0,0,W,Hh); var alive=false;
+    var a= dt>2200 ? Math.max(0,1-(dt-2200)/700) : 1;
+    for(var k=0;k<P.length;k++){ var p=P[k]; p.x+=p.vx; p.y+=p.vy; p.vy+=0.045; p.rot+=p.vr;
+      if(p.y<Hh+24) alive=true;
+      ctx.save(); ctx.globalAlpha=a; ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+      ctx.fillStyle=p.c; ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h); ctx.restore(); }
+    if(alive && dt<3200) raf=requestAnimationFrame(frame); else cv.remove();
+  })(t0);
+}
+function celebrate(accentTitle,t,b,conf){
   var _cid=state.coach||(COACHES[0]&&COACHES[0].id);
   var _mk=document.getElementById('cel-mk');
   _mk.src=_cid?('coaches/'+_cid+'.png'):WALKER;        // celebrate with your coach
@@ -5058,13 +5108,14 @@ function celebrate(accentTitle,t,b){
   var h=document.getElementById('cel-title');h.textContent=t;h.classList.toggle('accent',!!accentTitle);
   document.getElementById('cel-body').textContent=b;
   openOverlay('ov-cel');
+  if(conf) launchConfetti(conf);   // goal 90 / Maestro 130 (Racimo standard)
 }
 /* Celebration queue — lets several prompts (e.g. a route stop AND a 10k day)
    show one after another instead of one swallowing the others. */
 var _celebQueue=[];
-function _playNextCeleb(){ if(_celebQueue.length){ var c=_celebQueue.shift(); celebrate(c.a,c.t,c.b); } }
-function queueCeleb(a,t,b){
-  _celebQueue.push({a:a,t:t,b:b});
+function _playNextCeleb(){ if(_celebQueue.length){ var c=_celebQueue.shift(); celebrate(c.a,c.t,c.b,c.conf); } }
+function queueCeleb(a,t,b,conf){
+  _celebQueue.push({a:a,t:t,b:b,conf:conf});
   var ov=document.getElementById('ov-cel');
   if(!ov || !ov.classList.contains('open')) _playNextCeleb();
 }
@@ -5153,23 +5204,58 @@ function showStats(){
 ============================================================================ */
 function sharePasos(){
   var L=[];var _sd;try{var _d=new Date();_sd=cap(_d.toLocaleDateString('es-ES',{weekday:'long'}))+', '+_d.getDate()+' de '+_d.toLocaleDateString('es-ES',{month:'long'})+' de '+_d.getFullYear();}catch(e){_sd=prettyDate();}
-  L.push(_sd);L.push('');L.push('🧩 Pasos');L.push('');
+  L.push(_sd);L.push('');L.push('🧩 Pasos');
   if(current){
     var j=J(current),w=miles(current),done=w>=j.total,ts=todaySteps(current),ri=rankIndex(ts),pct=Math.min(100,Math.round(w/j.total*100));
     if(done){L.push('🎯 ¡Completada! '+j.name);L.push('   '+fmtMi(j.total)+' recorridas.');}
     else if(w<=0){L.push('🥾 '+j.name);L.push('   Lista para salir desde '+shortName(j.stops[0].n)+'.');}
     else{var leg=currentLeg(j,w);L.push('🥾 '+j.name+' · '+pct+'%');L.push('   '+fmtMi1(w)+' de '+fmtMi(j.total)+' (entre '+leg.from+' y '+leg.to+')');}
     L.push('👟 '+nFmt(ts)+' pasos hoy');
-    if(ri>=RANKS.length-1)L.push('👑 ¡Maestro/a del día!');
+    L.push(ts>=state.goal ? '✅ ¡Reto del día logrado! ('+nFmt(state.goal)+' pasos)' : '📌 Reto del día ('+nFmt(state.goal)+' pasos)');
+    if(ri>=RANKS.length-1)L.push('👑 ¡Maestro/a del camino!');
     else L.push('🏆 Rango: '+RANKS[ri]);
+    if(ts>=SILVER) L.push('✨ Plata: '+nFmt(SILVER)+' pasos');
+    if(ts>=LEYENDA)L.push('✨ Leyenda: '+nFmt(LEYENDA)+' pasos');
   }else{
     L.push('Mejorando tu salud paso a paso.');L.push('   Mínima recomendada: '+nFmt(RECOMMENDED)+' pasos.');
   }
   L.push('');L.push('https://pasos.dre-c8f.workers.dev/');
   var txt=L.join('\n');
-  if(navigator.share){navigator.share({text:txt}).catch(function(){});}
-  else if(navigator.clipboard){navigator.clipboard.writeText(txt).then(function(){showInfo('Copiado','<p>Resultado copiado al portapapeles. ¡Compártelo donde quieras!</p>');},function(){fallback(txt);});}
-  else{fallback(txt);}
+  // Racimo standard mechanism: native share ONLY on mobile UA, else clipboard
+  // → legacy execCommand → prompt; feedback via the lightweight share toast.
+  if(navigator.share && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)){
+    navigator.share({title:'Pasos',text:txt}).catch(function(){});
+  }
+  else if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(function(){shareToast('Copiado al portapapeles');},function(){legacyCopy(txt);});
+  }
+  else{legacyCopy(txt);}
+}
+/* Minimal share toast — bare text above the bottom bar, auto-hide 1400ms. */
+var _shareToastEl=null,_shareToastT=0;
+function shareToast(msg){
+  if(!_shareToastEl){
+    _shareToastEl=document.createElement('div');
+    _shareToastEl.className='share-toast';
+    _shareToastEl.setAttribute('aria-live','polite');
+    document.body.appendChild(_shareToastEl);
+  }
+  _shareToastEl.textContent=msg;
+  _shareToastEl.classList.add('show');
+  clearTimeout(_shareToastT);
+  _shareToastT=setTimeout(function(){_shareToastEl.classList.remove('show');},1400);
+}
+function legacyCopy(txt){
+  try{
+    var ta=document.createElement('textarea');ta.value=txt;
+    ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.focus();ta.select();
+    var ok=document.execCommand('copy');
+    document.body.removeChild(ta);
+    if(ok){shareToast('Copiado al portapapeles');return;}
+  }catch(e){}
+  shareToast('No se pudo copiar');
+  fallback(txt);
 }
 function fallback(txt){try{prompt('Copia tu resultado:',txt);}catch(e){}}
 
@@ -5206,7 +5292,7 @@ document.getElementById('rank-bar').addEventListener('click',showRangos);
 ============================================================================ */
 var HOWTO=
   '<p>Elige una <b>ruta real</b> del mundo. La app cuenta los pasos que das cada día y <span style="color:var(--accent);font-weight:600">tu cortadito recorre la distancia</span> a tu lado. Cada <b>2.000 pasos ≈ 1 milla</b>.</p>'+
-  '<p>Tienes <b>dos metas cada día</b>: la <b>tuya</b> (la que tú fijas) y la <b>recomendada</b> de 8.000 pasos, basada en la ciencia. Cumple la tuya y verás un "¡Buen trabajo!"; alcanza la recomendada y llegas a <b style="color:var(--accent)">Maestro/a</b> del día. Pásate de los 12.000 y es <b>día de leyenda</b>.</p>'+
+  '<p>Tienes <b>dos metas cada día</b>: la <b>tuya</b> (la que tú fijas) y la <b>recomendada</b> de 8.000 pasos, basada en la ciencia. Cumple la tuya y verás un "¡Buen sorbo!"; alcanza la recomendada y llegas a <b style="color:var(--accent)">Maestro/a</b> del día. Pásate de los 12.000 y es <b>día de leyenda</b>.</p>'+
   '<p>Al cruzar cada ciudad de la ruta ganas un <b>sello</b> en el pasaporte con un dato del lugar. La app te dice <b>cuántos días te faltan</b> para llegar: a tu ritmo y al ritmo recomendado.</p>'+
   '<p class="muted">Una ruta gratis a la vez; con <b>Cortadito Club</b>, la biblioteca completa y varias rutas en marcha.</p>';
 
